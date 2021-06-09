@@ -154,7 +154,7 @@ public class HelloWordService implements StreamService {
 			stream = env.addSource(new FlinkKafkaConsumer011<String>(Arrays.asList(topics.split(",")),
 					new SimpleStringSchema(), kafkaProperties));
 		} else {
-			stream = env.fromElements("test");
+			stream = env.fromElements("Hello, World!");
 		}
 		stream.print();
 	}
