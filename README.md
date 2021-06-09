@@ -18,7 +18,37 @@ flink-jobs为基于Flink的Java应用程序提供快速集成的能力，可通�
 </dependency>
 ```
 
-2.  编写应用入口类
+2.  配置文件application.properties
+
+```
+bootstrap.servers=192.168.10.40:9092,192.168.10.78:9092,192.168.10.153:9092
+topics=topic1,topic2
+auto.offset.reset=latest
+group.id.prefix=consumer_group_flink_jobs
+defaultService=helloWordService
+defaultRuntimeMode=BATCH
+```
+
+3.  编写配置类
+```
+@Configuration
+@PropertySource(value = "application.properties")
+public class Context {
+
+	@Bean
+	public Properties kafkaProperties(@Value("${bootstrap.servers}") String servers,
+			@Value("${group.id.prefix}") String groupIdPrefix, @Value("${auto.offset.reset}") String autoOffsetReset) {
+		Properties kafkaProperties = new Properties();
+		kafkaProperties.put("bootstrap.servers", servers);
+		kafkaProperties.put("group.id.prefix", groupIdPrefix);
+		kafkaProperties.put("auto.offset.reset", autoOffsetReset);
+		return kafkaProperties;
+	}
+
+}
+```
+
+4.  编写应用入口类
 
 ```
 @ComponentScan("cn.tenmg.flink.jobs")
@@ -55,79 +85,8 @@ public class App extends FlinkJobsRunner implements CommandLineRunner {
 }
 ```
 
-3.  编写Flink批处理服务
+5.  编写Flink流批一体服务
 
-```
-@Service
-public class HelloWordService implements StreamService {
-
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = -6651233695630282701L;
-
-	@Override
-	public void run(StreamExecutionEnvironment env, Params params) throws Exception {
-		DataStream<Person> flintstones = env.fromElements(new Person("Fred", 35), new Person("Wilma", 35),
-				new Person("Pebbles", 2));
-		DataStream<Person> adults = flintstones.filter(new FilterFunction<Person>() {
-
-			/**
-			 * 
-			 */
-			private static final long serialVersionUID = -5154134475063691613L;
-
-			@Override
-			public boolean filter(Person person) throws Exception {
-				return person.age >= 18;
-			}
-		});
-
-		adults.print();
-	}
-
-	public static class Person {
-		public String name;
-		public Integer age;
-
-		public Person() {
-		};
-
-		public Person(String name, Integer age) {
-			this.name = name;
-			this.age = age;
-		};
-
-		public String toString() {
-			return this.name.toString() + ": age " + this.age.toString();
-		};
-	}
-
-}
-```
-
-4.  编写Flink流批一体服务
-
-4.1  配置类
-```
-@Configuration
-@PropertySource(value = "application.properties")
-public class Context {
-
-	@Bean
-	public Properties kafkaProperties(@Value("${bootstrap.servers}") String servers,
-			@Value("${group.id.prefix}") String groupIdPrefix, @Value("${auto.offset.reset}") String autoOffsetReset) {
-		Properties kafkaProperties = new Properties();
-		kafkaProperties.put("bootstrap.servers", servers);
-		kafkaProperties.put("group.id.prefix", groupIdPrefix);
-		kafkaProperties.put("auto.offset.reset", autoOffsetReset);
-		return kafkaProperties;
-	}
-
-}
-```
-
-4.2  流批一体服务类
 ```
 @Service
 public class HelloWordService implements StreamService {
