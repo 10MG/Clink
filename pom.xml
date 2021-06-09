@@ -17,28 +17,23 @@
 		<maven.compiler.target>1.8</maven.compiler.target>
 		<maven-jar-plugin.version>3.1.1</maven-jar-plugin.version>
 		<encoding>UTF-8</encoding>
+		<junit.version>4.13.2</junit.version>
 		<flink.version>1.12.2</flink.version>
 		<scala.binary.version>2.11</scala.binary.version>
 		<scala.version>${scala.binary.version}.12</scala.version>
 		<flink.version>1.12.2</flink.version>
 		<flink-connector-kafka.version>1.11.3</flink-connector-kafka.version>
-		<fastjson.version>1.2.75</fastjson.version>
+		<fastjson.version>1.2.76</fastjson.version>
 	</properties>
 	<dependencies>
 		<!-- https://mvnrepository.com/artifact/junit/junit -->
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
-			<version>4.13.2</version>
+			<version>${junit.version}</version>
 			<scope>test</scope>
 		</dependency>
 
-		<!-- https://mvnrepository.com/artifact/org.scala-lang/scala-library -->
-		<dependency>
-			<groupId>org.scala-lang</groupId>
-			<artifactId>scala-library</artifactId>
-			<version>${scala.version}</version>
-		</dependency>
 		<!-- https://mvnrepository.com/artifact/org.apache.flink/flink-java -->
 		<dependency>
 			<groupId>org.apache.flink</groupId>
@@ -63,8 +58,10 @@
 			<groupId>org.apache.flink</groupId>
 			<artifactId>flink-connector-kafka-0.11_${scala.binary.version}</artifactId>
 			<version>${flink-connector-kafka.version}</version>
+			<scope>provided</scope>
 		</dependency>
 
+		<!-- https://mvnrepository.com/artifact/com.alibaba/fastjson -->
 		<dependency>
 			<groupId>com.alibaba</groupId>
 			<artifactId>fastjson</artifactId>
