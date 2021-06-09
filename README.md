@@ -55,7 +55,7 @@ public class App extends FlinkJobsRunner implements CommandLineRunner {
 }
 ```
 
-3.  编写Flink流式服务
+3.  编写Flink批处理服务
 
 ```
 @Service
@@ -107,6 +107,7 @@ public class HelloWordService implements StreamService {
 ```
 
 4.  编写Flink流批一体服务
+
 4.1  配置类
 ```
 @Configuration
