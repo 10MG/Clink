@@ -1,39 +1,162 @@
 # flink-jobs
 
 #### 介绍
-{**以下是 Gitee 平台说明，您可以替换此简介**
-Gitee 是 OSCHINA 推出的基于 Git 的代码托管平台（同时支持 SVN）。专为开发者提供稳定、高效、安全的云端软件开发协作平台
-无论是个人、团队、或是企业，都能够用 Gitee 实现代码托管、项目管理、协作开发。企业项目请看 [https://gitee.com/enterprises](https://gitee.com/enterprises)}
-
-#### 软件架构
-软件架构说明
-
-
-#### 安装教程
-
-1.  xxxx
-2.  xxxx
-3.  xxxx
+flink-jobs为基于Flink的Java应用程序提供快速集成的能力，可通过继承FlinkJobsRunner快速构建基于SpringBoot的Flink流批一体应用程序。
 
 #### 使用说明
 
-1.  xxxx
-2.  xxxx
-3.  xxxx
+以基于SpringBoot的Maven项目为例
 
-#### 参与贡献
+1.  pom.xml添加依赖，${flink-jobs.version}为版本号，可定义属性或直接使用版本号替换
 
-1.  Fork 本仓库
-2.  新建 Feat_xxx 分支
-3.  提交代码
-4.  新建 Pull Request
+```
+<!-- https://mvnrepository.com/artifact/cn.tenmg/flink-jobs -->
+<dependency>
+    <groupId>cn.tenmg</groupId>
+    <artifactId>flink-jobs</artifactId>
+    <version>${flink-jobs.version}</version>
+</dependency>
+```
 
+2.  编写应用入口类
 
-#### 特技
+```
+@ComponentScan("cn.tenmg.flink.jobs")
+public class App extends FlinkJobsRunner implements CommandLineRunner {
 
-1.  使用 Readme\_XXX.md 来支持不同的语言，例如 Readme\_en.md, Readme\_zh.md
-2.  Gitee 官方博客 [blog.gitee.com](https://blog.gitee.com)
-3.  你可以 [https://gitee.com/explore](https://gitee.com/explore) 这个地址来了解 Gitee 上的优秀开源项目
-4.  [GVP](https://gitee.com/gvp) 全称是 Gitee 最有价值开源项目，是综合评定出的优秀开源项目
-5.  Gitee 官方提供的使用手册 [https://gitee.com/help](https://gitee.com/help)
-6.  Gitee 封面人物是一档用来展示 Gitee 会员风采的栏目 [https://gitee.com/gitee-stars/](https://gitee.com/gitee-stars/)
+	@Value("${defaultService}")
+	private String defaultService;
+
+	@Value("${defaultRuntimeMode}")
+	private String defaultRuntimeMode;
+
+	@Autowired
+	private ApplicationContext springContext;
+
+	@Override
+	protected String getDefaultService() {
+		return defaultService;
+	}
+
+	@Override
+	protected RuntimeExecutionMode getDefaultRuntimeMode() {
+		return RuntimeExecutionMode.valueOf(defaultRuntimeMode);
+	}
+
+	@Override
+	protected StreamService getStreamService(String serviceName) {
+		return (StreamService) springContext.getBean(serviceName);
+	}
+
+	public static void main(String[] args) {
+		SpringApplication.run(App.class, args);
+	}
+
+}
+```
+
+3.  编写Flink流式服务
+
+```
+@Service
+public class HelloWordService implements StreamService {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -6651233695630282701L;
+
+	@Override
+	public void run(StreamExecutionEnvironment env, Params params) throws Exception {
+		DataStream<Person> flintstones = env.fromElements(new Person("Fred", 35), new Person("Wilma", 35),
+				new Person("Pebbles", 2));
+		DataStream<Person> adults = flintstones.filter(new FilterFunction<Person>() {
+
+			/**
+			 * 
+			 */
+			private static final long serialVersionUID = -5154134475063691613L;
+
+			@Override
+			public boolean filter(Person person) throws Exception {
+				return person.age >= 18;
+			}
+		});
+
+		adults.print();
+	}
+
+	public static class Person {
+		public String name;
+		public Integer age;
+
+		public Person() {
+		};
+
+		public Person(String name, Integer age) {
+			this.name = name;
+			this.age = age;
+		};
+
+		public String toString() {
+			return this.name.toString() + ": age " + this.age.toString();
+		};
+	}
+
+}
+```
+
+4.  编写Flink流批一体服务
+4.1  配置类
+```
+@Configuration
+@PropertySource(value = "application.properties")
+public class Context {
+
+	@Bean
+	public Properties kafkaProperties(@Value("${bootstrap.servers}") String servers,
+			@Value("${group.id.prefix}") String groupIdPrefix, @Value("${auto.offset.reset}") String autoOffsetReset) {
+		Properties kafkaProperties = new Properties();
+		kafkaProperties.put("bootstrap.servers", servers);
+		kafkaProperties.put("group.id.prefix", groupIdPrefix);
+		kafkaProperties.put("auto.offset.reset", autoOffsetReset);
+		return kafkaProperties;
+	}
+
+}
+```
+
+4.2  流批一体服务类
+```
+@Service
+public class HelloWordService implements StreamService {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -6651233695630282701L;
+
+	@Autowired
+	private Properties kafkaProperties;
+
+	@Value("${topics}")
+	private String topics;
+
+	@Override
+	public void run(StreamExecutionEnvironment env, Params params) throws Exception {
+		DataStream<String> stream;
+		if (RuntimeExecutionMode.STREAMING.equals(params.getRuntimeMode())) {
+			Properties properties = new Properties();
+			properties.putAll(kafkaProperties);
+			properties.setProperty("group.id", kafkaProperties.getProperty("group.id.prefix").concat("helloword"));
+			properties.remove("group.id.prefix");
+			stream = env.addSource(new FlinkKafkaConsumer011<String>(Arrays.asList(topics.split(",")),
+					new SimpleStringSchema(), kafkaProperties));
+		} else {
+			stream = env.fromElements("test");
+		}
+		stream.print();
+	}
+
+}
+```
