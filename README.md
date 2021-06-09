@@ -21,7 +21,7 @@ flink-jobs为基于Flink的Java应用程序提供快速集成的能力，可通�
 2.  配置文件application.properties
 
 ```
-bootstrap.servers=${ip1}:9092,${ip2}:9092,${ip3}:9092
+bootstrap.servers=${ip1}:${port},${ip2}:${port},${ip3}:${port}
 topics=topic1,topic2
 auto.offset.reset=latest
 group.id.prefix=consumer_group_flink_jobs
