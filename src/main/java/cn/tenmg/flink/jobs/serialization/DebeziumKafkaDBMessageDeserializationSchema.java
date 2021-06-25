@@ -8,6 +8,12 @@ import com.alibaba.fastjson.JSONObject;
 import cn.tenmg.flink.jobs.model.KafkaDBMessage;
 import cn.tenmg.flink.jobs.model.KafkaDBMessage.Operate;
 
+/**
+ * Debezium生成的数据库操作的Kafka消息反序列化方案
+ * 
+ * @author 赵伟均 wjzhao@aliyun.com
+ *
+ */
 public class DebeziumKafkaDBMessageDeserializationSchema extends KafkaDBMessageDeserializationSchema {
 
 	/**
