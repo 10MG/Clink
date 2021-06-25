@@ -18,7 +18,7 @@ flink-jobs为基于Flink的Java应用程序提供快速集成的能力，可通�
 </dependency>
 ```
 
-2.  配置文件application.properties
+2.  properties配置文件
 
 ```
 bootstrap.servers=${ip1}:${port},${ip2}:${port},${ip3}:${port}
