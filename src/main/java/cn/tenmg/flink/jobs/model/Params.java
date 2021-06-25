@@ -6,7 +6,7 @@ import java.util.Date;
 import org.apache.flink.api.common.RuntimeExecutionMode;
 
 /**
- * 基于SpringBoot封装的Flink应用入口参数
+ * flink-jobs应用入口参数
  * 
  * @author 赵伟均 wjzhao@aliyun.com
  *

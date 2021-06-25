@@ -70,7 +70,7 @@ public abstract class FlinkJobsRunner {
 			env.setRuntimeMode(RuntimeExecutionMode.STREAMING);
 		}
 		getStreamService(serviceName).run(env, params);
-		env.execute();
+		env.execute(serviceName);
 	}
 
 }

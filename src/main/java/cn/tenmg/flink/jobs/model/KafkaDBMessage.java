@@ -2,17 +2,14 @@ package cn.tenmg.flink.jobs.model;
 
 import java.io.Serializable;
 import java.sql.Timestamp;
-import java.util.List;
-
-import com.alibaba.fastjson.JSON;
 
 /**
- * Canal生成的数据库操作的kafka消息实体类
+ * 数据库操作的kafka消息实体类
  * 
  * @author 赵伟均 wjzhao@aliyun.com
  *
  */
-public class TableOperate implements Serializable {
+public class KafkaDBMessage implements Serializable {
 
 	/**
 	 * 
@@ -33,11 +30,11 @@ public class TableOperate implements Serializable {
 
 	private String table;
 
-	private String type;
+	private Operate operate;
 
-	private String data;
+	private String before;
 
-	private List<String> pkNames;
+	private String after;
 
 	public String getTopic() {
 		return topic;
@@ -95,33 +92,31 @@ public class TableOperate implements Serializable {
 		this.table = table;
 	}
 
-	public String getType() {
-		return type;
+	public Operate getOperate() {
+		return operate;
 	}
 
-	public void setType(String type) {
-		this.type = type;
+	public void setOperate(Operate operate) {
+		this.operate = operate;
 	}
 
-	public String getData() {
-		return data;
+	public String getBefore() {
+		return before;
 	}
 
-	public void setData(String data) {
-		this.data = data;
+	public void setBefore(String before) {
+		this.before = before;
 	}
 
-	public List<String> getPkNames() {
-		return pkNames;
+	public String getAfter() {
+		return after;
 	}
 
-	public void setPkNames(List<String> pkNames) {
-		this.pkNames = pkNames;
+	public void setAfter(String after) {
+		this.after = after;
 	}
 
-	@Override
-	public String toString() {
-		return JSON.toJSONString(this);
+	public enum Operate {
+		INSERT, UPDATE, DELETE, DDL
 	}
-
 }
