@@ -1,7 +1,7 @@
 # flink-jobs
 
 #### 介绍
-flink-jobs为基于Flink的Java应用程序提供快速集成的能力，可通过继承FlinkJobsRunner快速构建基于SpringBoot的Flink流批一体应用程序。
+flink-jobs为基于Flink的Java应用程序提供快速集成的能力，可通过继承FlinkJobsRunner快速构建基于SpringBoot的Flink流批一体应用程序。还可以通过使用[flink-jobs-launcher](https://gitee.com/tenmg/flink-jobs-launcher)，实现基于Java API启动flink-jobs应用程序。
 
 #### 使用说明
 
@@ -18,10 +18,10 @@ flink-jobs为基于Flink的Java应用程序提供快速集成的能力，可通�
 </dependency>
 ```
 
-2.  properties配置文件
+2.  配置文件application.properties
 
 ```
-bootstrap.servers=${ip1}:${port},${ip2}:${port},${ip3}:${port}
+bootstrap.servers=192.168.10.40:9092,192.168.10.78:9092,192.168.10.153:9092
 topics=topic1,topic2
 auto.offset.reset=latest
 group.id.prefix=consumer_group_flink_jobs
