@@ -7,7 +7,7 @@ import org.apache.flink.api.common.RuntimeExecutionMode;
 import org.apache.flink.api.common.functions.FilterFunction;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
-import org.apache.flink.streaming.connectors.kafka.FlinkKafkaConsumer011;
+import org.apache.flink.streaming.connectors.kafka.FlinkKafkaConsumer;
 import org.apache.flink.streaming.connectors.kafka.FlinkKafkaConsumerBase;
 
 import cn.tenmg.flink.jobs.StreamService;
@@ -103,7 +103,7 @@ public abstract class KafkaDBMessageService implements StreamService {
 					kafkaProperties.getProperty(GROUP_ID_PREFIX_PROPERTY_KEY, "flink-jobs").concat("_")
 							.concat(params.getServiceName()));
 			kafkaProperties.remove(GROUP_ID_PREFIX_PROPERTY_KEY);
-			FlinkKafkaConsumerBase<KafkaDBMessage> flinkKafkaConsumer = new FlinkKafkaConsumer011<KafkaDBMessage>(
+			FlinkKafkaConsumerBase<KafkaDBMessage> flinkKafkaConsumer = new FlinkKafkaConsumer<KafkaDBMessage>(
 					Arrays.asList(getSubscribe().split(",")), getKafkaDBMessageDeserializationSchema(),
 					kafkaProperties);
 			String startingOffset = kafkaProperties.getProperty(STARTING_OFFSET_PROPERTY_KEY);

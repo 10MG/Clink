@@ -6,66 +6,47 @@
 	<description>Flink流批一体数据处理快速集成开发框架</description>
 	<groupId>cn.tenmg</groupId>
 	<artifactId>flink-jobs</artifactId>
-	<version>1.0.1</version>
+	<version>1.0.2</version>
 	<packaging>jar</packaging>
 
 	<name>flink-jobs</name>
 	<url>https://gitee.com/tenmg/flink-jobs</url>
 
 	<properties>
-		<maven.compiler.source>1.8</maven.compiler.source>
-		<maven.compiler.target>1.8</maven.compiler.target>
-		<maven-jar-plugin.version>3.1.1</maven-jar-plugin.version>
 		<encoding>UTF-8</encoding>
-		<junit.version>4.13.2</junit.version>
-		<flink.version>1.12.2</flink.version>
+		<flink.version>1.13.1</flink.version>
 		<scala.binary.version>2.11</scala.binary.version>
-		<scala.version>${scala.binary.version}.12</scala.version>
-		<flink.version>1.12.2</flink.version>
-		<flink-connector-kafka.version>1.11.3</flink-connector-kafka.version>
-		<fastjson.version>1.2.76</fastjson.version>
 	</properties>
 	<dependencies>
-		<!-- https://mvnrepository.com/artifact/junit/junit -->
-		<dependency>
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
-			<version>${junit.version}</version>
-			<scope>test</scope>
-		</dependency>
-
-		<!-- https://mvnrepository.com/artifact/org.apache.flink/flink-java -->
-		<dependency>
-			<groupId>org.apache.flink</groupId>
-			<artifactId>flink-java</artifactId>
-			<version>${flink.version}</version>
-		</dependency>
-		<!-- https://mvnrepository.com/artifact/org.apache.flink/flink-streaming-java -->
-		<dependency>
-			<groupId>org.apache.flink</groupId>
-			<artifactId>flink-streaming-java_${scala.binary.version}</artifactId>
-			<version>${flink.version}</version>
-		</dependency>
 		<!-- https://mvnrepository.com/artifact/org.apache.flink/flink-clients -->
 		<dependency>
 			<groupId>org.apache.flink</groupId>
 			<artifactId>flink-clients_${scala.binary.version}</artifactId>
 			<version>${flink.version}</version>
-		</dependency>
-
-		<!-- https://mvnrepository.com/artifact/org.apache.flink/flink-connector-kafka-0.11 -->
-		<dependency>
-			<groupId>org.apache.flink</groupId>
-			<artifactId>flink-connector-kafka-0.11_${scala.binary.version}</artifactId>
-			<version>${flink-connector-kafka.version}</version>
 			<scope>provided</scope>
 		</dependency>
 
+		<!-- https://mvnrepository.com/artifact/org.apache.flink/flink-connector-kafka -->
+		<dependency>
+			<groupId>org.apache.flink</groupId>
+			<artifactId>flink-connector-kafka_${scala.binary.version}</artifactId>
+			<version>${flink.version}</version>
+			<optional>true</optional>
+		</dependency>
 		<!-- https://mvnrepository.com/artifact/com.alibaba/fastjson -->
 		<dependency>
 			<groupId>com.alibaba</groupId>
 			<artifactId>fastjson</artifactId>
-			<version>${fastjson.version}</version>
+			<version>1.2.76</version>
+			<optional>true</optional>
+		</dependency>
+
+		<!-- https://mvnrepository.com/artifact/junit/junit -->
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>4.13.2</version>
+			<scope>test</scope>
 		</dependency>
 	</dependencies>
 	<licenses>
