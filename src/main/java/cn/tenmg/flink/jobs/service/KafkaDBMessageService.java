@@ -28,22 +28,27 @@ public abstract class KafkaDBMessageService implements StreamService {
 	 */
 	private static final long serialVersionUID = 967105095937872674L;
 
-	public static final String
-	/**
-	 * Kafka消费者group.id的前缀配置属性的键
-	 */
-	GROUP_ID_PREFIX_PROPERTY_KEY = "group.id.prefix",
-			/**
-			 * Kafka消费者偏移量配置属性的键
-			 */
-			STARTING_OFFSET_PROPERTY_KEY = "starting.offset";
-
 	/**
 	 * 获取订阅主题
 	 * 
 	 * @return 返回订阅主题
 	 */
 	protected abstract String getSubscribe();
+
+	/**
+	 * 获取消费组编号前缀
+	 * 
+	 * @return 返回消费组编号前缀
+	 */
+	protected abstract String getGroupIdPrefix();
+
+	/**
+	 * 获取开始消费的偏移量。earliest代表flinkKafkaConsumer.setStartFromEarliest()，
+	 * groupOffsets代表flinkKafkaConsumer.setStartFromGroupOffsets()，其他则为flinkKafkaConsumer.setStartFromLatest()
+	 * 
+	 * @return 返回开始消费的偏移量
+	 */
+	protected abstract String getStartingOffset();
 
 	/**
 	 * 获取Kafka配置属性
@@ -99,22 +104,22 @@ public abstract class KafkaDBMessageService implements StreamService {
 			stream = getBatchDataStream(env, params);
 		} else {
 			Properties kafkaProperties = getKafkaProperties();
+			String groupIdPrefix = getGroupIdPrefix();
 			kafkaProperties.setProperty("group.id",
-					kafkaProperties.getProperty(GROUP_ID_PREFIX_PROPERTY_KEY, "flink-jobs").concat("_")
-							.concat(params.getServiceName()));
-			kafkaProperties.remove(GROUP_ID_PREFIX_PROPERTY_KEY);
+					groupIdPrefix == null ? "flink-jobs" : groupIdPrefix + "_" + params.getServiceName());
 			FlinkKafkaConsumerBase<KafkaDBMessage> flinkKafkaConsumer = new FlinkKafkaConsumer<KafkaDBMessage>(
 					Arrays.asList(getSubscribe().split(",")), getKafkaDBMessageDeserializationSchema(),
 					kafkaProperties);
-			String startingOffset = kafkaProperties.getProperty(STARTING_OFFSET_PROPERTY_KEY);
-			if ("earliest".equals(startingOffset)) {
+			String startingOffset = getStartingOffset();
+			if (startingOffset == null) {
+				flinkKafkaConsumer.setStartFromLatest();
+			} else if ("earliest".equals(startingOffset)) {
 				flinkKafkaConsumer.setStartFromEarliest();
 			} else if ("groupOffsets".equals(startingOffset)) {
 				flinkKafkaConsumer.setStartFromGroupOffsets();
 			} else {
 				flinkKafkaConsumer.setStartFromLatest();
 			}
-			kafkaProperties.remove(STARTING_OFFSET_PROPERTY_KEY);
 			flinkKafkaConsumer.setCommitOffsetsOnCheckpoints(true);
 			FilterFunction<KafkaDBMessage> filter = getFilter();
 			if (filter == null) {
