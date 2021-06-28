@@ -7,7 +7,7 @@ flink-jobs为基于Flink的Java应用程序提供快速集成的能力，可通�
 
 以基于SpringBoot的Maven项目为例
 
-1.  pom.xml添加依赖，${flink-jobs.version}为版本号，可定义属性或直接使用版本号替换
+1.  pom.xml添加依赖（Flink等其他相关依赖此处省略），${flink-jobs.version}为版本号，可定义属性或直接使用版本号替换
 
 ```
 <!-- https://mvnrepository.com/artifact/cn.tenmg/flink-jobs -->
@@ -110,7 +110,7 @@ public class HelloWordService implements StreamService {
 			properties.putAll(kafkaProperties);
 			properties.setProperty("group.id", kafkaProperties.getProperty("group.id.prefix").concat("helloword"));
 			properties.remove("group.id.prefix");
-			stream = env.addSource(new FlinkKafkaConsumer011<String>(Arrays.asList(topics.split(",")),
+			stream = env.addSource(new FlinkKafkaConsumer<String>(Arrays.asList(topics.split(",")),
 					new SimpleStringSchema(), kafkaProperties));
 		} else {
 			stream = env.fromElements("Hello, World!");
