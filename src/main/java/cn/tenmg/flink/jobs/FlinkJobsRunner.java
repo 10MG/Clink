@@ -1,33 +1,17 @@
 package cn.tenmg.flink.jobs;
 
-import org.apache.flink.api.common.RuntimeExecutionMode;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 
-import com.alibaba.fastjson.JSON;
-
-import cn.tenmg.flink.jobs.model.Params;
+import cn.tenmg.flink.jobs.model.Arguments;
 
 /**
- * 基于SpringBoot封装的Flink应用入口虚基类
+ * 模块化flink-jobs应用入口虚基类。可用于基于SpringBoot的CommandLineRunner封装的模块化的flink应用
  * 
  * @author 赵伟均 wjzhao@aliyun.com
- *
+ * 
+ * @since 1.0.0
  */
-public abstract class FlinkJobsRunner {
-
-	/**
-	 * 获取默认服务名称
-	 * 
-	 * @return 返回默认服务名称
-	 */
-	protected abstract String getDefaultService();
-
-	/**
-	 * 获取默认运行模式
-	 * 
-	 * @return 返回默认运行模式
-	 */
-	protected abstract RuntimeExecutionMode getDefaultRuntimeMode();
+public abstract class FlinkJobsRunner extends BasicFlinkJobsRunner {
 
 	/**
 	 * 根据服务名称获取流处理服务
@@ -38,39 +22,17 @@ public abstract class FlinkJobsRunner {
 	 */
 	protected abstract StreamService getStreamService(String serviceName);
 
-	/**
-	 * 运行应用
-	 * 
-	 * @param args
-	 *            运行参数
-	 * @throws Exception
-	 *             发生异常
-	 */
-	public void run(String... args) throws Exception {
-		Params params;
-		String serviceName = null;
-		if (args == null || args.length <= 0) {
-			params = new Params();
-		} else {
-			params = JSON.parseObject(args[0], Params.class);
-			serviceName = params.getServiceName();
+	@Override
+	protected void run(StreamExecutionEnvironment env, Arguments arguments) throws Exception {
+		// 获取和运行服务
+		String serviceName = arguments.getServiceName();
+		if (serviceName != null) {
+			StreamService streamService = getStreamService(serviceName);
+			if (streamService != null) {
+				streamService.run(env, arguments);
+				env.execute(serviceName);
+			}
 		}
-		if (serviceName == null) {
-			serviceName = getDefaultService();
-			params.setServiceName(serviceName);
-		}
-		if (params.getRuntimeMode() == null) {
-			params.setRuntimeMode(getDefaultRuntimeMode());
-		}
-		final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
-		RuntimeExecutionMode mode = params.getRuntimeMode();
-		if (RuntimeExecutionMode.BATCH.equals(mode)) {
-			env.setRuntimeMode(RuntimeExecutionMode.BATCH);
-		} else if (RuntimeExecutionMode.STREAMING.equals(mode)) {
-			env.setRuntimeMode(RuntimeExecutionMode.STREAMING);
-		}
-		getStreamService(serviceName).run(env, params);
-		env.execute(serviceName);
 	}
 
 }

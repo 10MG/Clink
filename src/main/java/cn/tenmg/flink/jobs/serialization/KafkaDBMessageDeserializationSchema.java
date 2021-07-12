@@ -12,7 +12,8 @@ import cn.tenmg.flink.jobs.model.KafkaDBMessage;
  * 数据库操作的Kafka消息反序列化方案
  * 
  * @author 赵伟均 wjzhao@aliyun.com
- *
+ * 
+ * @since 1.0.1
  */
 public abstract class KafkaDBMessageDeserializationSchema implements KafkaDeserializationSchema<KafkaDBMessage> {
 

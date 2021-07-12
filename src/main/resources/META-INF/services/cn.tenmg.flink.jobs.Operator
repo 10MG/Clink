@@ -1,0 +1,3 @@
+cn.tenmg.flink.jobs.operator.BshOperator
+cn.tenmg.flink.jobs.operator.ExecuteSqlOperator
+cn.tenmg.flink.jobs.operator.SqlQueryOperator

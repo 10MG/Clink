@@ -8,6 +8,7 @@ import java.sql.Timestamp;
  * 
  * @author 赵伟均 wjzhao@aliyun.com
  *
+ * @since 1.0.1
  */
 public class KafkaDBMessage implements Serializable {
 

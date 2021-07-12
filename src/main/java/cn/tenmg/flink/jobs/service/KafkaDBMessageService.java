@@ -12,7 +12,7 @@ import org.apache.flink.streaming.connectors.kafka.FlinkKafkaConsumerBase;
 
 import cn.tenmg.flink.jobs.StreamService;
 import cn.tenmg.flink.jobs.model.KafkaDBMessage;
-import cn.tenmg.flink.jobs.model.Params;
+import cn.tenmg.flink.jobs.model.Arguments;
 import cn.tenmg.flink.jobs.serialization.KafkaDBMessageDeserializationSchema;
 
 /**
@@ -20,6 +20,7 @@ import cn.tenmg.flink.jobs.serialization.KafkaDBMessageDeserializationSchema;
  * 
  * @author 赵伟均 wjzhao@aliyun.com
  *
+ * @since 1.0.1
  */
 public abstract class KafkaDBMessageService implements StreamService {
 
@@ -73,7 +74,7 @@ public abstract class KafkaDBMessageService implements StreamService {
 	 *            运行参数
 	 * @return 返回批处理数据流
 	 */
-	protected abstract DataStream<KafkaDBMessage> getBatchDataStream(StreamExecutionEnvironment env, Params params);
+	protected abstract DataStream<KafkaDBMessage> getBatchDataStream(StreamExecutionEnvironment env, Arguments params);
 
 	/**
 	 * 获取数据库操作的Kafka消息反序列化方案
@@ -94,19 +95,19 @@ public abstract class KafkaDBMessageService implements StreamService {
 	 * @throws Exception
 	 *             发生异常
 	 */
-	protected abstract void run(final StreamExecutionEnvironment env, Params params, DataStream<KafkaDBMessage> stream)
+	protected abstract void run(StreamExecutionEnvironment env, Arguments params, DataStream<KafkaDBMessage> stream)
 			throws Exception;
 
 	@Override
-	public void run(final StreamExecutionEnvironment env, Params params) throws Exception {
+	public void run(StreamExecutionEnvironment env, Arguments arguments) throws Exception {
 		DataStream<KafkaDBMessage> stream;
-		if (RuntimeExecutionMode.BATCH.equals(params.getRuntimeMode())) {
-			stream = getBatchDataStream(env, params);
+		if (RuntimeExecutionMode.BATCH.equals(arguments.getRuntimeMode())) {
+			stream = getBatchDataStream(env, arguments);
 		} else {
 			Properties kafkaProperties = getKafkaProperties();
 			String groupIdPrefix = getGroupIdPrefix();
 			kafkaProperties.setProperty("group.id",
-					groupIdPrefix == null ? "flink-jobs" : groupIdPrefix + "_" + params.getServiceName());
+					groupIdPrefix == null ? "flink-jobs" : groupIdPrefix + "_" + arguments.getServiceName());
 			FlinkKafkaConsumerBase<KafkaDBMessage> flinkKafkaConsumer = new FlinkKafkaConsumer<KafkaDBMessage>(
 					Arrays.asList(getSubscribe().split(",")), getKafkaDBMessageDeserializationSchema(),
 					kafkaProperties);
@@ -128,7 +129,7 @@ public abstract class KafkaDBMessageService implements StreamService {
 				stream = env.addSource(flinkKafkaConsumer).filter(filter);
 			}
 		}
-		run(env, params, stream);
+		run(env, arguments, stream);
 	}
 
 }
