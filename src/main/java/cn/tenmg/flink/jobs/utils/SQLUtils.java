@@ -38,7 +38,7 @@ public abstract class SQLUtils {
 		if (params == null) {
 			params = new HashMap<String, Object>();
 		}
-		int len = source.length(), i = 0;
+		int len = source.length(), i = 0, backslashes = 0;
 		char a = DSLUtils.BLANK_SPACE, b = DSLUtils.BLANK_SPACE;
 		boolean isString = false;// 是否在字符串区域
 		boolean isParam = false;// 是否在参数区域
@@ -46,8 +46,13 @@ public abstract class SQLUtils {
 		while (i < len) {
 			char c = source.charAt(i);
 			if (isString) {
-				if (DSLUtils.isStringEnd(a, b, c)) {// 字符串区域结束
-					isString = false;
+				if (c == DSLUtils.BACKSLASH) {
+					backslashes++;
+				} else {
+					if (DSLUtils.isStringEnd(a, b, c, backslashes)) {// 字符串区域结束
+						isString = false;
+					}
+					backslashes = 0;
 				}
 				sqlBuilder.append(c);
 			} else {
