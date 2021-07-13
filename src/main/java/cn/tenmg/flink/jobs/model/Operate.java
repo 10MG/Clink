@@ -39,7 +39,7 @@ public class Operate implements Serializable {
 	/**
 	 * 设置处理结果另存为变量名
 	 * 
-	 * @param 处理结果另存为变量名
+	 * @param saveAs 处理结果另存为变量名
 	 */
 	public void setSaveAs(String saveAs) {
 		this.saveAs = saveAs;
