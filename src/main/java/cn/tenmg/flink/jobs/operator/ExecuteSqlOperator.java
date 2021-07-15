@@ -123,10 +123,10 @@ public class ExecuteSqlOperator extends AbstractSqlOperator<ExecuteSql> {
 					if (c > DSLUtils.BLANK_SPACE) {
 						break;
 					}
-					blank.append(value.charAt(i));
+					blank.append(c);
 					i--;
 				}
-				sqlBuffer.append(value.substring(0, i)).append(SQLUtils.COMMA_SPACE);
+				sqlBuffer.append(value.substring(0, i + 1)).append(SQLUtils.COMMA_SPACE);
 				appendDataSource(sqlBuffer, actualDataSource);
 				if (!properties.containsKey(TABLE_NAME) && !actualDataSource.containsKey(TABLE_NAME)) {
 					apppendDefaultTableName(sqlBuffer, script);
