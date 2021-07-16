@@ -51,7 +51,7 @@ public abstract class FlinkJobsContext {
 
 	private static final Map<String, Map<String, String>> dataSources = new HashMap<String, Map<String, String>>();
 
-	private static final String DEFAULT_STRATEGIES_PATH = "flink-jobs-config-loader.properties",
+	private static final String DEFAULT_STRATEGIES_PATH = "flink-jobs-context-loader.properties",
 			CONFIG_LOCATION_KEY = "config.location", CONTEXT_LOCATION_KEY = "context.location", CONFIG_SPLITER = ".",
 			DATASOURCE_PREFIX = "datasource.",
 			DATASOURCE_REGEX = "^" + DATASOURCE_PREFIX.replaceAll("\\.", "\\\\.") + "([\\S]+\\.){0,1}[^\\.]+$",
