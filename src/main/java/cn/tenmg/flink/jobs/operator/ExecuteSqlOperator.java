@@ -59,7 +59,7 @@ public class ExecuteSqlOperator extends AbstractSqlOperator<ExecuteSql> {
 		String dataSource = sql.getDataSource(), statement = SQLUtils.toSQL(namedScript);
 		if (StringUtils.isNotBlank(dataSource)) {
 			Map<String, String> dsConfig = FlinkJobsContext.getDatasource(dataSource);
-			if ("jdbc".equals(dsConfig.get("connector"))
+			if (isJDBC(dsConfig)
 					&& (statement.matches(DELETE_CLAUSE_REGEX) || statement.matches(UPDATE_CLAUSE_REGEX))) {// DELETE/UPDATE语句，使用JDBC执行
 				Connection con = null;
 				PreparedStatement stmt = null;
@@ -128,7 +128,8 @@ public class ExecuteSqlOperator extends AbstractSqlOperator<ExecuteSql> {
 				}
 				sqlBuffer.append(value.substring(0, i + 1)).append(SQLUtils.COMMA_SPACE);
 				appendDataSource(sqlBuffer, actualDataSource);
-				if (!properties.containsKey(TABLE_NAME) && !actualDataSource.containsKey(TABLE_NAME)) {
+				if (isJDBC(actualDataSource) && !properties.containsKey(TABLE_NAME)
+						&& !actualDataSource.containsKey(TABLE_NAME)) {
 					apppendDefaultTableName(sqlBuffer, script);
 				}
 				sqlBuffer.append(blank.reverse()).append(end);
@@ -143,6 +144,10 @@ public class ExecuteSqlOperator extends AbstractSqlOperator<ExecuteSql> {
 			sqlBuffer.append(")");
 		}
 		return sqlBuffer.toString();
+	}
+
+	private static boolean isJDBC(Map<String, String> dataSource) {
+		return "jdbc".equals(dataSource.get("connector"));
 	}
 
 	/**
@@ -182,8 +187,7 @@ public class ExecuteSqlOperator extends AbstractSqlOperator<ExecuteSql> {
 	private static String wrapValue(String value) {
 		if (StringUtils.isBlank(value)) {
 			return SINGLE_QUOTATION_MARK + value + SINGLE_QUOTATION_MARK;
-		} else if (isString(value) || StringUtils.isNumber(value) || "true".equalsIgnoreCase(value)
-				|| "false".equalsIgnoreCase(value) || isDuration(value)) {
+		} else if (isString(value) || StringUtils.isNumber(value) || isDuration(value)) {
 			return value;
 		}
 		return wrapString(value);

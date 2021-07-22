@@ -65,8 +65,15 @@ public abstract class FlinkJobsContext {
 	static {
 		try {
 			defaultProperties = PropertiesLoaderUtils.loadFromClassPath(DEFAULT_STRATEGIES_PATH);
+		} catch (Exception e) {
+			defaultProperties = new Properties();
+		}
+		try {
 			defaultProperties.putAll(
 					PropertiesLoaderUtils.loadFromClassPath(defaultProperties.getProperty(CONTEXT_LOCATION_KEY)));
+		} catch (Exception e) {
+		}
+		try {
 			configProperties = PropertiesLoaderUtils
 					.loadFromClassPath(defaultProperties.getProperty(CONFIG_LOCATION_KEY));
 			String key, name, param;
@@ -92,6 +99,7 @@ public abstract class FlinkJobsContext {
 				}
 			}
 		} catch (Exception e) {
+			configProperties = new Properties();
 		}
 	}
 
