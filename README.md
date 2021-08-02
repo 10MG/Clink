@@ -24,9 +24,7 @@ flink-jobs为基于Flink的Java应用程序提供快速集成的能力，可通�
 bootstrap.servers=192.168.10.40:9092,192.168.10.78:9092,192.168.10.153:9092
 topics=topic1,topic2
 auto.offset.reset=latest
-group.id.prefix=flink-jobs
-defaultService=helloWordService
-defaultRuntimeMode=BATCH
+group.id=flink-jobs
 ```
 
 3.  编写配置类
@@ -37,11 +35,11 @@ public class Context {
 
 	@Bean
 	public Properties kafkaProperties(@Value("${bootstrap.servers}") String servers,
-			@Value("${group.id.prefix}") String groupIdPrefix, @Value("${auto.offset.reset}") String autoOffsetReset) {
+			@Value("${auto.offset.reset}") String autoOffsetReset, @Value("${group.id}") String groupId) {
 		Properties kafkaProperties = new Properties();
 		kafkaProperties.put("bootstrap.servers", servers);
-		kafkaProperties.put("group.id.prefix", groupIdPrefix);
 		kafkaProperties.put("auto.offset.reset", autoOffsetReset);
+		kafkaProperties.put("group.id", groupId);
 		return kafkaProperties;
 	}
 
@@ -51,27 +49,11 @@ public class Context {
 4.  编写应用入口类
 
 ```
-@ComponentScan("cn.tenmg.flink.jobs")
+@ComponentScan("com.sinochem.flink.jobs")
 public class App extends FlinkJobsRunner implements CommandLineRunner {
-
-	@Value("${defaultService}")
-	private String defaultService;
-
-	@Value("${defaultRuntimeMode}")
-	private String defaultRuntimeMode;
 
 	@Autowired
 	private ApplicationContext springContext;
-
-	@Override
-	protected String getDefaultService() {
-		return defaultService;
-	}
-
-	@Override
-	protected RuntimeExecutionMode getDefaultRuntimeMode() {
-		return RuntimeExecutionMode.valueOf(defaultRuntimeMode);
-	}
 
 	@Override
 	protected StreamService getStreamService(String serviceName) {
@@ -89,7 +71,7 @@ public class App extends FlinkJobsRunner implements CommandLineRunner {
 
 ```
 @Service
-public class HelloWordService implements StreamService {
+public class HelloWorldService implements StreamService {
 
 	/**
 	 * 
@@ -103,13 +85,9 @@ public class HelloWordService implements StreamService {
 	private String topics;
 
 	@Override
-	public void run(StreamExecutionEnvironment env, Params params) throws Exception {
+	public void run(StreamExecutionEnvironment env, Arguments arguments) throws Exception {
 		DataStream<String> stream;
-		if (RuntimeExecutionMode.STREAMING.equals(params.getRuntimeMode())) {
-			Properties properties = new Properties();
-			properties.putAll(kafkaProperties);
-			properties.setProperty("group.id", kafkaProperties.getProperty("group.id.prefix").concat("helloword"));
-			properties.remove("group.id.prefix");
+		if (RuntimeExecutionMode.STREAMING.equals(arguments.getRuntimeMode())) {
 			stream = env.addSource(new FlinkKafkaConsumer<String>(Arrays.asList(topics.split(",")),
 					new SimpleStringSchema(), kafkaProperties));
 		} else {
@@ -125,6 +103,6 @@ public class HelloWordService implements StreamService {
 
 - 在IDE环境中，可直接运行App类启动flink-jobs应用程序；
 
-- 也可打包后，通过命令行提交给flink集群执行（通常在pom.xml配置org.apache.maven.plugins.shade.resource.ManifestResourceTransformer的mainClass为App这个类，请注意是完整类名）；
+- 也可打包后，通过命令行提交给flink集群执行（通常在pom.xml配置org.apache.maven.plugins.shade.resource.ManifestResourceTransformer的mainClass为App这个类，请注意是完整类名）：flink run /yourpath/yourfile.jar "{\"serviceName\":\"yourServiceName\"}"，更多运行参数详见[运行参数](https://gitee.com/tenmg/flink-jobs/arguments.md)。
 
 - 此外，通过使用[flink-jobs-launcher](https://gitee.com/tenmg/flink-jobs-launcher)可以通过Java API的方式启动flink-jobs应用程序，这样启动操作就可以轻松集成到其他系统中（例如Java Web程序）。
