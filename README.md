@@ -3,7 +3,7 @@
 #### 介绍
 flink-jobs为基于Flink的Java应用程序提供快速集成的能力，可通过继承FlinkJobsRunner快速构建基于SpringBoot的Flink流批一体应用程序。还可以通过使用[flink-jobs-launcher](https://gitee.com/tenmg/flink-jobs-launcher)，实现基于Java API启动flink-jobs应用程序。
 
-#### 使用说明
+#### 起步
 
 以基于SpringBoot的Maven项目为例
 
