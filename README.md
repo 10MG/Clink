@@ -144,7 +144,9 @@ runtimeMode | String | 否 | 运行模式。可选值："BATCH"/"STREAMING"/"AUT
 params      | Object | 否 | 参数查找表。可用于SQL中。
 operates    | Array  | 否 | 操作列表。目前支持类型为Bsh、ExecuteSql和SqlQuery三种操作。
 
-### 类型为Bsh的操作，作用是运行基于Beanshell的java代码，相关属性及说明如下：
+### Bsh操作
+
+Bsh操作的作用是运行基于Beanshell的java代码，相关属性及说明如下：
 
 属性   | 类型 | 是否必需 | 说明
 -------|--------|----|--------
@@ -159,7 +161,9 @@ vars相关属性及说明如下：
 name  | String | 是 | Beanshell中使用的变量名称
 value | String | 否 | 变量对应的值的名称。默认与name相同。flink-jobs会从参数查找表中查找名称为value值的参数值，如果指定参数存在且不是null，则该值作为该参数的值；否则，使用value值作为该变量的值。
 
-### 类型为ExecuteSql的操作，作用是运行基于DSL的SQL代码，相关属性及说明如下：
+### ExecuteSql操作
+
+ExecuteSql操作的作用是运行基于DSL的SQL代码，相关属性及说明如下：
 
 属性       | 类型 | 是否必需 | 说明
 -----------|--------|----|--------
@@ -168,7 +172,8 @@ dataSource | String | 否 | 使用的数据源名称。
 catalog    | String | 否 | 执行SQL使用的Flink SQL的catalog名称。
 script     | String | 否 | 基于[DSL](https://gitee.com/tenmg/dsl)的SQL脚本。
 
-### 类型为SqlQuery的操作，作用是运行基于DSL的SQL查询代码，相关属性及说明如下：
+### SqlQuery操作
+SqlQuery操作的作用是运行基于DSL的SQL查询代码，相关属性及说明如下：
 
 属性       | 类型 | 是否必需 | 说明
 -----------|--------|----|--------
