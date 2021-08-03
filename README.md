@@ -107,7 +107,7 @@ public class HelloWorldService implements StreamService {
 
 - 此外，通过使用[flink-jobs-launcher](https://gitee.com/tenmg/flink-jobs-launcher)可以通过Java API的方式启动flink-jobs应用程序，这样启动操作就可以轻松集成到其他系统中（例如Java Web程序）。
 
-# 运行参数
+#### 运行参数
 flink-jobs应用程序的运行参数通过JSON格式的字符串（注意，如果是命令行运行，JSON格式字符串前后需加上双引号或单引号，JSON格式字符串内部的双引号或单引号则需要转义）或者一个.json文件提供，结构如下：
 
 ```
@@ -135,7 +135,7 @@ flink-jobs应用程序的运行参数通过JSON格式的字符串（注意，如
 }
 ```
 
-## JSON运行参数相关属性及说明如下：
+##### JSON运行参数相关属性及说明如下：
 
 属性        | 类型 | 是否必需 | 说明
 ------------|--------|----|--------
@@ -144,7 +144,7 @@ runtimeMode | String | 否 | 运行模式。可选值："BATCH"/"STREAMING"/"AUT
 params      | Object | 否 | 参数查找表。可用于SQL中。
 operates    | Array  | 否 | 操作列表。目前支持类型为Bsh、ExecuteSql和SqlQuery三种操作。
 
-### Bsh操作
+###### Bsh操作
 
 Bsh操作的作用是运行基于Beanshell的java代码，相关属性及说明如下：
 
@@ -161,7 +161,7 @@ vars相关属性及说明如下：
 name  | String | 是 | Beanshell中使用的变量名称
 value | String | 否 | 变量对应的值的名称。默认与name相同。flink-jobs会从参数查找表中查找名称为value值的参数值，如果指定参数存在且不是null，则该值作为该参数的值；否则，使用value值作为该变量的值。
 
-### ExecuteSql操作
+###### ExecuteSql操作
 
 ExecuteSql操作的作用是运行基于DSL的SQL代码，相关属性及说明如下：
 
@@ -172,7 +172,7 @@ dataSource | String | 否 | 使用的数据源名称。
 catalog    | String | 否 | 执行SQL使用的Flink SQL的catalog名称。
 script     | String | 否 | 基于[DSL](https://gitee.com/tenmg/dsl)的SQL脚本。
 
-### SqlQuery操作
+###### SqlQuery操作
 
 SqlQuery操作的作用是运行基于DSL的SQL查询代码，相关属性及说明如下：
 
