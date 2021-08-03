@@ -173,6 +173,7 @@ catalog    | String | 否 | 执行SQL使用的Flink SQL的catalog名称。
 script     | String | 否 | 基于[DSL](https://gitee.com/tenmg/dsl)的SQL脚本。
 
 ### SqlQuery操作
+
 SqlQuery操作的作用是运行基于DSL的SQL查询代码，相关属性及说明如下：
 
 属性       | 类型 | 是否必需 | 说明
