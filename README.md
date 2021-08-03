@@ -137,7 +137,7 @@ flink-jobs应用程序的运行参数通过JSON格式的字符串（注意，如
 
 #### JSON运行参数相关属性及说明如下：
 
-属性        | 类型 | 是否必需 | 说明
+属性        | 类型   | 必需 | 说明
 ------------|--------|----|--------
 serviceName | String | 否 | 运行的服务名称。该名称由用户定义并实现根据服务名称获取服务的方法，flink-jobs则在运行时调用并确定运行的实际服务。在运行SQL任务时，通常指定operates，而无需指定serviceName。
 runtimeMode | String | 否 | 运行模式。可选值："BATCH"/"STREAMING"/"AUTOMATIC"，相关含义详见Flink官方文档。
@@ -148,7 +148,7 @@ operates    | Array  | 否 | 操作列表。目前支持类型为Bsh、ExecuteSq
 
 Bsh操作的作用是运行基于Beanshell的java代码，相关属性及说明如下：
 
-属性   | 类型 | 是否必需 | 说明
+属性   | 类型   | 必需 | 说明
 -------|--------|----|--------
 saveAs | String | 否 | 操作结果另存为一个新的变量的名称。变量的值是基于Beanshell的java代码的返回值（通过`return xxx;`表示）。
 vars   | Array  | 否 | 参数声明列表。
@@ -156,7 +156,7 @@ java   | String | 否 | java代码。注意：使用泛型时，不能使用尖�
 
 vars相关属性及说明如下：
 
-属性   | 类型 | 是否必需 | 说明
+属性   | 类型  | 必需 | 说明
 ------|--------|----|--------
 name  | String | 是 | Beanshell中使用的变量名称
 value | String | 否 | 变量对应的值的名称。默认与name相同。flink-jobs会从参数查找表中查找名称为value值的参数值，如果指定参数存在且不是null，则该值作为该参数的值；否则，使用value值作为该变量的值。
@@ -165,7 +165,7 @@ value | String | 否 | 变量对应的值的名称。默认与name相同。flink
 
 ExecuteSql操作的作用是运行基于DSL的SQL代码，相关属性及说明如下：
 
-属性       | 类型 | 是否必需 | 说明
+属性       | 类型  | 必需 | 说明
 -----------|--------|----|--------
 saveAs     | String | 否 | 操作结果另存为一个新的变量的名称。变量的值是flink的`tableEnv.executeSql(statement);`的返回值。
 dataSource | String | 否 | 使用的数据源名称。
@@ -176,7 +176,7 @@ script     | String | 否 | 基于[DSL](https://gitee.com/tenmg/dsl)的SQL脚本
 
 SqlQuery操作的作用是运行基于DSL的SQL查询代码，相关属性及说明如下：
 
-属性       | 类型 | 是否必需 | 说明
+属性       | 类型  | 必需 | 说明
 -----------|--------|----|--------
 saveAs     | String | 否 | 查询结果另存为临时表的表名及操作结果另存为一个新的变量的名称。变量的值是flink的`tableEnv.executeSql(statement);`的返回值。
 catalog    | String | 否 | 执行SQL使用的Flink SQL的catalog名称。
