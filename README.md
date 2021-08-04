@@ -142,7 +142,7 @@ flink-jobs应用程序的运行参数通过JSON格式的字符串（注意，如
 serviceName | `String`             | 否 | 运行的服务名称。该名称由用户定义并实现根据服务名称获取服务的方法，flink-jobs则在运行时调用并确定运行的实际服务。在运行SQL任务时，通常指定operates，而无需指定serviceName。
 runtimeMode | `String`             | 否 | 运行模式。可选值："BATCH"/"STREAMING"/"AUTOMATIC"，相关含义详见[Flink](https://flink.apache.org)官方文档。
 params      | `Map<String,Object>` | 否 | 参数查找表。通常可用于SQL中，也可以在自定义服务中通过arguments参数获取。
-operates    | `List<Operate>`      | 否 | 操作列表。目前支持类型为Bsh、ExecuteSql和SqlQuery三种操作。
+operates    | `List<Operate>`      | 否 | 操作列表。目前支持类型为[Bsh](https://gitee.com/tenmg/flink-jobs#bsh%E6%93%8D%E4%BD%9C)、[ExecuteSql](https://gitee.com/tenmg/flink-jobs#executesql%E6%93%8D%E4%BD%9C)和[SqlQuery](https://gitee.com/tenmg/flink-jobs#sqlquery%E6%93%8D%E4%BD%9C)三种操作。
 
 ##### Bsh操作
 
