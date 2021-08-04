@@ -188,6 +188,8 @@ script     | `String` | 否 | 基于[DSL](https://gitee.com/tenmg/dsl)的SQL脚�
 
 #### 运行自定义服务
 
+以下为一个自定义服务任务XML配置文件：
+
 ```
 <?xml version="1.0" encoding="UTF-8"?>
 <flink-jobs xmlns="http://www.10mg.cn/schema/flink-jobs"
@@ -197,7 +199,9 @@ script     | `String` | 否 | 基于[DSL](https://gitee.com/tenmg/dsl)的SQL脚�
 </flink-jobs>
 ```
 
-#### 运行SQL任务
+#### 运行批处理SQL
+
+以下为一个简单订单量统计SQL批处理任务XML配置文件：
 
 ```
 <?xml version="1.0" encoding="UTF-8"?>
@@ -208,7 +212,7 @@ script     | `String` | 否 | 基于[DSL](https://gitee.com/tenmg/dsl)的SQL脚�
 	<!--任务运行参数 -->
 	<params>
 		<param name="beginDate">2021-01-01</param>
-		<param name="endDate">2021-07-02</param>
+		<param name="endDate">2021-07-01</param>
 	</params>
 
 	<!-- 使用名为hivedb的数据源配置创建名为hive的catalog -->
@@ -261,7 +265,9 @@ script     | `String` | 否 | 基于[DSL](https://gitee.com/tenmg/dsl)的SQL脚�
 </flink-jobs>
 ```
 
-#### 通过Debezium实现异构数据库同步
+#### 运行流处理SQL
+
+以下为通过Debezium实现异构数据库同步任务XML配置文件：
 
 ```
 <?xml version="1.0" encoding="UTF-8"?>
