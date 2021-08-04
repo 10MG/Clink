@@ -181,3 +181,225 @@ SqlQuery操作的作用是运行基于DSL的SQL查询代码，相关属性及说
 saveAs     | `String` | 否 | 查询结果另存为临时表的表名及操作结果另存为一个新的变量的名称。变量的值是flink的`tableEnv.executeSql(statement);`的返回值。
 catalog    | `String` | 否 | 执行SQL使用的Flink SQL的catalog名称。
 script     | `String` | 否 | 基于[DSL](https://gitee.com/tenmg/dsl)的SQL脚本。
+
+### 使用[flink-jobs-launcher](https://gitee.com/tenmg/flink-jobs-launcher)提交flink-jobs应用程序
+
+[flink-jobs-launcher](https://gitee.com/tenmg/flink-jobs-launcher)实现了使用XML配置文件来管理flink-jobs任务，这样开发Flink SQL任务会显得非常简单；同时，用户自定义的flink-jobs服务也可以被更轻松得集成到其他系统中。XML文件具有良好的可读性，并且在IDE环境下能够对配置进行自动提示。以下介绍几种通过XML管理的flink-jobs任务：
+
+#### 运行自定义服务
+
+```
+<?xml version="1.0" encoding="UTF-8"?>
+<flink-jobs xmlns="http://www.10mg.cn/schema/flink-jobs"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.10mg.cn/schema/flink-jobs http://www.10mg.cn/schema/flink-jobs.xsd"
+	jar="/yourPath/yourJar.jar" serviceName="yourServiceName">
+</flink-jobs>
+```
+
+#### 运行SQL任务
+
+```
+<?xml version="1.0" encoding="UTF-8"?>
+<flink-jobs xmlns="http://www.10mg.cn/schema/flink-jobs"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.10mg.cn/schema/flink-jobs http://www.10mg.cn/schema/flink-jobs.xsd"
+	jar="/yourPath/yourJar.jar">
+	<!--任务运行参数 -->
+	<params>
+		<param name="beginDate">2021-01-01</param>
+		<param name="endDate">2021-07-02</param>
+	</params>
+
+	<!-- 使用名为hivedb的数据源配置创建名为hive的catalog -->
+	<execute-sql dataSource="hivedb">
+		<![CDATA[
+			create catalog hive
+		]]>
+	</execute-sql>
+	<!--加载hive模块 -->
+	<execute-sql>
+		<![CDATA[
+			load module hive
+		]]>
+	</execute-sql>
+	<!--加载hive,core模块 -->
+	<execute-sql>
+		<![CDATA[
+			use modules hive,core
+		]]>
+	</execute-sql>
+	<!-- 使用名为pgdb的数据源配置在创建表order_stats_daily（如果源表名和建表语句指定的表名不一致，可以通过 WITH ('table-name' 
+		= 'actrual_table_name') 来指定） -->
+	<execute-sql dataSource="pgdb">
+		<![CDATA[
+			CREATE TABLE order_stats_daily (
+			  stats_date DATE,
+			  `count` BIGINT,
+			  PRIMARY KEY (stats_date) NOT ENFORCED
+			) WITH ('sink.buffer-flush.max-rows' = '0')
+		]]>
+	</execute-sql>
+	<!-- 使用hive catalog查询，并将结果存为临时表tmp，tmp放在默认的default_catalog中 -->
+	<sql-query saveAs="tmp" catalog="hive">
+		<![CDATA[
+			select cast(to_date(o.business_date) as date) stats_date, count(*) `count` from odc_order_info_par o where o.business_date >= :beginDate and o.business_date < :endDate group by cast(to_date(o.business_date) as date)
+		]]>
+	</sql-query>
+	<!-- 删除原有数据order_stats_daily（FLINK SQL不支持DELETE，此处执行的是JDBC）-->
+	<execute-sql dataSource="pgdb">
+		<![CDATA[
+			delete from order_stats_daily where stats_date >= :beginDate and stats_date < :endDate
+		]]>
+	</execute-sql>
+	<!-- 数据插入 -->
+	<execute-sql>
+		<![CDATA[
+			INSERT INTO order_stats_daily(stats_date,`count`) SELECT stats_date, `count` FROM tmp
+		]]>
+	</execute-sql>
+</flink-jobs>
+```
+
+#### 通过Debezium实现异构数据库同步
+
+```
+<?xml version="1.0" encoding="UTF-8"?>
+<flink-jobs xmlns="http://www.10mg.cn/schema/flink-jobs"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.10mg.cn/schema/flink-jobs http://www.10mg.cn/schema/flink-jobs.xsd">
+	<!-- Flink内创建SOURCE数据库 -->
+	<execute-sql>
+		<![CDATA[
+		CREATE DATABASE SOURCE
+		]]>
+	</execute-sql>
+	<!-- 使用SOURCE数据库执行Flink SQL -->
+	<execute-sql>
+		<![CDATA[
+		USE SOURCE
+		]]>
+	</execute-sql>
+	<!-- 定义名为kafka数据源的订单明细表 -->
+	<execute-sql dataSource="kafka">
+		<![CDATA[
+		CREATE TABLE KAFKA_ORDER_DETAIL (
+		  DETAIL_ID STRING,
+		  ORDER_ID STRING,
+		  ITEM_ID STRING,
+		  ITEM_CODE STRING,
+		  ITEM_NAME STRING,
+		  ITEM_TYPE STRING,
+		  ITEM_SPEC STRING,
+		  ITEM_UNIT STRING,
+		  ITEM_PRICE DECIMAL(12, 2),
+		  ITEM_QUANTITY DECIMAL(12, 2),
+		  SALE_PRICE DECIMAL(12, 2),
+		  SALE_AMOUNT DECIMAL(12, 2),
+		  SALE_DISCOUNT DECIMAL(12, 2),
+		  SALE_MODE STRING,
+		  CURRENCY STRING,
+		  SUPPLY_TYPE STRING,
+		  SUPPLY_CODE STRING,
+		  REMARKS STRING,
+		  CREATE_BY STRING,
+		  CREATE_TIME BIGINT,
+		  UPDATE_BY STRING,
+		  UPDATE_TIME BIGINT,
+		  OIL_GUN STRING,
+		  EVENT_TIME TIMESTAMP(3) METADATA FROM 'value.source.timestamp' VIRTUAL,
+		  PRIMARY KEY (DETAIL_ID) NOT ENFORCED
+		) WITH ('topic' = 'kaorder1.kaorder.order_detail', 'properties.group.id' = 'flink-jobs_source_order_detail')
+		]]>
+	</execute-sql>
+	<!-- 定义名为source数据源的订单明细表 -->
+	<execute-sql dataSource="source">
+		<![CDATA[
+		CREATE TABLE ORDER_DETAIL (
+		  DETAIL_ID STRING,
+		  ORDER_ID STRING,
+		  ITEM_ID STRING,
+		  ITEM_CODE STRING,
+		  ITEM_NAME STRING,
+		  ITEM_TYPE STRING,
+		  ITEM_SPEC STRING,
+		  ITEM_UNIT STRING,
+		  ITEM_PRICE DECIMAL(12, 2),
+		  ITEM_QUANTITY DECIMAL(12, 2),
+		  SALE_PRICE DECIMAL(12, 2),
+		  SALE_AMOUNT DECIMAL(12, 2),
+		  SALE_DISCOUNT DECIMAL(12, 2),
+		  SALE_MODE STRING,
+		  CURRENCY STRING,
+		  SUPPLY_TYPE STRING,
+		  SUPPLY_CODE STRING,
+		  REMARKS STRING,
+		  CREATE_BY STRING,
+		  CREATE_TIME TIMESTAMP(3),
+		  UPDATE_BY STRING,
+		  UPDATE_TIME TIMESTAMP(3),
+		  OIL_GUN STRING,
+		  EVENT_TIME TIMESTAMP(3),
+		  PRIMARY KEY (DETAIL_ID) NOT ENFORCED
+		)
+		]]>
+	</execute-sql>
+	<!-- 将kafka订单明细数据插入到source数据库订单明细表中 -->
+	<execute-sql>
+		<![CDATA[
+		INSERT INTO ORDER_DETAIL(
+		  DETAIL_ID,
+		  ORDER_ID,
+		  ITEM_ID,
+		  ITEM_CODE,
+		  ITEM_NAME,
+		  ITEM_TYPE,
+		  ITEM_SPEC,
+		  ITEM_UNIT,
+		  ITEM_PRICE,
+		  ITEM_QUANTITY,
+		  SALE_PRICE,
+		  SALE_AMOUNT,
+		  SALE_DISCOUNT,
+		  SALE_MODE,
+		  CURRENCY,
+		  SUPPLY_TYPE,
+		  SUPPLY_CODE,
+		  REMARKS,
+		  CREATE_BY,
+		  CREATE_TIME,
+		  UPDATE_BY,
+		  UPDATE_TIME,
+		  OIL_GUN,
+		  EVENT_TIME
+		)
+		SELECT
+		  DETAIL_ID,
+		  ORDER_ID,
+		  ITEM_ID,
+		  ITEM_CODE,
+		  ITEM_NAME,
+		  ITEM_TYPE,
+		  ITEM_SPEC,
+		  ITEM_UNIT,
+		  ITEM_PRICE,
+		  ITEM_QUANTITY,
+		  SALE_PRICE,
+		  SALE_AMOUNT,
+		  SALE_DISCOUNT,
+		  SALE_MODE,
+		  CURRENCY,
+		  SUPPLY_TYPE,
+		  SUPPLY_CODE,
+		  REMARKS,
+		  CREATE_BY,
+		  TO_TIMESTAMP(FROM_UNIXTIME(CREATE_TIME/1000, 'yyyy-MM-dd HH:mm:ss')) CREATE_TIME,
+		  UPDATE_BY,
+		  TO_TIMESTAMP(FROM_UNIXTIME(CREATE_TIME/1000, 'yyyy-MM-dd HH:mm:ss')) UPDATE_TIME,
+		  OIL_GUN,
+		  EVENT_TIME
+		FROM KAFKA_ORDER_DETAIL
+		]]>
+	</execute-sql>
+</flink-jobs>
+```
