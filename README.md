@@ -137,24 +137,24 @@ flink-jobs应用程序的运行参数通过JSON格式的字符串（注意，如
 
 #### 运行参数相关属性及说明：
 
-属性        | 类型   | 必需 | 说明
-------------|--------|----|--------
-serviceName | String | 否 | 运行的服务名称。该名称由用户定义并实现根据服务名称获取服务的方法，flink-jobs则在运行时调用并确定运行的实际服务。在运行SQL任务时，通常指定operates，而无需指定serviceName。
-runtimeMode | String | 否 | 运行模式。可选值："BATCH"/"STREAMING"/"AUTOMATIC"，相关含义详见[Flink](https://flink.apache.org)官方文档。
-params      | Object | 否 | 参数查找表。可用于SQL中。
-operates    | Array  | 否 | 操作列表。目前支持类型为Bsh、ExecuteSql和SqlQuery三种操作。
+属性        | 类型                | 必需 | 说明
+------------|--------------------|----|--------
+serviceName | String             | 否 | 运行的服务名称。该名称由用户定义并实现根据服务名称获取服务的方法，flink-jobs则在运行时调用并确定运行的实际服务。在运行SQL任务时，通常指定operates，而无需指定serviceName。
+runtimeMode | String             | 否 | 运行模式。可选值："BATCH"/"STREAMING"/"AUTOMATIC"，相关含义详见[Flink](https://flink.apache.org)官方文档。
+params      | Map<String,Object> | 否 | 参数查找表。可用于SQL中。
+operates    | Array              | 否 | 操作列表。目前支持类型为Bsh、ExecuteSql和SqlQuery三种操作。
 
 ##### Bsh操作
 
 Bsh操作的作用是运行基于Beanshell的java代码，相关属性及说明如下：
 
-属性   | 类型   | 必需 | 说明
--------|--------|----|--------
-saveAs | String | 否 | 操作结果另存为一个新的变量的名称。变量的值是基于Beanshell的java代码的返回值（通过`return xxx;`表示）。
-vars   | Array  | 否 | 参数声明列表。
-java   | String | 否 | java代码。注意：使用泛型时，不能使用尖括号声明泛型。例如使用Map不能使用“Map<String , String> map = new HashMap<String , String>();”，但可以使用“Map map = new HashMap();”。
+属性   | 类型      | 必需 | 说明
+-------|-----------|----|--------
+saveAs | String    | 否 | 操作结果另存为一个新的变量的名称。变量的值是基于Beanshell的java代码的返回值（通过`return xxx;`表示）。
+vars   | List<Var> | 否 | 参数声明列表。
+java   | String    | 否 | java代码。注意：使用泛型时，不能使用尖括号声明泛型。例如使用Map不能使用“Map<String , String> map = new HashMap<String , String>();”，但可以使用“Map map = new HashMap();”。
 
-vars相关属性及说明如下：
+Var相关属性及说明如下：
 
 属性   | 类型  | 必需 | 说明
 ------|--------|----|--------
