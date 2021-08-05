@@ -10,7 +10,7 @@ import java.util.Iterator;
 import java.util.Map;
 
 import cn.tenmg.dsl.NamedScript;
-import cn.tenmg.dsl.utils.DSLUtils;
+import cn.tenmg.dsl.utils.NamedScriptUtils;
 import cn.tenmg.dsl.utils.StringUtils;
 
 /**
@@ -39,17 +39,17 @@ public abstract class SQLUtils {
 			params = new HashMap<String, Object>();
 		}
 		int len = source.length(), i = 0, backslashes = 0;
-		char a = DSLUtils.BLANK_SPACE, b = DSLUtils.BLANK_SPACE;
+		char a = NamedScriptUtils.BLANK_SPACE, b = NamedScriptUtils.BLANK_SPACE;
 		boolean isString = false;// 是否在字符串区域
 		boolean isParam = false;// 是否在参数区域
 		StringBuilder sqlBuilder = new StringBuilder(), paramName = new StringBuilder();
 		while (i < len) {
 			char c = source.charAt(i);
 			if (isString) {
-				if (c == DSLUtils.BACKSLASH) {
+				if (c == NamedScriptUtils.BACKSLASH) {
 					backslashes++;
 				} else {
-					if (DSLUtils.isStringEnd(a, b, c, backslashes)) {// 字符串区域结束
+					if (NamedScriptUtils.isStringEnd(a, b, c, backslashes)) {// 字符串区域结束
 						isString = false;
 					}
 					backslashes = 0;
@@ -60,7 +60,7 @@ public abstract class SQLUtils {
 					isString = true;
 					sqlBuilder.append(c);
 				} else if (isParam) {// 处于参数区域
-					if (DSLUtils.isParamChar(c)) {
+					if (NamedScriptUtils.isParamChar(c)) {
 						paramName.append(c);
 					} else {
 						isParam = false;// 参数区域结束
@@ -69,7 +69,7 @@ public abstract class SQLUtils {
 						sqlBuilder.append(c);
 					}
 				} else {
-					if (DSLUtils.isParamBegin(b, c)) {
+					if (NamedScriptUtils.isParamBegin(b, c)) {
 						isParam = true;// 参数区域开始
 						paramName.setLength(0);
 						paramName.append(c);

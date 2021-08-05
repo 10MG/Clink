@@ -51,11 +51,13 @@ public abstract class FlinkJobsContext {
 
 	private static final Map<String, Map<String, String>> dataSources = new HashMap<String, Map<String, String>>();
 
+	private static final Map<String, String> tableExecConfigs = new HashMap<String, String>();
+
 	private static final String DEFAULT_STRATEGIES_PATH = "flink-jobs-context-loader.properties",
 			CONFIG_LOCATION_KEY = "config.location", CONTEXT_LOCATION_KEY = "context.location", CONFIG_SPLITER = ".",
 			DATASOURCE_PREFIX = "datasource.",
 			DATASOURCE_REGEX = "^" + DATASOURCE_PREFIX.replaceAll("\\.", "\\\\.") + "([\\S]+\\.){0,1}[^\\.]+$",
-			EXECUTION_ENVIRONMENT = "ExecutionEnvironment";
+			EXECUTION_ENVIRONMENT = "ExecutionEnvironment", TABLE_EXEC_CONFIG_KEY_REGEX = "^table\\.exec[\\s\\S]*";
 
 	private static final int CONFIG_SPLITER_LEN = CONFIG_SPLITER.length(),
 			DATASOURCE_PREFIX_LEN = DATASOURCE_PREFIX.length();
@@ -96,6 +98,8 @@ public abstract class FlinkJobsContext {
 						}
 						dataSource.put(param, value.toString());
 					}
+				} else if (key.matches(TABLE_EXEC_CONFIG_KEY_REGEX)) {
+					tableExecConfigs.put(key, value.toString());
 				}
 			}
 		} catch (Exception e) {
@@ -226,6 +230,15 @@ public abstract class FlinkJobsContext {
 							+ defaultProperties.getProperty(CONFIG_LOCATION_KEY));
 		}
 		return dataSource;
+	}
+
+	/**
+	 * 获取Table API & SQL的运行配置
+	 * 
+	 * @return 返回Table API & SQL的运行配置
+	 */
+	public static Map<String, String> getTableExecConfigs() {
+		return tableExecConfigs;
 	}
 
 	/**

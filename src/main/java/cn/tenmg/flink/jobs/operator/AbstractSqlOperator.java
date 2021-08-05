@@ -1,8 +1,11 @@
 package cn.tenmg.flink.jobs.operator;
 
 import java.lang.reflect.ParameterizedType;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.Map.Entry;
 
+import org.apache.flink.configuration.Configuration;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
 
@@ -47,6 +50,15 @@ public abstract class AbstractSqlOperator<T extends SqlQuery> implements Operato
 				tableEnv.useCatalog(catalog);
 			}
 		}
+
+		// 添加配置
+		Map<String, String> tableExecConfigs = FlinkJobsContext.getTableExecConfigs();
+		Configuration configuration = tableEnv.getConfig().getConfiguration();
+		for (Iterator<Entry<String, String>> it = tableExecConfigs.entrySet().iterator(); it.hasNext();) {
+			Entry<String, String> entry = it.next();
+			configuration.setString(entry.getKey(), entry.getValue());
+		}
+
 		if (saveAs == null) {
 			execute(tableEnv, JSON.parseObject(config, type), params);
 		} else {
