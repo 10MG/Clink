@@ -2,11 +2,13 @@ package cn.tenmg.flink.jobs.utils;
 
 import java.sql.Time;
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import cn.tenmg.dsl.NamedScript;
@@ -29,6 +31,80 @@ public abstract class SQLUtils {
 
 	public static final String COMMA_SPACE = ", ";
 
+	/**
+	 * 将指定的含命名参数的脚本转换为JDBC可执行的SQL对象，该对象内含SQL脚本及对应的参数列表
+	 * 
+	 * @param namedScript
+	 *            含命名参数的脚本
+	 * @return 返回JDBC可执行的SQL对象，含SQL脚本及对应的参数列表
+	 */
+	public static JDBC toJDBC(NamedScript namedScript) {
+		List<Object> paramList = new ArrayList<Object>();
+		String script = namedScript.getScript();
+		if (StringUtils.isBlank(script)) {
+			return new JDBC(script, paramList);
+		}
+		Map<String, Object> params = namedScript.getParams();
+		if (params == null) {
+			params = new HashMap<String, Object>();
+		}
+		int len = script.length(), i = 0, backslashes = 0;
+		char a = NamedScriptUtils.BLANK_SPACE, b = NamedScriptUtils.BLANK_SPACE;
+		boolean isString = false;// 是否在字符串区域
+		boolean isParam = false;// 是否在参数区域
+		StringBuilder sql = new StringBuilder(), paramName = new StringBuilder();
+		while (i < len) {
+			char c = script.charAt(i);
+			if (isString) {
+				if (c == NamedScriptUtils.BACKSLASH) {
+					backslashes++;
+				} else {
+					if (NamedScriptUtils.isStringEnd(a, b, c, backslashes)) {// 字符串区域结束
+						isString = false;
+					}
+					backslashes = 0;
+				}
+				sql.append(c);
+			} else {
+				if (c == SINGLE_QUOTATION_MARK) {// 字符串区域开始
+					isString = true;
+					sql.append(c);
+				} else if (isParam) {// 处于参数区域
+					if (NamedScriptUtils.isParamChar(c)) {
+						paramName.append(c);
+					} else {
+						isParam = false;// 参数区域结束
+						paramEnd(params, sql, paramName, paramList);
+						sql.append(c);
+					}
+				} else {
+					if (NamedScriptUtils.isParamBegin(b, c)) {
+						isParam = true;// 参数区域开始
+						paramName.setLength(0);
+						paramName.append(c);
+						sql.setCharAt(sql.length() - 1, '?');// “:”替换为“?”
+					} else {
+						sql.append(c);
+					}
+				}
+			}
+			a = b;
+			b = c;
+			i++;
+		}
+		if (isParam) {
+			paramEnd(params, sql, paramName, paramList);
+		}
+		return new JDBC(sql.toString(), paramList);
+	}
+
+	/**
+	 * 将指定的含命名参数的脚本转换为Flink SQL
+	 * 
+	 * @param namedScript
+	 *            含命名参数的脚本
+	 * @return 返回Flink SQL
+	 */
 	public static String toSQL(NamedScript namedScript) {
 		String source = namedScript.getScript();
 		if (StringUtils.isBlank(source)) {
@@ -88,6 +164,39 @@ public abstract class SQLUtils {
 			parseParam(sqlBuilder, name, params.get(name));
 		}
 		return sqlBuilder.toString();
+	}
+
+	public static class JDBC {
+
+		private String statement;
+
+		private List<Object> params;
+
+		public String getStatement() {
+			return statement;
+		}
+
+		public void setStatement(String statement) {
+			this.statement = statement;
+		}
+
+		public List<Object> getParams() {
+			return params;
+		}
+
+		public void setParams(List<Object> params) {
+			this.params = params;
+		}
+
+		public JDBC() {
+			super();
+		}
+
+		public JDBC(String statement, List<Object> params) {
+			super();
+			this.statement = statement;
+			this.params = params;
+		}
 	}
 
 	private static void parseParam(StringBuilder sb, String name, Object value) {
@@ -162,6 +271,46 @@ public abstract class SQLUtils {
 			s = "TO_DATE('" + DateUtils.format(value, DATE_PATTERN) + "', '" + DATE_PATTERN + "')";
 		}
 		sqlBuilder.append(s);
+	}
+
+	private static void paramEnd(Map<String, ?> params, StringBuilder sqlBuilder, StringBuilder paramName,
+			List<Object> paramList) {
+		String name = paramName.toString();
+		Object value = params.get(name);
+		if (value != null) {
+			if (value instanceof Collection<?>) {
+				Collection<?> collection = (Collection<?>) value;
+				if (collection == null || collection.isEmpty()) {
+					paramList.add(null);
+				} else {
+					boolean flag = false;
+					for (Iterator<?> it = collection.iterator(); it.hasNext();) {
+						if (flag) {
+							sqlBuilder.append(", ?");
+						} else {
+							flag = true;
+						}
+						paramList.add(it.next());
+					}
+				}
+			} else if (value instanceof Object[]) {
+				Object[] objects = (Object[]) value;
+				if (objects.length == 0) {
+					paramList.add(null);
+				} else {
+					for (int j = 0; j < objects.length; j++) {
+						if (j > 0) {
+							sqlBuilder.append(", ?");
+						}
+						paramList.add(objects[j]);
+					}
+				}
+			} else {
+				paramList.add(value);
+			}
+		} else {
+			paramList.add(value);
+		}
 	}
 
 }

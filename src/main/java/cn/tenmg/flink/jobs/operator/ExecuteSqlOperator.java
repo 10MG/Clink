@@ -37,7 +37,7 @@ public class ExecuteSqlOperator extends AbstractSqlOperator<ExecuteSql> {
 	private static final Logger log = LogManager.getLogger(ExecuteSqlOperator.class);
 
 	private static final String SINGLE_QUOTATION_MARK = "'", DURATIONS[] = { "d", "h", "m", "s", "ms" },
-			JDBC_PRODUCT_NAME_SPLIT = ":", TABLE_NAME = "table-name",
+			TABLE_NAME = "table-name",
 			/**
 			 * 删除语句正则表达式
 			 */
@@ -64,7 +64,7 @@ public class ExecuteSqlOperator extends AbstractSqlOperator<ExecuteSql> {
 				Connection con = null;
 				PreparedStatement stmt = null;
 				try {
-					loadJDBCDriver(dsConfig);
+					JdbcUtils.loadDriver(dsConfig);
 					con = DriverManager.getConnection(dsConfig.get("url"), dsConfig.get("username"),
 							dsConfig.get("password"));// 获得数据库连接
 					con.setAutoCommit(true);
@@ -248,23 +248,6 @@ public class ExecuteSqlOperator extends AbstractSqlOperator<ExecuteSql> {
 			apppendEquals(sqlBuffer);
 			sqlBuffer.append(wrapString(tableNameBuilder.reverse().toString()));
 		}
-	}
-
-	/**
-	 * 加载JDBC驱动程序
-	 * 
-	 * @param dataSource
-	 *            数据源配置查找表
-	 * @throws ClassNotFoundException
-	 *             未找到驱动类异常
-	 */
-	private static final void loadJDBCDriver(Map<String, String> dataSource) throws ClassNotFoundException {
-		String driver = dataSource.get("driver"), url = dataSource.get("url");
-		if (StringUtils.isBlank(driver)) {
-			String tmp = url.substring(url.indexOf(JDBC_PRODUCT_NAME_SPLIT) + 1);
-			driver = FlinkJobsContext.getDefaultJDBCDriver(tmp.substring(0, tmp.indexOf(JDBC_PRODUCT_NAME_SPLIT)));
-		}
-		Class.forName(driver);
 	}
 
 }
