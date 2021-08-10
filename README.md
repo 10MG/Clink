@@ -146,16 +146,17 @@ operates    | `List<Operate>`      | 否 | 操作列表。目前支持类型为[
 
 Bsh操作的作用是运行基于Beanshell的java代码，相关属性及说明如下：
 
-属性   | 类型      | 必需 | 说明
--------|-----------|----|--------
+属性   | 类型        | 必需 | 说明
+-------|-------------|----|--------
+type   | `String`    | 是 | 操作类型。这里是"Bsh"。
 saveAs | `String`    | 否 | 操作结果另存为一个新的变量的名称。变量的值是基于Beanshell的java代码的返回值（通过`return xxx;`表示）。
 vars   | `List<Var>` | 否 | 参数声明列表。
-java   | `String`    | 否 | java代码。注意：使用泛型时，不能使用尖括号声明泛型。例如，使用Map不能使用“Map<String , String> map = new HashMap<String , String>();”，但可以使用“Map map = new HashMap();”。
+java   | `String`    | 是 | java代码。注意：使用泛型时，不能使用尖括号声明泛型。例如，使用Map不能使用“Map<String , String> map = new HashMap<String , String>();”，但可以使用“Map map = new HashMap();”。
 
 Var相关属性及说明如下：
 
-属性   | 类型  | 必需 | 说明
-------|--------|----|--------
+属性   | 类型    | 必需 | 说明
+------|----------|----|--------
 name  | `String` | 是 | Beanshell中使用的变量名称
 value | `String` | 否 | 变量对应的值的名称。默认与name相同。flink-jobs会从参数查找表中查找名称为value值的参数值，如果指定参数存在且不是null，则该值作为该参数的值；否则，使用value值作为该变量的值。
 
@@ -163,12 +164,13 @@ value | `String` | 否 | 变量对应的值的名称。默认与name相同。fli
 
 ExecuteSql操作的作用是运行基于DSL的SQL代码，相关属性及说明如下：
 
-属性       | 类型  | 必需 | 说明
------------|--------|----|--------
+属性       | 类型     | 必需 | 说明
+-----------|----------|----|--------
+type       | `String` | 是 | 操作类型。这里是"ExecuteSql"。
 saveAs     | `String` | 否 | 操作结果另存为一个新的变量的名称。变量的值是flink的`tableEnv.executeSql(statement);`的返回值。
 dataSource | `String` | 否 | 使用的数据源名称。
 catalog    | `String` | 否 | 执行SQL使用的Flink SQL的catalog名称。
-script     | `String` | 否 | 基于[DSL](https://gitee.com/tenmg/dsl)的SQL脚本。
+script     | `String` | 是 | 基于[DSL](https://gitee.com/tenmg/dsl)的SQL脚本。
 
 #### SqlQuery操作
 
@@ -178,18 +180,19 @@ SqlQuery操作的作用是运行基于DSL的SQL查询代码，相关属性及说
 -----------|--------|----|--------
 saveAs     | `String` | 否 | 查询结果另存为临时表的表名及操作结果另存为一个新的变量的名称。变量的值是flink的`tableEnv.executeSql(statement);`的返回值。
 catalog    | `String` | 否 | 执行SQL使用的Flink SQL的catalog名称。
-script     | `String` | 否 | 基于[DSL](https://gitee.com/tenmg/dsl)的SQL脚本。
+script     | `String` | 是 | 基于[DSL](https://gitee.com/tenmg/dsl)的SQL脚本。
 
 #### Jdbc操作
 
 Jdbc操作的作用是运行基于DSL的JDBC SQL代码，相关属性及说明如下：
 
-属性       | 类型  | 必需 | 说明
------------|--------|----|--------
+属性       | 类型     | 必需 | 说明
+-----------|----------|----|--------
+type       | `String` | 是 | 操作类型。这里是"Jdbc"。
 saveAs     | `String` | 否 | 查询结果另存为临时表的表名及操作结果另存为一个新的变量的名称。变量的值是flink的`tableEnv.executeSql(statement);`的返回值。
 dataSource | `String` | 否 | 使用的数据源名称。
 method     | `String` | 否 | 调用的JDBC方法。默认是"executeLargeUpdate"。
-script     | `String` | 否 | 基于[DSL](https://gitee.com/tenmg/dsl)的SQL脚本。
+script     | `String` | 是 | 基于[DSL](https://gitee.com/tenmg/dsl)的SQL脚本。
 
 ### 使用[flink-jobs-launcher](https://gitee.com/tenmg/flink-jobs-launcher)提交flink-jobs应用程序
 
