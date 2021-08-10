@@ -140,7 +140,7 @@ flink-jobs应用程序的运行参数通过JSON格式的字符串（注意，如
 serviceName | `String`             | 否 | 运行的服务名称。该名称由用户定义并实现根据服务名称获取服务的方法，flink-jobs则在运行时调用并确定运行的实际服务。在运行SQL任务时，通常指定operates，而无需指定serviceName。
 runtimeMode | `String`             | 否 | 运行模式。可选值："BATCH"/"STREAMING"/"AUTOMATIC"，相关含义详见[Flink](https://flink.apache.org)官方文档。
 params      | `Map<String,Object>` | 否 | 参数查找表。通常可用于SQL中，也可以在自定义服务中通过arguments参数获取。
-operates    | `List<Operate>`      | 否 | 操作列表。目前支持类型为[Bsh](#bsh%E6%93%8D%E4%BD%9C)、[ExecuteSql](#executesql%E6%93%8D%E4%BD%9C)和[SqlQuery](#sqlquery%E6%93%8D%E4%BD%9C)三种操作。
+operates    | `List<Operate>`      | 否 | 操作列表。目前支持类型为[Bsh](#bsh%E6%93%8D%E4%BD%9C)、[ExecuteSql](#executesql%E6%93%8D%E4%BD%9C)、[SqlQuery](#sqlquery%E6%93%8D%E4%BD%9C)和[Jdbc](#jdbc%E6%93%8D%E4%BD%9C)四种操作。
 
 #### Bsh操作
 
@@ -178,6 +178,17 @@ SqlQuery操作的作用是运行基于DSL的SQL查询代码，相关属性及说
 -----------|--------|----|--------
 saveAs     | `String` | 否 | 查询结果另存为临时表的表名及操作结果另存为一个新的变量的名称。变量的值是flink的`tableEnv.executeSql(statement);`的返回值。
 catalog    | `String` | 否 | 执行SQL使用的Flink SQL的catalog名称。
+script     | `String` | 否 | 基于[DSL](https://gitee.com/tenmg/dsl)的SQL脚本。
+
+#### Jdbc操作
+
+Jdbc操作的作用是运行基于DSL的JDBC SQL代码，相关属性及说明如下：
+
+属性       | 类型  | 必需 | 说明
+-----------|--------|----|--------
+saveAs     | `String` | 否 | 查询结果另存为临时表的表名及操作结果另存为一个新的变量的名称。变量的值是flink的`tableEnv.executeSql(statement);`的返回值。
+dataSource | `String` | 否 | 使用的数据源名称。
+method     | `String` | 否 | 调用的JDBC方法。默认是"executeLargeUpdate"。
 script     | `String` | 否 | 基于[DSL](https://gitee.com/tenmg/dsl)的SQL脚本。
 
 ### 使用[flink-jobs-launcher](https://gitee.com/tenmg/flink-jobs-launcher)提交flink-jobs应用程序
