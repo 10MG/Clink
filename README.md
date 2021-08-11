@@ -421,7 +421,7 @@ datasource.hivedb.hive-conf-dir=/etc/hive/conf
 		)
 		]]>
 	</execute-sql>
-	<!-- 将kafka订单明细数据插入到source数据库订单明细表中 -->
+	<!-- 将kafka订单明细数据插入到source数据源的订单明细表中 -->
 	<execute-sql>
 		<![CDATA[
 		INSERT INTO ORDER_DETAIL(
