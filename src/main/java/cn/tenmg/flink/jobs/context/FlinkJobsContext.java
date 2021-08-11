@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 
+import org.apache.flink.configuration.Configuration;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
 
@@ -133,6 +134,13 @@ public abstract class FlinkJobsContext {
 		StreamTableEnvironment tableEnv = (StreamTableEnvironment) get(env);
 		if (tableEnv == null) {
 			tableEnv = StreamTableEnvironment.create(env);
+			// 添加配置
+			Map<String, String> tableExecConfigs = FlinkJobsContext.getTableExecConfigs();
+			Configuration configuration = tableEnv.getConfig().getConfiguration();
+			for (Iterator<Entry<String, String>> it = tableExecConfigs.entrySet().iterator(); it.hasNext();) {
+				Entry<String, String> entry = it.next();
+				configuration.setString(entry.getKey(), entry.getValue());
+			}
 			FlinkJobsContext.put(env, tableEnv);
 			FlinkJobsContext.put(tableEnv, tableEnv.getCurrentCatalog());
 		}
