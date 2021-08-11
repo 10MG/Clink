@@ -126,6 +126,16 @@ public abstract class FlinkJobsContext {
 	 * 
 	 * 获取或创建流表环境
 	 * 
+	 * @return 流表环境
+	 */
+	public static StreamTableEnvironment getOrCreateStreamTableEnvironment() {
+		return getOrCreateStreamTableEnvironment(getExecutionEnvironment());
+	}
+
+	/**
+	 * 
+	 * 获取或创建流表环境
+	 * 
 	 * @param env
 	 *            流运行环境
 	 * @return 流表环境
