@@ -194,6 +194,8 @@ dataSource | `String` | 否 | 使用的数据源名称。
 method     | `String` | 否 | 调用的JDBC方法。默认是"executeLargeUpdate"。
 script     | `String` | 是 | 基于[DSL](https://gitee.com/tenmg/dsl)的SQL脚本。
 
+目标JDBC SQL代码是在flink-jobs应用程序的main函数中运行的。
+
 ### 配置文件
 
 默认的配置文件为flink-jobs.properties（注意：需在classpath下），可通过flink-jobs-context-loader.properties配置文件的`config.location`修改配置文件路径和名称。
