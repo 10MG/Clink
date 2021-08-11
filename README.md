@@ -326,7 +326,7 @@ datasource.hivedb.hive-conf-dir=/etc/hive/conf
 			delete from order_stats_daily where stats_date >= :beginDate and stats_date < :endDate
 		]]>
 	</execute-sql>
-	<!-- 数据插入 -->
+	<!-- 数据插入。实际上Flink最终将执行Upsert语法 -->
 	<execute-sql>
 		<![CDATA[
 			INSERT INTO order_stats_daily(stats_date,`count`) SELECT stats_date, `count` FROM tmp
