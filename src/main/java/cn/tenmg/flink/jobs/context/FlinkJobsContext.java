@@ -71,13 +71,13 @@ public abstract class FlinkJobsContext {
 			defaultProperties = new Properties();
 		}
 		try {
-			defaultProperties.putAll(
-					PropertiesLoaderUtils.loadFromClassPath(defaultProperties.getProperty(CONTEXT_LOCATION_KEY)));
+			defaultProperties.putAll(PropertiesLoaderUtils.loadFromClassPath(
+					defaultProperties.getProperty(CONTEXT_LOCATION_KEY, "flink-jobs-context.properties")));
 		} catch (Exception e) {
 		}
 		try {
 			configProperties = PropertiesLoaderUtils
-					.loadFromClassPath(defaultProperties.getProperty(CONFIG_LOCATION_KEY));
+					.loadFromClassPath(defaultProperties.getProperty(CONFIG_LOCATION_KEY, "flink-jobs.properties"));
 			String key, name, param;
 			Object value;
 			Map<String, String> dataSource;
