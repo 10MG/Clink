@@ -194,6 +194,62 @@ dataSource | `String` | 否 | 使用的数据源名称。
 method     | `String` | 否 | 调用的JDBC方法。默认是"executeLargeUpdate"。
 script     | `String` | 是 | 基于[DSL](https://gitee.com/tenmg/dsl)的SQL脚本。
 
+### 配置文件
+
+默认的配置文件为flink-jobs.properties（注意：需在classpath下），可通过flink-jobs-context-loader.properties配置文件的`config.location`修改配置文件路径和名称。
+
+#### 数据源配置
+
+每个数据源有一个唯一的命名，数据源配置以“datasource”为前缀，以“.”作为分隔符，格式为datasource.${name}.${key}=${value}。其中，第一和第二个“.”符号之间的是数据源名称，第二个“.”符号之后和“=”之前的是该数据源具体的配置项，“=”之后的是该配置项的值。数据源的配置项与[Flink](https://flink.apache.org)保持一致，以下给出部分常用数据源配置示例：
+
+```
+#FlinkSQL数据源配置
+#Debezium
+#配置名称为kafka的数据源
+datasource.kafka.connector=kafka
+datasource.kafka.properties.bootstrap.servers=192.168.1.101:9092,192.168.1.102:9092,192.168.1.103:9092
+datasource.kafka.properties.group.id=flink-jobs
+datasource.kafka.scan.startup.mode=earliest-offset
+datasource.kafka.format=debezium-json
+datasource.kafka.debezium-json.schema-include=true
+
+#PostgreSQL
+#配置名称为bidb的数据源
+datasource.bidb.connector=jdbc
+datasource.bidb.driver=org.postgresql.Driver
+datasource.bidb.url=jdbc:postgresql://192.168.1.104:5432/bidb
+datasource.bidb.username=your_name
+datasource.bidb.password=your_password
+
+#MySQL
+#配置名称为kaorder的数据源
+datasource.kaorder.connector=jdbc
+datasource.kaorder.driver=com.mysql.cj.jdbc.Driver
+datasource.kaorder.url=jdbc:mysql://192.168.1.105:3306/kaorder?useSSL=false&serverTimezone=Asia/Shanghai
+datasource.kaorder.username=your_name
+datasource.kaorder.password=your_password
+
+#SQLServer
+#配置名称为sqltool的数据源
+datasource.sqltool.connector=jdbc
+datasource.sqltool.driver=org.postgresql.Driver
+datasource.sqltool.url=jdbc:sqlserver://192.168.1.106:1433;DatabaseName=sqltool;
+datasource.sqltool.username=your_name
+datasource.sqltool.password=your_password
+
+#Hive
+#配置名称为hivedb的数据源
+datasource.hivedb.type=hive
+datasource.hivedb.default-database=default
+datasource.hivedb.hive-conf-dir=/etc/hive/conf
+```
+
+#### Table API & SQL
+
+[Flink](http://)的Table API & SQL配置除了在Flink配置文件中指定之外，也可以在flink-jobs的配置文件中指定。例如：
+
+`table.exec.sink.not-null-enforcer=drop`
+
 ### 使用[flink-jobs-launcher](https://gitee.com/tenmg/flink-jobs-launcher)提交flink-jobs应用程序
 
 [flink-jobs-launcher](https://gitee.com/tenmg/flink-jobs-launcher)实现了使用XML配置文件来管理flink-jobs任务，这样开发Flink SQL任务会显得非常简单；同时，用户自定义的flink-jobs服务也可以被更轻松得集成到其他系统中。XML文件具有良好的可读性，并且在IDE环境下能够对配置进行自动提示。具体使用方法详见[flink-jobs-launcher开发文档](https://gitee.com/tenmg/flink-jobs-launcher)，以下介绍几种通过XML管理的flink-jobs任务：
