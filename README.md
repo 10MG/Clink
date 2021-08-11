@@ -170,7 +170,7 @@ type       | `String` | 是 | 操作类型。这里是"ExecuteSql"。
 saveAs     | `String` | 否 | 操作结果另存为一个新的变量的名称。变量的值是flink的`tableEnv.executeSql(statement);`的返回值。
 dataSource | `String` | 否 | 使用的数据源名称。
 catalog    | `String` | 否 | 执行SQL使用的Flink SQL的catalog名称。
-script     | `String` | 是 | 基于[DSL](https://gitee.com/tenmg/dsl)的SQL脚本。
+script     | `String` | 是 | 基于[DSL](https://gitee.com/tenmg/dsl)的SQL脚本。由于Flink SQL不支持DELETE、UPDATE语句，因此如果配置的SQL脚本是DELETE或者UPDATE语句，该语句将在程序main函数中采用JDBC执行。
 
 #### SqlQuery操作
 
