@@ -162,7 +162,7 @@ value | `String` | 否 | 变量对应的值的名称。默认与name相同。fli
 
 #### ExecuteSql操作
 
-ExecuteSql操作的作用是运行基于DSL的SQL代码，相关属性及说明如下：
+ExecuteSql操作的作用是运行基于[DSL](https://gitee.com/tenmg/dsl)的SQL代码，相关属性及说明如下：
 
 属性       | 类型     | 必需 | 说明
 -----------|----------|----|--------
@@ -174,7 +174,7 @@ script     | `String` | 是 | 基于[DSL](https://gitee.com/tenmg/dsl)的SQL脚�
 
 #### SqlQuery操作
 
-SqlQuery操作的作用是运行基于DSL的SQL查询代码，相关属性及说明如下：
+SqlQuery操作的作用是运行基于[DSL](https://gitee.com/tenmg/dsl)的SQL查询代码，相关属性及说明如下：
 
 属性       | 类型  | 必需 | 说明
 -----------|--------|----|--------
@@ -184,12 +184,12 @@ script     | `String` | 是 | 基于[DSL](https://gitee.com/tenmg/dsl)的SQL脚�
 
 #### Jdbc操作
 
-Jdbc操作的作用是运行基于DSL的JDBC SQL代码，相关属性及说明如下：
+Jdbc操作的作用是运行基于[DSL](https://gitee.com/tenmg/dsl)的JDBC SQL代码，相关属性及说明如下：
 
 属性       | 类型     | 必需 | 说明
 -----------|----------|----|--------
 type       | `String` | 是 | 操作类型。这里是"Jdbc"。
-saveAs     | `String` | 否 | 查询结果另存为临时表的表名及操作结果另存为一个新的变量的名称。变量的值是flink的`tableEnv.executeSql(statement);`的返回值。
+saveAs     | `String` | 否 | 执行结果另存为一个新的变量的名称。变量的值是执行JDBC指定方法的返回值。
 dataSource | `String` | 否 | 使用的数据源名称。
 method     | `String` | 否 | 调用的JDBC方法。默认是"executeLargeUpdate"。
 script     | `String` | 是 | 基于[DSL](https://gitee.com/tenmg/dsl)的SQL脚本。
