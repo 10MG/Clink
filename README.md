@@ -345,17 +345,18 @@ datasource.hivedb.hive-conf-dir=/etc/hive/conf
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://www.10mg.cn/schema/flink-jobs http://www.10mg.cn/schema/flink-jobs.xsd">
 	<!-- Flink内创建SOURCE数据库 -->
-	<execute-sql>
+	<!-- <execute-sql>
 		<![CDATA[
 		CREATE DATABASE SOURCE
 		]]>
-	</execute-sql>
+	</execute-sql> -->
 	<!-- 使用SOURCE数据库执行Flink SQL -->
-	<execute-sql>
+	<!-- <execute-sql>
 		<![CDATA[
 		USE SOURCE
 		]]>
-	</execute-sql>
+	</execute-sql> -->
+        <!-- 上述两步操作是非必须的，只是为了Flink自动生成的作业名称更容易识别 -->
 	<!-- 定义名为kafka数据源的订单明细表 -->
 	<execute-sql dataSource="kafka">
 		<![CDATA[
