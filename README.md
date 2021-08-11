@@ -297,7 +297,7 @@ datasource.hivedb.hive-conf-dir=/etc/hive/conf
 			load module hive
 		]]>
 	</execute-sql>
-	<!--加载hive,core模块 -->
+	<!--使用hive,core模块 -->
 	<execute-sql>
 		<![CDATA[
 			use modules hive,core
