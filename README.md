@@ -356,7 +356,7 @@ datasource.hivedb.hive-conf-dir=/etc/hive/conf
 		USE SOURCE
 		]]>
 	</execute-sql> -->
-        <!-- 上述两步操作是非必须的，只是为了Flink自动生成的作业名称更容易识别 -->
+	<!-- 上述两步操作是非必须的，只是为了Flink自动生成的作业名称更容易识别 -->
 	<!-- 定义名为kafka数据源的订单明细表 -->
 	<execute-sql dataSource="kafka">
 		<![CDATA[
