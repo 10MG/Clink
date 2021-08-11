@@ -357,7 +357,7 @@ datasource.hivedb.hive-conf-dir=/etc/hive/conf
 		]]>
 	</execute-sql> -->
 	<!-- 上述两步操作是非必须的，只是为了Flink自动生成的作业名称更容易识别 -->
-	<!-- 定义名为kafka数据源的订单明细表 -->
+	<!-- 定义名为kafka的数据源的订单明细表 -->
 	<execute-sql dataSource="kafka">
 		<![CDATA[
 		CREATE TABLE KAFKA_ORDER_DETAIL (
@@ -389,7 +389,7 @@ datasource.hivedb.hive-conf-dir=/etc/hive/conf
 		) WITH ('topic' = 'kaorder1.kaorder.order_detail', 'properties.group.id' = 'flink-jobs_source_order_detail')
 		]]>
 	</execute-sql>
-	<!-- 定义名为source数据源的订单明细表 -->
+	<!-- 定义名为source的数据源的订单明细表 -->
 	<execute-sql dataSource="source">
 		<![CDATA[
 		CREATE TABLE ORDER_DETAIL (
