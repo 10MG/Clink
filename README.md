@@ -250,7 +250,7 @@ datasource.hivedb.hive-conf-dir=/etc/hive/conf
 
 `table.exec.sink.not-null-enforcer=drop`
 
-注意：如果是在flink-jobs的配置文件中配置这些参数，当执行自定义Java服务时，只有通过`FlinkJobsContext.getOrCreateStreamTableEnvironment()`或`FlinkJobsContext.getOrCreateStreamTableEnvironment(env)`方法获取的`StreamTableEnvironment`这些配置才会生效。
+注意：如果是在flink-jobs的配置文件中配置这些参数，当执行自定义Java服务时，只有通过`FlinkJobsContext.getOrCreateStreamTableEnvironment()`或`FlinkJobsContext.getOrCreateStreamTableEnvironment(env)`方法获取的`StreamTableEnvironment`执行Table API & SQL，这些配置才会生效。
 
 ### 使用[flink-jobs-launcher](https://gitee.com/tenmg/flink-jobs-launcher)提交flink-jobs应用程序
 
