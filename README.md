@@ -190,7 +190,7 @@ Jdbc操作的作用是运行基于[DSL](https://gitee.com/tenmg/dsl)的JDBC SQL�
 -----------|----------|----|--------
 type       | `String` | 是 | 操作类型。这里是"Jdbc"。
 saveAs     | `String` | 否 | 执行结果另存为一个新的变量的名称。变量的值是执行JDBC指定方法的返回值。
-dataSource | `String` | 否 | 使用的数据源名称。
+dataSource | `String` | 是 | 使用的数据源名称。
 method     | `String` | 否 | 调用的JDBC方法。默认是"executeLargeUpdate"。
 script     | `String` | 是 | 基于[DSL](https://gitee.com/tenmg/dsl)的SQL脚本。
 
@@ -482,3 +482,11 @@ datasource.hivedb.hive-conf-dir=/etc/hive/conf
 	</execute-sql>
 </flink-jobs>
 ```
+
+### 发布计划
+
+计划将在1.1.2中发布一下功能
+
+标签       | 功能     | 说明
+-----------|---------|--------
+<data-syn> | 数据同步 | 实现基于Debezuim的数据同步，以便简化通过<execute-sql>实现的数据同步功能。
