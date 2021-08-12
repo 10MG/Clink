@@ -39,7 +39,7 @@ public class JdbcOperator extends AbstractOperator<Jdbc> {
 	Object execute(StreamExecutionEnvironment env, Jdbc jdbc, Map<String, Object> params) throws Exception {
 		NamedScript namedScript = DSLUtils.parse(jdbc.getScript(), params);
 		String dataSource = jdbc.getDataSource();
-		JDBC JDBC = SQLUtils.toJDBC(namedScript);
+		JDBC sql = SQLUtils.toJDBC(namedScript);
 		if (StringUtils.isNotBlank(dataSource)) {
 			Map<String, String> dsConfig = FlinkJobsContext.getDatasource(dataSource);
 			Connection con = null;
@@ -49,11 +49,11 @@ public class JdbcOperator extends AbstractOperator<Jdbc> {
 				con = DriverManager.getConnection(dsConfig.get("url"), dsConfig.get("username"),
 						dsConfig.get("password"));// 获得数据库连接
 				con.setAutoCommit(true);
-				String statement = JDBC.getStatement();
+				String statement = sql.getStatement();
 				stmt = con.prepareStatement(statement);
-				List<Object> paramters = JDBC.getParams();
+				List<Object> paramters = sql.getParams();
 				for (int i = 0, size = paramters.size(); i < size; i++) {
-					stmt.setObject(i, paramters.get(i));
+					stmt.setObject(i + 1, paramters.get(i));
 				}
 
 				if (log.isInfoEnabled()) {

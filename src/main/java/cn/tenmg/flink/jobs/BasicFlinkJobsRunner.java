@@ -56,7 +56,7 @@ public abstract class BasicFlinkJobsRunner {
 			if (json.endsWith(".json")) {
 				arguments = JSON.parseObject(new FileInputStream(json), Arguments.class);
 			} else {
-				arguments = JSON.parseObject(args[0], Arguments.class);
+				arguments = JSON.parseObject(json, Arguments.class);
 			}
 			final StreamExecutionEnvironment env = FlinkJobsContext.getExecutionEnvironment();
 			RuntimeExecutionMode mode = arguments.getRuntimeMode();
