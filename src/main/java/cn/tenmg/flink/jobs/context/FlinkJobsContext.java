@@ -13,6 +13,7 @@ import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
 
 import cn.tenmg.flink.jobs.exception.DataSourceNotFoundException;
+import cn.tenmg.flink.jobs.utils.PlaceHolderUtils;
 import cn.tenmg.flink.jobs.utils.PropertiesLoaderUtils;
 
 /**
@@ -79,11 +80,19 @@ public abstract class FlinkJobsContext {
 		try {
 			configProperties = PropertiesLoaderUtils
 					.loadFromClassPath(defaultProperties.getProperty(CONFIG_LOCATION_KEY, "flink-jobs.properties"));
-			String key, name, param;
+			Entry<Object, Object> entry;
 			Object value;
+			for (Iterator<Entry<Object, Object>> it = configProperties.entrySet().iterator(); it.hasNext();) {
+				entry = it.next();
+				value = entry.getValue();
+				if (value != null) {
+					configProperties.put(entry.getKey(), PlaceHolderUtils.replace(value.toString(), configProperties));
+				}
+			}
+			String key, name, param;
 			Map<String, String> dataSource;
 			for (Iterator<Entry<Object, Object>> it = configProperties.entrySet().iterator(); it.hasNext();) {
-				Entry<Object, Object> entry = it.next();
+				entry = it.next();
 				key = entry.getKey().toString();
 				value = entry.getValue();
 				if (key.matches(DATASOURCE_REGEX)) {
@@ -103,6 +112,7 @@ public abstract class FlinkJobsContext {
 					tableExecConfigs.put(key, value.toString());
 				}
 			}
+
 		} catch (Exception e) {
 			configProperties = new Properties();
 		}
@@ -330,4 +340,12 @@ public abstract class FlinkJobsContext {
 		}
 	}
 
+	
+	public static void main(String[] args) {
+		Entry<Object, Object> entry;
+		for (Iterator<Entry<Object, Object>> it = configProperties.entrySet().iterator(); it.hasNext();) {
+			entry = it.next();
+			System.out.println(entry.getKey()+"="+entry.getValue());
+		}
+	}
 }
