@@ -198,7 +198,7 @@ script     | `String` | 是 | 基于[DSL](https://gitee.com/tenmg/dsl)的SQL脚�
 
 ### 配置文件
 
-默认的配置文件为flink-jobs.properties（注意：需在classpath下），可通过flink-jobs-context-loader.properties配置文件的`config.location`修改配置文件路径和名称。
+默认的配置文件为flink-jobs.properties（注意：需在classpath下），可通过flink-jobs-context-loader.properties配置文件的`config.location`修改配置文件路径和名称。配置项的值允许通过占位符`${}`引用，例如`name=${value}`。
 
 #### 数据源配置
 
@@ -222,6 +222,14 @@ datasource.bidb.driver=org.postgresql.Driver
 datasource.bidb.url=jdbc:postgresql://192.168.1.104:5432/bidb
 datasource.bidb.username=your_name
 datasource.bidb.password=your_password
+
+#引用配置文件内的另一个配置
+#配置名称为syndb的数据源
+datasource.syndb.connector=${datasource.bidb.connector}
+datasource.syndb.driver=${datasource.bidb.driver}
+datasource.syndb.url=${datasource.bidb.url}?currentSchema=syndb
+datasource.syndb.username=${datasource.bidb.username}
+datasource.syndb.password=${datasource.bidb.password}
 
 #MySQL
 #配置名称为kaorder的数据源
