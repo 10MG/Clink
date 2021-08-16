@@ -493,12 +493,6 @@ datasource.hivedb.hive-conf-dir=/etc/hive/conf
 
 ### 发布计划
 
-计划将在1.1.1中发布以下功能：
-
-标签     | 功能           | 说明
----------|----------------|--------
-`<jdbc>` | 使用JDBC执行SQL | 解析基于[DSL](https://gitee.com/tenmg/dsl)的SQL并采用JDBC执行。
-
 计划将在1.1.2中发布以下功能：
 
 标签         | 功能     | 说明
