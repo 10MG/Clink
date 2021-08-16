@@ -78,7 +78,7 @@ public abstract class SQLUtils {
 						sql.append(c);
 					}
 				} else {
-					if (NamedScriptUtils.isParamBegin(b, c)) {
+					if (NamedScriptUtils.isParamBegin(a, b, c)) {
 						isParam = true;// 参数区域开始
 						paramName.setLength(0);
 						paramName.append(c);
@@ -145,7 +145,7 @@ public abstract class SQLUtils {
 						sqlBuilder.append(c);
 					}
 				} else {
-					if (NamedScriptUtils.isParamBegin(b, c)) {
+					if (NamedScriptUtils.isParamBegin(a, b, c)) {
 						isParam = true;// 参数区域开始
 						paramName.setLength(0);
 						paramName.append(c);
