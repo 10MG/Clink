@@ -198,7 +198,7 @@ script     | `String` | 是 | 基于[DSL](https://gitee.com/tenmg/dsl)的SQL脚�
 
 ### 配置文件
 
-默认的配置文件为flink-jobs.properties（注意：需在classpath下），可通过flink-jobs-context-loader.properties配置文件的`config.location`修改配置文件路径和名称。配置项的值允许通过占位符`${}`引用，例如`name=${anotherValue}`。
+默认的配置文件为flink-jobs.properties（注意：需在classpath下），可通过flink-jobs-context-loader.properties配置文件的`config.location`修改配置文件路径和名称。配置项的值允许通过占位符`${}`引用，例如`name=${anotherName}`。
 
 #### 数据源配置
 
