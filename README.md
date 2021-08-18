@@ -508,7 +508,3 @@ DSL开源地址：https://gitee.com/tenmg/dsl
 Flink官网：https://flink.apache.org
 
 Debezuim官网：https://debezium.io
-
-#I40RUO 
-
-如需快速入门详见：https://gitee.com/tenmg/flink-jobs-quickstart。
