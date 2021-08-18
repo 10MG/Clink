@@ -107,6 +107,10 @@ public class HelloWorldService implements StreamService {
 
 - 此外，通过使用[flink-jobs-launcher](https://gitee.com/tenmg/flink-jobs-launcher)可以通过Java API的方式启动flink-jobs应用程序，这样启动操作就可以轻松集成到其他系统中（例如Java Web程序）。
 
+### 快速入门
+
+详见https://gitee.com/tenmg/flink-jobs-quickstart
+
 ### 运行参数（arguments）
 flink-jobs应用程序的运行参数通过JSON格式的字符串（注意，如果是命令行运行，JSON格式字符串前后需加上双引号或单引号，JSON格式字符串内部的双引号或单引号则需要转义）或者一个.json文件提供，结构如下：
 
