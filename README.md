@@ -503,6 +503,13 @@ datasource.hivedb.hive-conf-dir=/etc/hive/conf
 ----------|---------|--------
 `DataSyn` | 数据同步 | 实现基于Debezuim的数据同步，以便简化通过`ExecuteSql`实现的数据同步功能。
 
+### 参与贡献
+
+1.  Fork 本仓库
+2.  新建 Feat_xxx 分支
+3.  提交代码
+4.  新建 Pull Request
+
 ### 相关链接
 
 flink-jobs-launcher开源地址：https://gitee.com/tenmg/flink-jobs-launcher
