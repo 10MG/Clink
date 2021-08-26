@@ -299,7 +299,7 @@ datasource.hivedb.hive-conf-dir=/etc/hive/conf
 		<param name="endDate">2021-07-01</param>
 	</params>
 
-	<!-- 使用名为hivedb的数据源配置创建名为hive的catalog -->
+	<!-- 使用名为hivedb的数据源创建名为hive的catalog -->
 	<execute-sql dataSource="hivedb">
 		<![CDATA[
 			create catalog hive
@@ -317,7 +317,7 @@ datasource.hivedb.hive-conf-dir=/etc/hive/conf
 			use modules hive,core
 		]]>
 	</execute-sql>
-	<!-- 使用名为pgdb的数据源配置在创建表order_stats_daily（如果源表名和建表语句指定的表名不一致，可以通过 WITH ('table-name' 
+	<!-- 使用名为pgdb的数据源创建表order_stats_daily（如果源表名和建表语句指定的表名不一致，可以通过 WITH ('table-name' 
 		= 'actrual_table_name') 来指定） -->
 	<execute-sql dataSource="pgdb">
 		<![CDATA[
