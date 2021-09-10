@@ -499,9 +499,9 @@ datasource.hivedb.hive-conf-dir=/etc/hive/conf
 
 计划将在1.1.2中发布以下功能：
 
-标签      | 功能     | 说明
-----------|---------|--------
-`DataSyn` | 数据同步 | 实现基于Debezuim的数据同步，以便简化通过`ExecuteSql`实现的数据同步功能。
+标签       | 功能     | 说明
+-----------|---------|--------
+`DataSync` | 数据同步 | 实现基于Debezuim的数据同步，以便简化通过`ExecuteSql`实现的数据同步功能。
 
 ### 参与贡献
 
