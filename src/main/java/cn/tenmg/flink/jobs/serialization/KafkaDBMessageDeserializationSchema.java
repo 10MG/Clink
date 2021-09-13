@@ -15,6 +15,7 @@ import cn.tenmg.flink.jobs.model.KafkaDBMessage;
  * 
  * @since 1.0.1
  */
+@Deprecated
 public abstract class KafkaDBMessageDeserializationSchema implements KafkaDeserializationSchema<KafkaDBMessage> {
 
 	/**

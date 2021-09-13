@@ -5,12 +5,13 @@ import java.io.InputStream;
 import java.util.Properties;
 
 /**
- * 配置加载工具类
+ * 配置加载工具类。请使用cn.tenmg.dsl.utils.PropertiesLoaderUtils替换
  * 
  * @author 赵伟均 wjzhao@aliyun.com
  * 
  * @since 1.1.0
  */
+@Deprecated
 public abstract class PropertiesLoaderUtils {
 
 	private static final String XML_FILE_SUFFIX = ".xml";

@@ -84,15 +84,10 @@ public abstract class BasicFlinkJobsRunner {
 	private void operates(final StreamExecutionEnvironment env, List<String> operates, Map<String, Object> params)
 			throws Exception {
 		if (operates != null) {
-			String operate, type;
+			String operate;
 			for (int i = 0; i < operates.size(); i++) {
 				operate = operates.get(i);
-				type = JSON.parseObject(operate).getString("type");
-				Operator operator = OperatorUtils.getOperator(type);
-				if (operator == null) {
-					throw new IllegalArgumentException("Operate of type " + type + " is not supported");
-				}
-				operator.execute(env, operate, params);
+				OperatorUtils.getOperator(JSON.parseObject(operate).getString("type")).execute(env, operate, params);
 			}
 		}
 	}

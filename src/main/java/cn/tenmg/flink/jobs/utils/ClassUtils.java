@@ -3,13 +3,15 @@ package cn.tenmg.flink.jobs.utils;
 import javax.swing.Spring;
 
 /**
- * 类工具类
+ * 类工具类。请使用cn.tenmg.dsl.utils.ClassUtils替换
  * 
  * @author 赵伟均 wjzhao@aliyun.com
  * @see Spring
  * 
  * @since 1.1.0
+ * 
  */
+@Deprecated
 public class ClassUtils {
 	/**
 	 * Return the default ClassLoader to use: typically the thread context

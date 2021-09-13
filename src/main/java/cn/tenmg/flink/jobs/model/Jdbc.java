@@ -1,7 +1,7 @@
 package cn.tenmg.flink.jobs.model;
 
 /**
- * JDBC操作配置模型
+ * JDBC操作配置
  * 
  * @author 赵伟均 wjzhao@aliyun.com
  * 

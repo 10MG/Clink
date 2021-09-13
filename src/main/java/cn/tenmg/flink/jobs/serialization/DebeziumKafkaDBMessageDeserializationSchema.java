@@ -15,6 +15,7 @@ import cn.tenmg.flink.jobs.model.KafkaDBMessage.Operate;
  * 
  * @since 1.0.1
  */
+@Deprecated
 public class DebeziumKafkaDBMessageDeserializationSchema extends KafkaDBMessageDeserializationSchema {
 
 	/**

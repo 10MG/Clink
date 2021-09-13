@@ -16,13 +16,13 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import cn.tenmg.dsl.NamedScript;
+import cn.tenmg.dsl.Script;
+import cn.tenmg.dsl.parser.JDBCParamsParser;
 import cn.tenmg.dsl.utils.DSLUtils;
 import cn.tenmg.dsl.utils.StringUtils;
 import cn.tenmg.flink.jobs.context.FlinkJobsContext;
 import cn.tenmg.flink.jobs.model.Jdbc;
-import cn.tenmg.flink.jobs.utils.JdbcUtils;
-import cn.tenmg.flink.jobs.utils.SQLUtils;
-import cn.tenmg.flink.jobs.utils.SQLUtils.JDBC;
+import cn.tenmg.flink.jobs.utils.JDBCUtils;
 
 /**
  * JBDC操作执行器
@@ -39,23 +39,21 @@ public class JdbcOperator extends AbstractOperator<Jdbc> {
 	Object execute(StreamExecutionEnvironment env, Jdbc jdbc, Map<String, Object> params) throws Exception {
 		NamedScript namedScript = DSLUtils.parse(jdbc.getScript(), params);
 		String dataSource = jdbc.getDataSource();
-		JDBC sql = SQLUtils.toJDBC(namedScript);
+		Script<List<Object>> sql = DSLUtils.toScript(namedScript.getScript(), namedScript.getParams(),
+				JDBCParamsParser.getInstance());
 		if (StringUtils.isNotBlank(dataSource)) {
 			Map<String, String> dsConfig = FlinkJobsContext.getDatasource(dataSource);
 			Connection con = null;
-			PreparedStatement stmt = null;
+			PreparedStatement ps = null;
 			try {
-				JdbcUtils.loadDriver(dsConfig);
+				JDBCUtils.loadDriver(dsConfig);
 				con = DriverManager.getConnection(dsConfig.get("url"), dsConfig.get("username"),
 						dsConfig.get("password"));// 获得数据库连接
 				con.setAutoCommit(true);
-				String statement = sql.getStatement();
-				stmt = con.prepareStatement(statement);
+				String statement = sql.getValue();
+				ps = con.prepareStatement(statement);
 				List<Object> paramters = sql.getParams();
-				for (int i = 0, size = paramters.size(); i < size; i++) {
-					stmt.setObject(i + 1, paramters.get(i));
-				}
-
+				JDBCUtils.setParams(ps, paramters);
 				if (log.isInfoEnabled()) {
 					StringBuilder sb = new StringBuilder();
 					sb.append("Execute SQL: ").append(statement).append(", ").append("parameters: ")
@@ -65,18 +63,18 @@ public class JdbcOperator extends AbstractOperator<Jdbc> {
 
 				String method = jdbc.getMethod();
 				if ("executeLargeUpdate".equals(method)) {
-					return stmt.executeLargeUpdate();
+					return ps.executeLargeUpdate();
 				} else if ("executeUpdate".equals(method)) {
-					return stmt.executeUpdate();
+					return ps.executeUpdate();
 				} else if ("execute".equals(method)) {
-					return stmt.execute();
+					return ps.execute();
 				}
-				return stmt.executeLargeUpdate();
+				return ps.executeLargeUpdate();
 			} catch (Exception e) {
 				throw e;
 			} finally {
-				JdbcUtils.close(stmt);
-				JdbcUtils.close(con);
+				JDBCUtils.close(ps);
+				JDBCUtils.close(con);
 			}
 		} else {
 			throw new IllegalArgumentException("dataSource must be not null");

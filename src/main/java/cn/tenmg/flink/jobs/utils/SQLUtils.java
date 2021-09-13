@@ -10,9 +10,10 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import cn.tenmg.dsl.NamedScript;
-import cn.tenmg.dsl.utils.NamedScriptUtils;
+import cn.tenmg.dsl.utils.DSLUtils;
 import cn.tenmg.dsl.utils.StringUtils;
 
 /**
@@ -24,20 +25,104 @@ import cn.tenmg.dsl.utils.StringUtils;
  */
 public abstract class SQLUtils {
 
-	private static final char SINGLE_QUOTATION_MARK = '\'';
+	public static final String SINGLE_QUOTATION_MARK = "'";
 
-	private static final String DATE_PATTERN = "yyyy-MM-dd HH:mm:ss", TIMESTAMP_PATTERN = "yyyy-MM-dd HH:mm:ss.S",
+	private static final String SPACE_EQUALS_SPACE = " = ", DURATIONS[] = { "d", "h", "m", "s", "ms" },
+			DATE_PATTERN = "yyyy-MM-dd HH:mm:ss", TIMESTAMP_PATTERN = "yyyy-MM-dd HH:mm:ss.S",
 			TIME_PATTERN = "HH:mm:ss";
 
+	@Deprecated
 	public static final String COMMA_SPACE = ", ";
 
 	/**
-	 * 将指定的含命名参数的脚本转换为JDBC可执行的SQL对象，该对象内含SQL脚本及对应的参数列表
+	 * 向SQL追加数据源配置
+	 * 
+	 * @param sqlBuffer
+	 *            SQL缓冲器
+	 * @param dataSource
+	 *            数据源配置查找表
+	 */
+	public static void appendDataSource(StringBuffer sqlBuffer, Map<String, String> dataSource) {
+		Iterator<Entry<String, String>> it = dataSource.entrySet().iterator();
+		Entry<String, String> entry = it.next();
+		appendProperty(sqlBuffer, entry);
+		while (it.hasNext()) {
+			entry = it.next();
+			sqlBuffer.append(DSLUtils.COMMA).append(DSLUtils.BLANK_SPACE);
+			appendProperty(sqlBuffer, entry);
+		}
+	}
+
+	/**
+	 * 包装SQL字符串
+	 * 
+	 * @param value
+	 *            字符串
+	 * @return 返回包装后的SQL字符串
+	 */
+	public static String wrapString(String value) {
+		return SINGLE_QUOTATION_MARK + value.replaceAll(SINGLE_QUOTATION_MARK, "\\\\'") + SINGLE_QUOTATION_MARK;
+	}
+
+	/**
+	 * 追加空格等号空格
+	 * 
+	 * @param sqlBuffer
+	 *            SQL缓冲器
+	 */
+	public static void apppendEquals(StringBuffer sqlBuffer) {
+		sqlBuffer.append(SPACE_EQUALS_SPACE);
+	}
+
+	private static void appendProperty(StringBuffer sqlBuffer, Entry<String, String> entry) {
+		sqlBuffer.append(wrapKey(entry.getKey()));
+		apppendEquals(sqlBuffer);
+		sqlBuffer.append(wrapValue(entry.getValue()));
+	}
+
+	private static String wrapKey(String value) {
+		return isString(value) ? value : wrapString(value);
+	}
+
+	private static boolean isString(String value) {
+		return value.startsWith(SINGLE_QUOTATION_MARK) && value.endsWith(SINGLE_QUOTATION_MARK);
+	}
+
+	private static boolean isDuration(String value) {
+		for (int i = 0; i < DURATIONS.length; i++) {
+			if (value.endsWith(DURATIONS[i])
+					&& StringUtils.isNumber(value.substring(0, value.length() - DURATIONS[i].length()))) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * 包装配置的值
+	 * 
+	 * @param value
+	 *            配置的值
+	 * @return 返回包装后的配置值
+	 */
+	private static String wrapValue(String value) {
+		if (StringUtils.isBlank(value)) {
+			return SINGLE_QUOTATION_MARK + value + SINGLE_QUOTATION_MARK;
+		} else if (isString(value) || StringUtils.isNumber(value) || isDuration(value)) {
+			return value;
+		}
+		return wrapString(value);
+	}
+
+	/**
+	 * 将指定的含命名参数的脚本转换为JDBC可执行的SQL对象，该对象内含SQL脚本及对应的参数列表。请使用cn.tenmg.dsl.utils.DSLUtils.toScript(namedscript.getScript(),
+	 * namedscript.getParams(),cn.tenmg.dsl.utils.JDBCParamsParser.getInstance())替换
 	 * 
 	 * @param namedScript
 	 *            含命名参数的脚本
 	 * @return 返回JDBC可执行的SQL对象，含SQL脚本及对应的参数列表
 	 */
+	@Deprecated
 	public static JDBC toJDBC(NamedScript namedScript) {
 		List<Object> paramList = new ArrayList<Object>();
 		String script = namedScript.getScript();
@@ -49,28 +134,28 @@ public abstract class SQLUtils {
 			params = new HashMap<String, Object>();
 		}
 		int len = script.length(), i = 0, backslashes = 0;
-		char a = NamedScriptUtils.BLANK_SPACE, b = NamedScriptUtils.BLANK_SPACE;
+		char a = DSLUtils.BLANK_SPACE, b = DSLUtils.BLANK_SPACE;
 		boolean isString = false;// 是否在字符串区域
 		boolean isParam = false;// 是否在参数区域
 		StringBuilder sql = new StringBuilder(), paramName = new StringBuilder();
 		while (i < len) {
 			char c = script.charAt(i);
 			if (isString) {
-				if (c == NamedScriptUtils.BACKSLASH) {
+				if (c == DSLUtils.BACKSLASH) {
 					backslashes++;
 				} else {
-					if (NamedScriptUtils.isStringEnd(a, b, c, backslashes)) {// 字符串区域结束
+					if (DSLUtils.isStringEnd(a, b, c, backslashes)) {// 字符串区域结束
 						isString = false;
 					}
 					backslashes = 0;
 				}
 				sql.append(c);
 			} else {
-				if (c == SINGLE_QUOTATION_MARK) {// 字符串区域开始
+				if (c == DSLUtils.SINGLE_QUOTATION_MARK) {// 字符串区域开始
 					isString = true;
 					sql.append(c);
 				} else if (isParam) {// 处于参数区域
-					if (NamedScriptUtils.isParamChar(c)) {
+					if (DSLUtils.isParamChar(c)) {
 						paramName.append(c);
 					} else {
 						isParam = false;// 参数区域结束
@@ -78,7 +163,7 @@ public abstract class SQLUtils {
 						sql.append(c);
 					}
 				} else {
-					if (NamedScriptUtils.isParamBegin(a, b, c)) {
+					if (DSLUtils.isParamBegin(a, b, c)) {
 						isParam = true;// 参数区域开始
 						paramName.setLength(0);
 						paramName.append(c);
@@ -99,12 +184,16 @@ public abstract class SQLUtils {
 	}
 
 	/**
-	 * 将指定的含命名参数的脚本转换为Flink SQL
+	 * 将指定的含命名参数的脚本转换为Flink
+	 * SQL。请使用cn.tenmg.dsl.utils.DSLUtils.toScript(namedscript.getScript(),
+	 * namedscript.getParams(),
+	 * cn.tenmg.flink.jobs.parser.FlinkSQLParamsParser.getInstance()).getValue()替换
 	 * 
 	 * @param namedScript
 	 *            含命名参数的脚本
 	 * @return 返回Flink SQL
 	 */
+	@Deprecated
 	public static String toSQL(NamedScript namedScript) {
 		String source = namedScript.getScript();
 		if (StringUtils.isBlank(source)) {
@@ -115,28 +204,28 @@ public abstract class SQLUtils {
 			params = new HashMap<String, Object>();
 		}
 		int len = source.length(), i = 0, backslashes = 0;
-		char a = NamedScriptUtils.BLANK_SPACE, b = NamedScriptUtils.BLANK_SPACE;
+		char a = DSLUtils.BLANK_SPACE, b = DSLUtils.BLANK_SPACE;
 		boolean isString = false;// 是否在字符串区域
 		boolean isParam = false;// 是否在参数区域
 		StringBuilder sqlBuilder = new StringBuilder(), paramName = new StringBuilder();
 		while (i < len) {
 			char c = source.charAt(i);
 			if (isString) {
-				if (c == NamedScriptUtils.BACKSLASH) {
+				if (c == DSLUtils.BACKSLASH) {
 					backslashes++;
 				} else {
-					if (NamedScriptUtils.isStringEnd(a, b, c, backslashes)) {// 字符串区域结束
+					if (DSLUtils.isStringEnd(a, b, c, backslashes)) {// 字符串区域结束
 						isString = false;
 					}
 					backslashes = 0;
 				}
 				sqlBuilder.append(c);
 			} else {
-				if (c == SINGLE_QUOTATION_MARK) {// 字符串区域开始
+				if (c == DSLUtils.SINGLE_QUOTATION_MARK) {// 字符串区域开始
 					isString = true;
 					sqlBuilder.append(c);
 				} else if (isParam) {// 处于参数区域
-					if (NamedScriptUtils.isParamChar(c)) {
+					if (DSLUtils.isParamChar(c)) {
 						paramName.append(c);
 					} else {
 						isParam = false;// 参数区域结束
@@ -145,7 +234,7 @@ public abstract class SQLUtils {
 						sqlBuilder.append(c);
 					}
 				} else {
-					if (NamedScriptUtils.isParamBegin(a, b, c)) {
+					if (DSLUtils.isParamBegin(a, b, c)) {
 						isParam = true;// 参数区域开始
 						paramName.setLength(0);
 						paramName.append(c);
@@ -166,6 +255,7 @@ public abstract class SQLUtils {
 		return sqlBuilder.toString();
 	}
 
+	@Deprecated
 	public static class JDBC {
 
 		private String statement;

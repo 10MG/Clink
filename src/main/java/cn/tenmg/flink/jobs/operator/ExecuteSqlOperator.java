@@ -1,15 +1,13 @@
 package cn.tenmg.flink.jobs.operator;
 
 import java.io.IOException;
-import java.io.StringReader;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
+import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -18,11 +16,16 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import cn.tenmg.dsl.NamedScript;
+import cn.tenmg.dsl.Script;
+import cn.tenmg.dsl.parser.JDBCParamsParser;
 import cn.tenmg.dsl.utils.DSLUtils;
 import cn.tenmg.dsl.utils.StringUtils;
 import cn.tenmg.flink.jobs.context.FlinkJobsContext;
 import cn.tenmg.flink.jobs.model.ExecuteSql;
-import cn.tenmg.flink.jobs.utils.JdbcUtils;
+import cn.tenmg.flink.jobs.parser.FlinkSQLParamsParser;
+import cn.tenmg.flink.jobs.utils.ConfigurationUtils;
+import cn.tenmg.flink.jobs.utils.JDBCUtils;
+import cn.tenmg.flink.jobs.utils.JSONUtils;
 import cn.tenmg.flink.jobs.utils.SQLUtils;
 
 /**
@@ -36,8 +39,7 @@ public class ExecuteSqlOperator extends AbstractSqlOperator<ExecuteSql> {
 
 	private static final Logger log = LogManager.getLogger(ExecuteSqlOperator.class);
 
-	private static final String SINGLE_QUOTATION_MARK = "'", DURATIONS[] = { "d", "h", "m", "s", "ms" },
-			TABLE_NAME = "table-name",
+	private static final String TABLE_NAME = "table-name",
 			/**
 			 * 删除语句正则表达式
 			 */
@@ -56,31 +58,44 @@ public class ExecuteSqlOperator extends AbstractSqlOperator<ExecuteSql> {
 	@Override
 	Object execute(StreamTableEnvironment tableEnv, ExecuteSql sql, Map<String, Object> params) throws Exception {
 		NamedScript namedScript = DSLUtils.parse(sql.getScript(), params);
-		String dataSource = sql.getDataSource(), statement = SQLUtils.toSQL(namedScript);
-		if (StringUtils.isNotBlank(dataSource)) {
-			Map<String, String> dsConfig = FlinkJobsContext.getDatasource(dataSource);
-			if (isJDBC(dsConfig)
+		String datasource = sql.getDataSource(), statement = namedScript.getScript();
+		if (StringUtils.isNotBlank(datasource)) {
+			Map<String, String> dataSource = FlinkJobsContext.getDatasource(datasource);
+			if (isJDBC(dataSource)
 					&& (statement.matches(DELETE_CLAUSE_REGEX) || statement.matches(UPDATE_CLAUSE_REGEX))) {// DELETE/UPDATE语句，使用JDBC执行
+				Script<List<Object>> script = DSLUtils.toScript(namedScript.getScript(), namedScript.getParams(),
+						JDBCParamsParser.getInstance());
+				statement = script.getValue();
 				Connection con = null;
-				PreparedStatement stmt = null;
+				PreparedStatement ps = null;
 				try {
-					JdbcUtils.loadDriver(dsConfig);
-					con = DriverManager.getConnection(dsConfig.get("url"), dsConfig.get("username"),
-							dsConfig.get("password"));// 获得数据库连接
+					JDBCUtils.loadDriver(dataSource);
+					con = DriverManager.getConnection(dataSource.get("url"), dataSource.get("username"),
+							dataSource.get("password"));// 获得数据库连接
 					con.setAutoCommit(true);
-					stmt = con.prepareStatement(statement);
-					log.info(statement);
-					return stmt.executeLargeUpdate();// 执行删除
+					ps = con.prepareStatement(statement);
+					List<Object> parameters = script.getParams();
+					JDBCUtils.setParams(ps, parameters);
+					if (log.isInfoEnabled()) {
+						log.info("SQL: " + statement + ", parameters: " + JSONUtils.toJSONString(parameters));
+					}
+					return ps.executeLargeUpdate();// 执行删除
 				} catch (Exception e) {
 					throw e;
 				} finally {
-					JdbcUtils.close(stmt);
-					JdbcUtils.close(con);
+					JDBCUtils.close(ps);
+					JDBCUtils.close(con);
 				}
+			} else {
+				statement = DSLUtils
+						.toScript(namedScript.getScript(), namedScript.getParams(), FlinkSQLParamsParser.getInstance())
+						.getValue();
 			}
-			statement = wrapDataSource(statement, dsConfig);
+			statement = wrapDataSource(statement, dataSource);
 		}
-		log.info(statement);
+		if (log.isInfoEnabled()) {
+			log.info(statement);
+		}
 		return tableEnv.executeSql(statement);
 	}
 
@@ -102,18 +117,17 @@ public class ExecuteSqlOperator extends AbstractSqlOperator<ExecuteSql> {
 					end = group.substring(endIndex);
 			if (StringUtils.isBlank(value)) {
 				matcher.appendReplacement(sqlBuffer, start);
-				appendDataSource(sqlBuffer, dataSource);
+				SQLUtils.appendDataSource(sqlBuffer, dataSource);
 				if (!dataSource.containsKey(TABLE_NAME)) {
 					apppendDefaultTableName(sqlBuffer, script);
 				}
 				sqlBuffer.append(end);
 			} else {
-				Properties properties = new Properties();
-				properties.load(new StringReader(value.replaceAll(SINGLE_QUOTATION_MARK, "")));
-				LinkedHashMap<String, String> actualDataSource = new LinkedHashMap<String, String>();
+				Map<String, String> config = ConfigurationUtils.load(value),
+						actualDataSource = new HashMap<String, String>();
 				actualDataSource.putAll(dataSource);
-				for (Iterator<Object> it = properties.keySet().iterator(); it.hasNext();) {
-					actualDataSource.remove(it.next().toString());
+				for (Iterator<String> it = config.keySet().iterator(); it.hasNext();) {
+					actualDataSource.remove(it.next());
 				}
 				matcher.appendReplacement(sqlBuffer, start);
 				StringBuilder blank = new StringBuilder();
@@ -126,9 +140,9 @@ public class ExecuteSqlOperator extends AbstractSqlOperator<ExecuteSql> {
 					blank.append(c);
 					i--;
 				}
-				sqlBuffer.append(value.substring(0, i + 1)).append(SQLUtils.COMMA_SPACE);
-				appendDataSource(sqlBuffer, actualDataSource);
-				if (isJDBC(actualDataSource) && !properties.containsKey(TABLE_NAME)
+				sqlBuffer.append(value.substring(0, i + 1)).append(DSLUtils.COMMA).append(DSLUtils.BLANK_SPACE);
+				SQLUtils.appendDataSource(sqlBuffer, actualDataSource);
+				if (isJDBC(actualDataSource) && !config.containsKey(TABLE_NAME)
 						&& !actualDataSource.containsKey(TABLE_NAME)) {
 					apppendDefaultTableName(sqlBuffer, script);
 				}
@@ -137,7 +151,7 @@ public class ExecuteSqlOperator extends AbstractSqlOperator<ExecuteSql> {
 		} else {
 			sqlBuffer.append(script);
 			sqlBuffer.append(" WITH (");
-			appendDataSource(sqlBuffer, dataSource);
+			SQLUtils.appendDataSource(sqlBuffer, dataSource);
 			if (!dataSource.containsKey(TABLE_NAME)) {
 				apppendDefaultTableName(sqlBuffer, script);
 			}
@@ -148,71 +162,6 @@ public class ExecuteSqlOperator extends AbstractSqlOperator<ExecuteSql> {
 
 	private static boolean isJDBC(Map<String, String> dataSource) {
 		return "jdbc".equals(dataSource.get("connector"));
-	}
-
-	/**
-	 * 向SQL追加数据源配置
-	 * 
-	 * @param sqlBuffer
-	 *            SQL缓冲器
-	 * @param dataSource
-	 *            数据源配置查找表
-	 */
-	private static void appendDataSource(StringBuffer sqlBuffer, Map<String, String> dataSource) {
-		boolean flag = false;
-		for (Iterator<Entry<String, String>> it = dataSource.entrySet().iterator(); it.hasNext();) {
-			Entry<String, String> entry = it.next();
-			if (flag) {
-				sqlBuffer.append(SQLUtils.COMMA_SPACE);
-			} else {
-				flag = true;
-			}
-			sqlBuffer.append(wrapKey(entry.getKey()));
-			apppendEquals(sqlBuffer);
-			sqlBuffer.append(wrapValue(entry.getValue()));
-		}
-	}
-
-	private static String wrapKey(String value) {
-		return isString(value) ? value : wrapString(value);
-	}
-
-	/**
-	 * 包装配置的值
-	 * 
-	 * @param value
-	 *            配置的值
-	 * @return 返回包装后的配置值
-	 */
-	private static String wrapValue(String value) {
-		if (StringUtils.isBlank(value)) {
-			return SINGLE_QUOTATION_MARK + value + SINGLE_QUOTATION_MARK;
-		} else if (isString(value) || StringUtils.isNumber(value) || isDuration(value)) {
-			return value;
-		}
-		return wrapString(value);
-	}
-
-	private static String wrapString(String value) {
-		return SINGLE_QUOTATION_MARK + value.replaceAll(SINGLE_QUOTATION_MARK, "\\'") + SINGLE_QUOTATION_MARK;
-	}
-
-	private static boolean isString(String value) {
-		return value.startsWith(SINGLE_QUOTATION_MARK) && value.endsWith(SINGLE_QUOTATION_MARK);
-	}
-
-	private static boolean isDuration(String value) {
-		for (int i = 0; i < DURATIONS.length; i++) {
-			if (value.endsWith(DURATIONS[i])
-					&& StringUtils.isNumber(value.substring(0, value.length() - DURATIONS[i].length()))) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	private static void apppendEquals(StringBuffer sqlBuffer) {
-		sqlBuffer.append(" = ");
 	}
 
 	/**
@@ -244,9 +193,9 @@ public class ExecuteSqlOperator extends AbstractSqlOperator<ExecuteSql> {
 					break;
 				}
 			}
-			sqlBuffer.append(SQLUtils.COMMA_SPACE).append(wrapString(TABLE_NAME));
-			apppendEquals(sqlBuffer);
-			sqlBuffer.append(wrapString(tableNameBuilder.reverse().toString()));
+			sqlBuffer.append(DSLUtils.COMMA).append(DSLUtils.BLANK_SPACE).append(SQLUtils.wrapString(TABLE_NAME));
+			SQLUtils.apppendEquals(sqlBuffer);
+			sqlBuffer.append(SQLUtils.wrapString(tableNameBuilder.reverse().toString()));
 		}
 	}
 

@@ -10,6 +10,7 @@ import java.sql.Timestamp;
  *
  * @since 1.0.1
  */
+@Deprecated
 public class KafkaDBMessage implements Serializable {
 
 	/**

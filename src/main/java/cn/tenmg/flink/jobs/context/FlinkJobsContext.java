@@ -12,9 +12,9 @@ import org.apache.flink.configuration.Configuration;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
 
+import cn.tenmg.dsl.utils.PropertiesLoaderUtils;
 import cn.tenmg.flink.jobs.exception.DataSourceNotFoundException;
 import cn.tenmg.flink.jobs.utils.PlaceHolderUtils;
-import cn.tenmg.flink.jobs.utils.PropertiesLoaderUtils;
 
 /**
  * flink-jobs上下文
@@ -340,12 +340,11 @@ public abstract class FlinkJobsContext {
 		}
 	}
 
-	
 	public static void main(String[] args) {
 		Entry<Object, Object> entry;
 		for (Iterator<Entry<Object, Object>> it = configProperties.entrySet().iterator(); it.hasNext();) {
 			entry = it.next();
-			System.out.println(entry.getKey()+"="+entry.getValue());
+			System.out.println(entry.getKey() + "=" + entry.getValue());
 		}
 	}
 }

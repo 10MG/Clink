@@ -22,6 +22,7 @@ import cn.tenmg.flink.jobs.serialization.KafkaDBMessageDeserializationSchema;
  *
  * @since 1.0.1
  */
+@Deprecated
 public abstract class KafkaDBMessageService implements StreamService {
 
 	/**

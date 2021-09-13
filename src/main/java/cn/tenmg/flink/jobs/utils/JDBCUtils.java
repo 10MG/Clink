@@ -1,9 +1,11 @@
 package cn.tenmg.flink.jobs.utils;
 
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.logging.log4j.LogManager;
@@ -19,13 +21,13 @@ import cn.tenmg.flink.jobs.context.FlinkJobsContext;
  * 
  * @since 1.1.0
  */
-public abstract class JdbcUtils {
+public abstract class JDBCUtils {
 
-	private static final Logger log = LogManager.getLogger(JdbcUtils.class);
+	private static final Logger log = LogManager.getLogger(JDBCUtils.class);
 
 	private static final String JDBC_PRODUCT_NAME_SPLIT = ":";
 
-	private JdbcUtils() {
+	private JDBCUtils() {
 	}
 
 	/**
@@ -111,6 +113,24 @@ public abstract class JdbcUtils {
 					log.error("Unexpected exception on closing JDBC ResultSet", ex);
 				}
 			}
+		}
+	}
+
+	/**
+	 * 设置参数
+	 * 
+	 * @param ps
+	 *            SQL声明对象
+	 * @param params
+	 *            查询参数
+	 * @throws SQLException
+	 */
+	public static void setParams(PreparedStatement ps, List<Object> params) throws SQLException {
+		if (params == null || params.isEmpty()) {
+			return;
+		}
+		for (int i = 0, size = params.size(); i < size; i++) {
+			ps.setObject(i + 1, params.get(i));
 		}
 	}
 }
