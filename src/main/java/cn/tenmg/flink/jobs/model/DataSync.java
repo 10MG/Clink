@@ -20,6 +20,8 @@ public class DataSync extends Operate {
 
 	private String from;
 
+	private String topic;
+
 	private String fromConfig;
 
 	private String to;
@@ -31,6 +33,8 @@ public class DataSync extends Operate {
 	private String primaryKey;
 
 	private List<Column> columns;
+
+	private Boolean smart;
 
 	/**
 	 * 获取来源数据源名称
@@ -44,11 +48,28 @@ public class DataSync extends Operate {
 	/**
 	 * 设置来源数据源名称
 	 * 
-	 * @param from
-	 *            来源数据源名称
+	 * @param from 来源数据源名称
 	 */
 	public void setFrom(String from) {
 		this.from = from;
+	}
+
+	/**
+	 * 获取主题
+	 * 
+	 * @return 返回主题
+	 */
+	public String getTopic() {
+		return topic;
+	}
+
+	/**
+	 * 设置主题
+	 * 
+	 * @param topic 主题
+	 */
+	public void setTopic(String topic) {
+		this.topic = topic;
 	}
 
 	/**
@@ -63,8 +84,7 @@ public class DataSync extends Operate {
 	/**
 	 * 设置来源配置
 	 * 
-	 * @param fromConfig
-	 *            来源配置
+	 * @param fromConfig 来源配置
 	 */
 	public void setFromConfig(String fromConfig) {
 		this.fromConfig = fromConfig;
@@ -82,8 +102,7 @@ public class DataSync extends Operate {
 	/**
 	 * 设置目标数据源名称
 	 * 
-	 * @param to
-	 *            目标数据源名称
+	 * @param to 目标数据源名称
 	 */
 	public void setTo(String to) {
 		this.to = to;
@@ -101,8 +120,7 @@ public class DataSync extends Operate {
 	/**
 	 * 设置目标配置
 	 * 
-	 * @param toConfig
-	 *            目标配置
+	 * @param toConfig 目标配置
 	 */
 	public void setToConfig(String toConfig) {
 		this.toConfig = toConfig;
@@ -120,8 +138,7 @@ public class DataSync extends Operate {
 	/**
 	 * 设置同步数据表名
 	 * 
-	 * @param table
-	 *            同步数据表名
+	 * @param table 同步数据表名
 	 */
 	public void setTable(String table) {
 		this.table = table;
@@ -139,8 +156,7 @@ public class DataSync extends Operate {
 	/**
 	 * 设置同步数据列
 	 * 
-	 * @param columns
-	 *            同步数据列
+	 * @param columns 同步数据列
 	 */
 	public void setColumns(List<Column> columns) {
 		this.columns = columns;
@@ -158,11 +174,28 @@ public class DataSync extends Operate {
 	/**
 	 * 设置主键
 	 * 
-	 * @param primaryKey
-	 *            主键。如为复合主键，多个字段名之间使用“,”分隔
+	 * @param primaryKey 主键。如为复合主键，多个字段名之间使用“,”分隔
 	 */
 	public void setPrimaryKey(String primaryKey) {
 		this.primaryKey = primaryKey;
+	}
+
+	/**
+	 * 获取智能模式状态
+	 * 
+	 * @return 返回智能模式状态
+	 */
+	public Boolean getSmart() {
+		return smart;
+	}
+
+	/**
+	 * 设置智能模式状态。true表示开启智能模式，即自动查询列名和数据类型信息，false则表示仅使用指定的列执行数据同步，不设置表示使用配置文件的配置，如果配置文件未指定则默认为true。
+	 * 
+	 * @param smart 智能模式状态
+	 */
+	public void setSmart(Boolean smart) {
+		this.smart = smart;
 	}
 
 }

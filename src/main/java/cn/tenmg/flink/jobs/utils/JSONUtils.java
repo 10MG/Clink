@@ -13,7 +13,7 @@ import java.util.Map.Entry;
  * 
  * @author 赵伟均 wjzhao@aliyun.com
  * 
- * @since 1.2.0
+ * @since 1.1.2
  */
 public abstract class JSONUtils {
 

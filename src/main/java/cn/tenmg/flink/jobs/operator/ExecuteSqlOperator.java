@@ -4,8 +4,6 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
-import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -26,6 +24,7 @@ import cn.tenmg.flink.jobs.parser.FlinkSQLParamsParser;
 import cn.tenmg.flink.jobs.utils.ConfigurationUtils;
 import cn.tenmg.flink.jobs.utils.JDBCUtils;
 import cn.tenmg.flink.jobs.utils.JSONUtils;
+import cn.tenmg.flink.jobs.utils.MapUtils;
 import cn.tenmg.flink.jobs.utils.SQLUtils;
 
 /**
@@ -61,7 +60,7 @@ public class ExecuteSqlOperator extends AbstractSqlOperator<ExecuteSql> {
 		String datasource = sql.getDataSource(), statement = namedScript.getScript();
 		if (StringUtils.isNotBlank(datasource)) {
 			Map<String, String> dataSource = FlinkJobsContext.getDatasource(datasource);
-			if (isJDBC(dataSource)
+			if (ConfigurationUtils.isJDBC(dataSource)
 					&& (statement.matches(DELETE_CLAUSE_REGEX) || statement.matches(UPDATE_CLAUSE_REGEX))) {// DELETE/UPDATE语句，使用JDBC执行
 				Script<List<Object>> script = DSLUtils.toScript(namedScript.getScript(), namedScript.getParams(),
 						JDBCParamsParser.getInstance());
@@ -102,10 +101,8 @@ public class ExecuteSqlOperator extends AbstractSqlOperator<ExecuteSql> {
 	/**
 	 * 包装数据源，即包装Flink SQL的CREATE TABLE语句的WITH子句
 	 * 
-	 * @param script
-	 *            SQL脚本
-	 * @throws IOException
-	 *             I/O异常
+	 * @param script SQL脚本
+	 * @throws IOException I/O异常
 	 */
 	private static String wrapDataSource(String script, Map<String, String> dataSource) throws IOException {
 		Matcher matcher = WITH_CLAUSE_PATTERN.matcher(script);
@@ -124,11 +121,8 @@ public class ExecuteSqlOperator extends AbstractSqlOperator<ExecuteSql> {
 				sqlBuffer.append(end);
 			} else {
 				Map<String, String> config = ConfigurationUtils.load(value),
-						actualDataSource = new HashMap<String, String>();
-				actualDataSource.putAll(dataSource);
-				for (Iterator<String> it = config.keySet().iterator(); it.hasNext();) {
-					actualDataSource.remove(it.next());
-				}
+						actualDataSource = MapUtils.newHashMap(dataSource);
+				MapUtils.removeAll(actualDataSource, config.keySet());
 				matcher.appendReplacement(sqlBuffer, start);
 				StringBuilder blank = new StringBuilder();
 				int len = value.length(), i = len - 1;
@@ -142,7 +136,7 @@ public class ExecuteSqlOperator extends AbstractSqlOperator<ExecuteSql> {
 				}
 				sqlBuffer.append(value.substring(0, i + 1)).append(DSLUtils.COMMA).append(DSLUtils.BLANK_SPACE);
 				SQLUtils.appendDataSource(sqlBuffer, actualDataSource);
-				if (isJDBC(actualDataSource) && !config.containsKey(TABLE_NAME)
+				if (ConfigurationUtils.isJDBC(actualDataSource) && !config.containsKey(TABLE_NAME)
 						&& !actualDataSource.containsKey(TABLE_NAME)) {
 					apppendDefaultTableName(sqlBuffer, script);
 				}
@@ -160,17 +154,11 @@ public class ExecuteSqlOperator extends AbstractSqlOperator<ExecuteSql> {
 		return sqlBuffer.toString();
 	}
 
-	private static boolean isJDBC(Map<String, String> dataSource) {
-		return "jdbc".equals(dataSource.get("connector"));
-	}
-
 	/**
 	 * 追加默认表名，默认表名从CREATE语句中获取
 	 * 
-	 * @param sqlBuffer
-	 *            SQL语句缓冲器
-	 * @param script
-	 *            原SQL脚本
+	 * @param sqlBuffer SQL语句缓冲器
+	 * @param script    原SQL脚本
 	 */
 	private static void apppendDefaultTableName(StringBuffer sqlBuffer, String script) {
 		Matcher createMatcher = CREATE_CLAUSE_PATTERN.matcher(script);

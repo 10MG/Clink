@@ -25,24 +25,32 @@ public abstract class JDBCUtils {
 
 	private static final Logger log = LogManager.getLogger(JDBCUtils.class);
 
-	private static final String JDBC_PRODUCT_NAME_SPLIT = ":";
+	private static final String JDBC_PRODUCT_SPLIT = ":";
 
 	private JDBCUtils() {
 	}
 
 	/**
+	 * 根据连接地址获取产品名称
+	 * 
+	 * @param url 连接地址
+	 * @return 返回产品名称
+	 */
+	public static final String getProduct(String url) {
+		String tmp = url.substring(url.indexOf(JDBC_PRODUCT_SPLIT) + 1);
+		return tmp.substring(0, tmp.indexOf(JDBC_PRODUCT_SPLIT));
+	}
+
+	/**
 	 * 加载JDBC驱动程序
 	 * 
-	 * @param dataSource
-	 *            数据源配置查找表
-	 * @throws ClassNotFoundException
-	 *             未找到驱动类异常
+	 * @param dataSource 数据源配置查找表
+	 * @throws ClassNotFoundException 未找到驱动类异常
 	 */
 	public static final void loadDriver(Map<String, String> dataSource) throws ClassNotFoundException {
 		String driver = dataSource.get("driver"), url = dataSource.get("url");
 		if (StringUtils.isBlank(driver)) {
-			String tmp = url.substring(url.indexOf(JDBC_PRODUCT_NAME_SPLIT) + 1);
-			driver = FlinkJobsContext.getDefaultJDBCDriver(tmp.substring(0, tmp.indexOf(JDBC_PRODUCT_NAME_SPLIT)));
+			driver = FlinkJobsContext.getDefaultJDBCDriver(getProduct(url));
 		}
 		Class.forName(driver);
 	}
@@ -50,8 +58,7 @@ public abstract class JDBCUtils {
 	/**
 	 * 关闭连接
 	 * 
-	 * @param con
-	 *            连接
+	 * @param con 连接
 	 */
 	public static void close(Connection con) {
 		if (con != null) {
@@ -97,8 +104,7 @@ public abstract class JDBCUtils {
 	/**
 	 * 关闭结果集
 	 * 
-	 * @param rs
-	 *            结果集
+	 * @param rs 结果集
 	 */
 	public static void close(ResultSet rs) {
 		if (rs != null) {
@@ -119,10 +125,8 @@ public abstract class JDBCUtils {
 	/**
 	 * 设置参数
 	 * 
-	 * @param ps
-	 *            SQL声明对象
-	 * @param params
-	 *            查询参数
+	 * @param ps     SQL声明对象
+	 * @param params 查询参数
 	 * @throws SQLException
 	 */
 	public static void setParams(PreparedStatement ps, List<Object> params) throws SQLException {
