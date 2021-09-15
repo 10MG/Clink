@@ -200,6 +200,24 @@ script     | `String` | 是 | 基于[DSL](https://gitee.com/tenmg/dsl)的SQL脚�
 
 目标JDBC SQL代码是在flink-jobs应用程序的main函数中运行的。
 
+#### DataSync操作
+
+DataSync操作的作用是运行基于Flink SQL的流式任务实现数据同步，支持版本：1.1.2+，相关属性及说明如下：
+
+属性       | 类型            | 必需 | 说明
+-----------|----------------|----|--------
+type       | `String`       | 是 | 操作类型。这里是"DataSync"。
+saveAs     | `String`       | 否 | 执行结果另存为一个新的变量的名称。变量的值是执行`INSERT`语句返回的`org.apache.flink.table.api.TableResult`对象。
+from       | `String`       | 是 | 来源Kafka数据源名称。
+topic      | `String`       | 否 | Kafka主题。也可在fromConfig中配置`topic=xxx`。
+fromConfig | `String`       | 否 | 来源配置。例如：`properties.group.id=flink-jobs`。
+to         | `String`       | 是 | 目标数据源名称，目前仅支持JDBC数据源。
+toConfig   | `String`       | 是 | 来源配置。例如：`sink.buffer-flush.max-rows = 0`。
+table      | `String`       | 是 | 同步数据表名。
+columns    | `List<Column>` | 否 | 同步列。当开启智能模式时，会自动获取列信息。
+primaryKey | `String`       | 否 | 主键，多个列名以“,”分隔。当开启智能模式时，会自动获取主键信息。
+smart      | `Boolean`      | 否 | 是否开启智能模式。不设置时，根据全局配置确定是否开启智能模式，全局默认配置为`data.sync.smart=true`。
+
 ### 配置文件
 
 默认的配置文件为flink-jobs.properties（注意：需在classpath下），可通过flink-jobs-context-loader.properties配置文件的`config.location`修改配置文件路径和名称。配置项的值允许通过占位符`${}`引用，例如`key=${anotherKey}`。
