@@ -148,7 +148,7 @@ operates    | `List<Operate>`      | 否 | 操作列表。目前支持类型为[
 
 #### Bsh操作
 
-Bsh操作的作用是运行基于Beanshell的java代码，相关属性及说明如下：
+Bsh操作的作用是运行基于Beanshell的java代码，支持版本：1.1.0+，相关属性及说明如下：
 
 属性   | 类型        | 必需 | 说明
 -------|-------------|----|--------
@@ -166,7 +166,7 @@ value | `String` | 否 | 变量对应的值的名称。默认与name相同。fli
 
 #### ExecuteSql操作
 
-ExecuteSql操作的作用是运行基于[DSL](https://gitee.com/tenmg/dsl)的SQL代码，相关属性及说明如下：
+ExecuteSql操作的作用是运行基于[DSL](https://gitee.com/tenmg/dsl)的SQL代码，支持版本：1.1.0+，相关属性及说明如下：
 
 属性       | 类型     | 必需 | 说明
 -----------|----------|----|--------
@@ -178,7 +178,7 @@ script     | `String` | 是 | 基于[DSL](https://gitee.com/tenmg/dsl)的SQL脚�
 
 #### SqlQuery操作
 
-SqlQuery操作的作用是运行基于[DSL](https://gitee.com/tenmg/dsl)的SQL查询代码，相关属性及说明如下：
+SqlQuery操作的作用是运行基于[DSL](https://gitee.com/tenmg/dsl)的SQL查询代码，支持版本：1.1.0+，相关属性及说明如下：
 
 属性       | 类型  | 必需 | 说明
 -----------|--------|----|--------
@@ -188,7 +188,7 @@ script     | `String` | 是 | 基于[DSL](https://gitee.com/tenmg/dsl)的SQL脚�
 
 #### Jdbc操作
 
-Jdbc操作的作用是运行基于[DSL](https://gitee.com/tenmg/dsl)的JDBC SQL代码，相关属性及说明如下：
+Jdbc操作的作用是运行基于[DSL](https://gitee.com/tenmg/dsl)的JDBC SQL代码，支持版本：1.1.1+，相关属性及说明如下：
 
 属性       | 类型     | 必需 | 说明
 -----------|----------|----|--------
