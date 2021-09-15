@@ -79,6 +79,9 @@ public class DataSyncOperator extends AbstractOperator<DataSync> {
 					}
 					String toType = columnsMap.get(toName);
 					if (toType != null) {
+						if (StringUtils.isBlank(column.getFromType())) {
+							column.setFromType(toType);
+						}
 						if (StringUtils.isBlank(column.getToType())) {
 							column.setToType(toType);
 						}
