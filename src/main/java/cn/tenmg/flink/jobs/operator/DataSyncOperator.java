@@ -32,8 +32,9 @@ import cn.tenmg.flink.jobs.utils.SQLUtils;
  */
 public class DataSyncOperator extends AbstractOperator<DataSync> {
 
-	private static final String SMART_KEY = "data.sync.smart", FORM_TABLE_PREFIX_KEY = "data.sync.form_table_prefix",
-			TOPIC_KEY = "topic";
+	private static final String SMART_KEY = "data.sync.smart", FROM_TABLE_PREFIX_KEY = "data.sync.from_table_prefix",
+			TOPIC_KEY = "topic", GROUP_ID_KEY = "properties.group.id",
+			GROUP_ID_PREFIX_KEY = "data.sync.group_id_prefix";
 
 	@Override
 	Object execute(StreamExecutionEnvironment env, DataSync dataSync, Map<String, Object> params) throws Exception {
@@ -45,12 +46,18 @@ public class DataSyncOperator extends AbstractOperator<DataSync> {
 		String primaryKey = dataSync.getPrimaryKey(), topic = dataSync.getTopic(),
 				currentCatalog = tableEnv.getCurrentCatalog(),
 				defaultCatalog = FlinkJobsContext.getDefaultCatalog(tableEnv),
-				fromTable = FlinkJobsContext.get(FORM_TABLE_PREFIX_KEY) + table;
+				fromTable = FlinkJobsContext.get(FROM_TABLE_PREFIX_KEY) + table,
+
+				fromConfig = dataSync.getFromConfig();
 		if (!defaultCatalog.equals(currentCatalog)) {
 			tableEnv.useCatalog(defaultCatalog);
 		}
-		Map<String, String> fromDataSource = FlinkJobsContext.getDatasource(from),
+		Map<String, String> fromDataSource = MapUtils.newHashMap(FlinkJobsContext.getDatasource(from)),
 				toDataSource = FlinkJobsContext.getDatasource(to);
+		if (StringUtils.isBlank(fromConfig)) {// 设置properties.group.id
+			fromDataSource.put(GROUP_ID_KEY, FlinkJobsContext.getProperty(GROUP_ID_PREFIX_KEY) + table);
+		}
+
 		List<Column> columns = dataSync.getColumns();
 		Boolean smart = dataSync.getSmart();
 		if (smart == null) {
@@ -91,8 +98,7 @@ public class DataSyncOperator extends AbstractOperator<DataSync> {
 				addColumns(columns, columnsMap);
 			}
 		}
-		tableEnv.executeSql(
-				fromCreateTableSQL(fromDataSource, topic, fromTable, columns, primaryKey, dataSync.getFromConfig()));
+		tableEnv.executeSql(fromCreateTableSQL(fromDataSource, topic, fromTable, columns, primaryKey, fromConfig));
 		tableEnv.executeSql(toCreateTableSQL(toDataSource, table, columns, primaryKey, dataSync.getToConfig()));
 		return tableEnv.executeSql(insertSQL(table, fromTable, columns));
 	}
@@ -129,21 +135,17 @@ public class DataSyncOperator extends AbstractOperator<DataSync> {
 
 		sqlBuffer.append(") ").append("WITH (");
 		if (StringUtils.isBlank(fromConfig)) {
-			if (topic == null) {
-				SQLUtils.appendDataSource(sqlBuffer, dataSource);
-			} else {
-				Map<String, String> actualDataSource = MapUtils.newHashMap(dataSource);
-				actualDataSource.put(TOPIC_KEY, topic);
-				SQLUtils.appendDataSource(sqlBuffer, actualDataSource);
+			if (topic != null) {
+				dataSource.put(TOPIC_KEY, topic);
 			}
+			SQLUtils.appendDataSource(sqlBuffer, dataSource);
 		} else {
-			Map<String, String> actualDataSource = MapUtils.newHashMap(dataSource),
-					config = ConfigurationUtils.load(fromConfig);
-			MapUtils.removeAll(actualDataSource, config.keySet());
+			Map<String, String> config = ConfigurationUtils.load(fromConfig);
+			MapUtils.removeAll(dataSource, config.keySet());
 			if (topic != null && !config.containsKey(TOPIC_KEY)) {
-				actualDataSource.put(TOPIC_KEY, topic);
+				dataSource.put(TOPIC_KEY, topic);
 			}
-			SQLUtils.appendDataSource(sqlBuffer, actualDataSource);
+			SQLUtils.appendDataSource(sqlBuffer, dataSource);
 			sqlBuffer.append(DSLUtils.COMMA).append(DSLUtils.BLANK_SPACE).append(fromConfig);
 		}
 		sqlBuffer.append(")");
