@@ -208,15 +208,25 @@ DataSync操作的作用是运行基于Flink SQL的流式任务实现数据同步
 -----------|----------------|----|--------
 type       | `String`       | 是 | 操作类型。这里是"DataSync"。
 saveAs     | `String`       | 否 | 执行结果另存为一个新的变量的名称。变量的值是执行`INSERT`语句返回的`org.apache.flink.table.api.TableResult`对象。
-from       | `String`       | 是 | 来源Kafka数据源名称。
+from       | `String`       | 是 | 来源数据源名称。目前仅支持Kafka数据源。
 topic      | `String`       | 否 | Kafka主题。也可在fromConfig中配置`topic=xxx`。
 fromConfig | `String`       | 否 | 来源配置。例如：`properties.group.id=flink-jobs`。
 to         | `String`       | 是 | 目标数据源名称，目前仅支持JDBC数据源。
-toConfig   | `String`       | 是 | 来源配置。例如：`sink.buffer-flush.max-rows = 0`。
+toConfig   | `String`       | 是 | 目标配置。例如：`sink.buffer-flush.max-rows = 0`。
 table      | `String`       | 是 | 同步数据表名。
-columns    | `List<Column>` | 否 | 同步列。当开启智能模式时，会自动获取列信息。
+columns    | `List<Column>` | 否 | 同步数据列。当开启智能模式时，会自动获取列信息。
 primaryKey | `String`       | 否 | 主键，多个列名以“,”分隔。当开启智能模式时，会自动获取主键信息。
 smart      | `Boolean`      | 否 | 是否开启智能模式。不设置时，根据全局配置确定是否开启智能模式，全局默认配置为`data.sync.smart=true`。
+
+##### Column
+
+属性     | 类型     | 必需 | 说明
+---------|----------|----|--------
+fromName | `String` | 是 | 来源列名。
+fromType | `String` | 否 | 来源数据类型。如果缺省，则如果开启智能模式会自动获取目标数据类型作为来源数据类型，如果关闭智能模式则必填。
+toName   | `String` | 否 | 目标列名。默认为来源列名。
+toType   | `String` | 否 | 目标列数据类型。如果缺省，则如果开启智能模式会自动获取，如果关闭智能模式则默认为来源列数据类型。
+script   | `String` | 否 | 自定义脚本。通常是需要进行函数转换时使用。
 
 ### 配置文件
 
