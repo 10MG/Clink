@@ -27,7 +27,7 @@ public abstract class SQLUtils {
 
 	public static final String SINGLE_QUOTATION_MARK = "'";
 
-	private static final String SPACE_EQUALS_SPACE = " = ", DURATIONS[] = { "d", "h", "m", "s", "ms" },
+	private static final String SPACE_EQUALS_SPACE = " = ", /* DURATIONS[] = { "d", "h", "m", "s", "ms" }, */
 			DATE_PATTERN = "yyyy-MM-dd HH:mm:ss", TIMESTAMP_PATTERN = "yyyy-MM-dd HH:mm:ss.S",
 			TIME_PATTERN = "HH:mm:ss";
 
@@ -88,15 +88,12 @@ public abstract class SQLUtils {
 		return value.startsWith(SINGLE_QUOTATION_MARK) && value.endsWith(SINGLE_QUOTATION_MARK);
 	}
 
-	private static boolean isDuration(String value) {
-		for (int i = 0; i < DURATIONS.length; i++) {
-			if (value.endsWith(DURATIONS[i])
-					&& StringUtils.isNumber(value.substring(0, value.length() - DURATIONS[i].length()))) {
-				return true;
-			}
-		}
-		return false;
-	}
+	/*
+	 * private static boolean isDuration(String value) { for (int i = 0; i <
+	 * DURATIONS.length; i++) { if (value.endsWith(DURATIONS[i]) &&
+	 * StringUtils.isNumber(value.substring(0, value.length() -
+	 * DURATIONS[i].length()))) { return true; } } return false; }
+	 */
 
 	/**
 	 * 包装配置的值
@@ -106,9 +103,9 @@ public abstract class SQLUtils {
 	 * @return 返回包装后的配置值
 	 */
 	private static String wrapValue(String value) {
-		if (StringUtils.isBlank(value)) {
-			return SINGLE_QUOTATION_MARK + value + SINGLE_QUOTATION_MARK;
-		} else if (isString(value) || StringUtils.isNumber(value) || isDuration(value)) {
+		if (value == null) {
+			return "null";
+		} else if (isString(value)) {
 			return value;
 		}
 		return wrapString(value);
