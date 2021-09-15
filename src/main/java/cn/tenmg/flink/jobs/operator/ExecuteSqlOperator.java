@@ -2,7 +2,6 @@ package cn.tenmg.flink.jobs.operator;
 
 import java.io.IOException;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.util.List;
 import java.util.Map;
@@ -68,9 +67,7 @@ public class ExecuteSqlOperator extends AbstractSqlOperator<ExecuteSql> {
 				Connection con = null;
 				PreparedStatement ps = null;
 				try {
-					JDBCUtils.loadDriver(dataSource);
-					con = DriverManager.getConnection(dataSource.get("url"), dataSource.get("username"),
-							dataSource.get("password"));// 获得数据库连接
+					con = JDBCUtils.getConnection(dataSource);// 获得数据库连接
 					con.setAutoCommit(true);
 					ps = con.prepareStatement(statement);
 					List<Object> parameters = script.getParams();
@@ -101,8 +98,10 @@ public class ExecuteSqlOperator extends AbstractSqlOperator<ExecuteSql> {
 	/**
 	 * 包装数据源，即包装Flink SQL的CREATE TABLE语句的WITH子句
 	 * 
-	 * @param script SQL脚本
-	 * @throws IOException I/O异常
+	 * @param script
+	 *            SQL脚本
+	 * @throws IOException
+	 *             I/O异常
 	 */
 	private static String wrapDataSource(String script, Map<String, String> dataSource) throws IOException {
 		Matcher matcher = WITH_CLAUSE_PATTERN.matcher(script);
@@ -157,8 +156,10 @@ public class ExecuteSqlOperator extends AbstractSqlOperator<ExecuteSql> {
 	/**
 	 * 追加默认表名，默认表名从CREATE语句中获取
 	 * 
-	 * @param sqlBuffer SQL语句缓冲器
-	 * @param script    原SQL脚本
+	 * @param sqlBuffer
+	 *            SQL语句缓冲器
+	 * @param script
+	 *            原SQL脚本
 	 */
 	private static void apppendDefaultTableName(StringBuffer sqlBuffer, String script) {
 		Matcher createMatcher = CREATE_CLAUSE_PATTERN.matcher(script);

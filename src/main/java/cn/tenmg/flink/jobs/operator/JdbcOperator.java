@@ -2,7 +2,6 @@ package cn.tenmg.flink.jobs.operator;
 
 import java.math.BigDecimal;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.util.Calendar;
 import java.util.Collection;
@@ -38,17 +37,15 @@ public class JdbcOperator extends AbstractOperator<Jdbc> {
 	@Override
 	Object execute(StreamExecutionEnvironment env, Jdbc jdbc, Map<String, Object> params) throws Exception {
 		NamedScript namedScript = DSLUtils.parse(jdbc.getScript(), params);
-		String dataSource = jdbc.getDataSource();
+		String datasource = jdbc.getDataSource();
 		Script<List<Object>> sql = DSLUtils.toScript(namedScript.getScript(), namedScript.getParams(),
 				JDBCParamsParser.getInstance());
-		if (StringUtils.isNotBlank(dataSource)) {
-			Map<String, String> dsConfig = FlinkJobsContext.getDatasource(dataSource);
+		if (StringUtils.isNotBlank(datasource)) {
+			Map<String, String> dataSource = FlinkJobsContext.getDatasource(datasource);
 			Connection con = null;
 			PreparedStatement ps = null;
 			try {
-				JDBCUtils.loadDriver(dsConfig);
-				con = DriverManager.getConnection(dsConfig.get("url"), dsConfig.get("username"),
-						dsConfig.get("password"));// 获得数据库连接
+				con = JDBCUtils.getConnection(dataSource);// 获得数据库连接
 				con.setAutoCommit(true);
 				String statement = sql.getValue();
 				ps = con.prepareStatement(statement);

@@ -1,6 +1,7 @@
 package cn.tenmg.flink.jobs.utils;
 
 import java.sql.Connection;
+import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -33,7 +34,8 @@ public abstract class JDBCUtils {
 	/**
 	 * 根据连接地址获取产品名称
 	 * 
-	 * @param url 连接地址
+	 * @param url
+	 *            连接地址
 	 * @return 返回产品名称
 	 */
 	public static final String getProduct(String url) {
@@ -44,9 +46,12 @@ public abstract class JDBCUtils {
 	/**
 	 * 加载JDBC驱动程序
 	 * 
-	 * @param dataSource 数据源配置查找表
-	 * @throws ClassNotFoundException 未找到驱动类异常
+	 * @param dataSource
+	 *            数据源配置查找表
+	 * @throws ClassNotFoundException
+	 *             未找到驱动类异常
 	 */
+	@Deprecated
 	public static final void loadDriver(Map<String, String> dataSource) throws ClassNotFoundException {
 		String driver = dataSource.get("driver"), url = dataSource.get("url");
 		if (StringUtils.isBlank(driver)) {
@@ -55,10 +60,22 @@ public abstract class JDBCUtils {
 		Class.forName(driver);
 	}
 
+	public static final Connection getConnection(Map<String, String> dataSource)
+			throws SQLException, ClassNotFoundException {
+		String driver = dataSource.get("driver"), url = dataSource.get("url");
+		if (StringUtils.isBlank(driver)) {
+			driver = FlinkJobsContext.getDefaultJDBCDriver(getProduct(url));
+		}
+		Class.forName(driver);
+		return DriverManager.getConnection(dataSource.get("url"), dataSource.get("username"),
+				dataSource.get("password"));
+	}
+
 	/**
 	 * 关闭连接
 	 * 
-	 * @param con 连接
+	 * @param con
+	 *            连接
 	 */
 	public static void close(Connection con) {
 		if (con != null) {
@@ -104,7 +121,8 @@ public abstract class JDBCUtils {
 	/**
 	 * 关闭结果集
 	 * 
-	 * @param rs 结果集
+	 * @param rs
+	 *            结果集
 	 */
 	public static void close(ResultSet rs) {
 		if (rs != null) {
@@ -125,8 +143,10 @@ public abstract class JDBCUtils {
 	/**
 	 * 设置参数
 	 * 
-	 * @param ps     SQL声明对象
-	 * @param params 查询参数
+	 * @param ps
+	 *            SQL声明对象
+	 * @param params
+	 *            查询参数
 	 * @throws SQLException
 	 */
 	public static void setParams(PreparedStatement ps, List<Object> params) throws SQLException {

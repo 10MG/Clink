@@ -2,9 +2,11 @@ package cn.tenmg.flink.jobs.operator;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
@@ -14,6 +16,9 @@ import cn.tenmg.dsl.utils.DSLUtils;
 import cn.tenmg.flink.jobs.context.FlinkJobsContext;
 import cn.tenmg.flink.jobs.model.DataSync;
 import cn.tenmg.flink.jobs.model.data.sync.Column;
+import cn.tenmg.flink.jobs.operator.data.sync.MetaDataGetter;
+import cn.tenmg.flink.jobs.operator.data.sync.MetaDataGetter.TableMetaData;
+import cn.tenmg.flink.jobs.operator.data.sync.MetaDataGetterFactory;
 import cn.tenmg.flink.jobs.utils.ConfigurationUtils;
 import cn.tenmg.flink.jobs.utils.MapUtils;
 import cn.tenmg.flink.jobs.utils.SQLUtils;
@@ -34,7 +39,7 @@ public class DataSyncOperator extends AbstractOperator<DataSync> {
 	Object execute(StreamExecutionEnvironment env, DataSync dataSync, Map<String, Object> params) throws Exception {
 		String from = dataSync.getFrom(), to = dataSync.getTo(), table = dataSync.getTable();
 		if (StringUtils.isBlank(from) || StringUtils.isBlank(to) || StringUtils.isBlank(table)) {
-			throw new IllegalArgumentException("The property from, to or table of DataSync cannot be blank.");
+			throw new IllegalArgumentException("The property 'from', 'to' or 'table' cannot be blank.");
 		}
 		StreamTableEnvironment tableEnv = FlinkJobsContext.getOrCreateStreamTableEnvironment(env);
 		String primaryKey = dataSync.getPrimaryKey(), topic = dataSync.getTopic(),
@@ -52,12 +57,55 @@ public class DataSyncOperator extends AbstractOperator<DataSync> {
 			smart = Boolean.valueOf(FlinkJobsContext.getProperty(SMART_KEY));
 		}
 		if (Boolean.TRUE.equals(smart)) {// 智能模式，自动查询列名、数据类型
-			
+			MetaDataGetter metaDataGetter = MetaDataGetterFactory.getMetaDataGetter(toDataSource);
+			TableMetaData tableMetaData = metaDataGetter.getTableMetaData(toDataSource, table);
+			Set<String> primaryKeys = tableMetaData.getPrimaryKeys();
+			if (primaryKey == null && primaryKeys != null && !primaryKeys.isEmpty()) {
+				primaryKey = String.join(",", primaryKeys);
+			}
+			Map<String, String> columnsMap = tableMetaData.getColumns();
+			if (columns == null) {
+				columns = new ArrayList<Column>();
+				addColumns(columns, columnsMap);
+			} else if (columns.isEmpty()) {
+				addColumns(columns, columnsMap);
+			} else {
+				String toName;
+				for (int i = 0, size = columns.size(); i < size; i++) {
+					Column column = columns.get(i);
+					toName = column.getToName();
+					if (StringUtils.isBlank(toName)) {
+						toName = column.getFromName();
+					}
+					String toType = columnsMap.get(toName);
+					if (toType != null) {
+						if (StringUtils.isBlank(column.getToType())) {
+							column.setToType(toType);
+						}
+						columnsMap.remove(toName);
+					}
+				}
+				addColumns(columns, columnsMap);
+			}
 		}
 		tableEnv.executeSql(
 				fromCreateTableSQL(fromDataSource, topic, fromTable, columns, primaryKey, dataSync.getFromConfig()));
 		tableEnv.executeSql(toCreateTableSQL(toDataSource, table, columns, primaryKey, dataSync.getToConfig()));
 		return tableEnv.executeSql(insertSQL(table, fromTable, columns));
+	}
+
+	private static void addColumns(List<Column> columns, Map<String, String> columnsMap) {
+		for (Iterator<Entry<String, String>> it = columnsMap.entrySet().iterator(); it.hasNext();) {
+			Entry<String, String> column = it.next();
+			addColumn(columns, column.getKey(), column.getValue());
+		}
+	}
+
+	private static void addColumn(List<Column> columns, String fromName, String fromType) {
+		Column column = new Column();
+		column.setFromName(fromName);
+		column.setFromType(fromType);
+		columns.add(column);
 	}
 
 	private static String fromCreateTableSQL(Map<String, String> dataSource, String topic, String fromTable,
@@ -161,54 +209,6 @@ public class DataSyncOperator extends AbstractOperator<DataSync> {
 
 		sqlBuffer.append(" FROM ").append(fromTable);
 		return sqlBuffer.toString();
-
-	}
-
-	public static void main(String[] args) throws IOException {
-		Map<String, String> kafka = new HashMap<String, String>() {
-			/**
-			 * 
-			 */
-			private static final long serialVersionUID = 7684549968969231800L;
-
-			{
-				put("connector", "kafka");
-				put("properties.bootstrap.servers", "192.168.81.103:9092,192.168.81.104:9092,192.168.81.105:9092");
-				put("properties.group.id", "sinochem-flink-jobs");
-				put("scan.startup.mode", "earliest-offset");
-				put("format", "debezium-json");
-				put("debezium-json.schema-include", "true");
-			}
-		}, bidb = new HashMap<String, String>() {
-			/**
-			 * 
-			 */
-			private static final long serialVersionUID = 7684549968969231800L;
-
-			{
-				put("connector", "jdbc");
-				put("driver", "org.postgresql.Driver");
-				put("url", "jdbc:postgresql://192.168.1.104:5432/bidb");
-				put("username", "your_name");
-				put("password", "your_password");
-			}
-		};
-		List<Column> columns = new ArrayList<Column>();
-		Column column = new Column();
-		column.setFromName("order_id");
-		column.setFromType("STRING");
-		columns.add(column);
-		System.out.println(fromCreateTableSQL(kafka, "kaorder.kaorder.order_detail", "kafka_order_info", columns,
-				"order_id",
-				"'topic' = 'kaorder.kaorder.order_detail', 'properties.group.id' = 'flink-jobs_kaorder_order_detail'"));
-
-		System.out.println();
-
-		System.out.println(toCreateTableSQL(bidb, "order_info", columns, "order_id", null));
-
-		System.out.println();
-
-		System.out.println(insertSQL("order_info", "kafka_order_info", columns));
 
 	}
 
