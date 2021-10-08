@@ -4,7 +4,7 @@ import java.io.Serializable;
 import java.sql.Timestamp;
 
 /**
- * 数据库操作的kafka消息实体类
+ * 数据库操作的kafka消息实体类。已废弃，将在下一版本移除
  * 
  * @author 赵伟均 wjzhao@aliyun.com
  *

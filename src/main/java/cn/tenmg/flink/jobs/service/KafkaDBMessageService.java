@@ -16,7 +16,7 @@ import cn.tenmg.flink.jobs.model.Arguments;
 import cn.tenmg.flink.jobs.serialization.KafkaDBMessageDeserializationSchema;
 
 /**
- * 数据库表数据变更处理服务
+ * 数据库表数据变更处理服务。已废弃，将在下一版本移除
  * 
  * @author 赵伟均 wjzhao@aliyun.com
  *

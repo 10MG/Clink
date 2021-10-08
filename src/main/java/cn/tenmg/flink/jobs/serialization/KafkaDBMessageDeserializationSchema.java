@@ -9,7 +9,7 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import cn.tenmg.flink.jobs.model.KafkaDBMessage;
 
 /**
- * 数据库操作的Kafka消息反序列化方案
+ * 数据库操作的Kafka消息反序列化方案。已废弃，将在下一版本移除
  * 
  * @author 赵伟均 wjzhao@aliyun.com
  * 

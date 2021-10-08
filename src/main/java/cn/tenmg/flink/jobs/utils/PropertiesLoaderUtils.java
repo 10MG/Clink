@@ -5,7 +5,7 @@ import java.io.InputStream;
 import java.util.Properties;
 
 /**
- * 配置加载工具类。请使用cn.tenmg.dsl.utils.PropertiesLoaderUtils替换
+ * 配置加载工具类。已废弃，将在下一版本移除，请使用cn.tenmg.dsl.utils.PropertiesLoaderUtils替换
  * 
  * @author 赵伟均 wjzhao@aliyun.com
  * 

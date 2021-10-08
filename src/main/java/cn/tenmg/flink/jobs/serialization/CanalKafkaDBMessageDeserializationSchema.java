@@ -9,7 +9,7 @@ import cn.tenmg.flink.jobs.model.KafkaDBMessage;
 import cn.tenmg.flink.jobs.model.KafkaDBMessage.Operate;
 
 /**
- * Canal生成的数据库操作的Kafka消息反序列化方案
+ * Canal生成的数据库操作的Kafka消息反序列化方案。已废弃，将在下一版本移除
  * 
  * @author 赵伟均 wjzhao@aliyun.com
  * 

@@ -3,7 +3,7 @@ package cn.tenmg.flink.jobs.utils;
 import javax.swing.Spring;
 
 /**
- * 类工具类。请使用cn.tenmg.dsl.utils.ClassUtils替换
+ * 类工具类。已废弃，将在下一版本移除，请使用cn.tenmg.dsl.utils.ClassUtils替换
  * 
  * @author 赵伟均 wjzhao@aliyun.com
  * @see Spring

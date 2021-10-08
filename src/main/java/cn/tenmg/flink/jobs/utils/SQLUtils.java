@@ -31,6 +31,9 @@ public abstract class SQLUtils {
 			DATE_PATTERN = "yyyy-MM-dd HH:mm:ss", TIMESTAMP_PATTERN = "yyyy-MM-dd HH:mm:ss.S",
 			TIME_PATTERN = "HH:mm:ss";
 
+	/**
+	 * 已废弃，将在下一版本移除
+	 */
 	@Deprecated
 	public static final String COMMA_SPACE = ", ";
 
@@ -112,7 +115,7 @@ public abstract class SQLUtils {
 	}
 
 	/**
-	 * 将指定的含命名参数的脚本转换为JDBC可执行的SQL对象，该对象内含SQL脚本及对应的参数列表。请使用cn.tenmg.dsl.utils.DSLUtils.toScript(namedscript.getScript(),
+	 * 将指定的含命名参数的脚本转换为JDBC可执行的SQL对象，该对象内含SQL脚本及对应的参数列表。已废弃，将在下一版本移除，请使用cn.tenmg.dsl.utils.DSLUtils.toScript(namedscript.getScript(),
 	 * namedscript.getParams(),cn.tenmg.dsl.utils.JDBCParamsParser.getInstance())替换
 	 * 
 	 * @param namedScript
@@ -182,7 +185,7 @@ public abstract class SQLUtils {
 
 	/**
 	 * 将指定的含命名参数的脚本转换为Flink
-	 * SQL。请使用cn.tenmg.dsl.utils.DSLUtils.toScript(namedscript.getScript(),
+	 * SQL。已废弃，将在下一版本移除，请使用cn.tenmg.dsl.utils.DSLUtils.toScript(namedscript.getScript(),
 	 * namedscript.getParams(),
 	 * cn.tenmg.flink.jobs.parser.FlinkSQLParamsParser.getInstance()).getValue()替换
 	 * 
@@ -252,6 +255,10 @@ public abstract class SQLUtils {
 		return sqlBuilder.toString();
 	}
 
+	/**
+	 * 已废弃，将在下一版本移除
+	 *
+	 */
 	@Deprecated
 	public static class JDBC {
 
