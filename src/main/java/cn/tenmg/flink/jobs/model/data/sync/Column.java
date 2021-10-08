@@ -38,7 +38,7 @@ public class Column implements Serializable {
 	/**
 	 * 设置来源列名
 	 * 
-	 * @param formName
+	 * @param fromName
 	 *            来源列名
 	 */
 	public void setFromName(String fromName) {
@@ -57,7 +57,7 @@ public class Column implements Serializable {
 	/**
 	 * 设置目标列名
 	 * 
-	 * @param formName
+	 * @param toName
 	 *            目标列名
 	 */
 	public void setToName(String toName) {
@@ -76,7 +76,7 @@ public class Column implements Serializable {
 	/**
 	 * 设置来源列数据类型
 	 * 
-	 * @param formType
+	 * @param fromType
 	 *            来源列数据类型
 	 */
 	public void setFromType(String fromType) {
