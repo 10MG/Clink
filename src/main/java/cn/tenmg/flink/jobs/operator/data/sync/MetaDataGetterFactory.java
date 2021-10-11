@@ -37,19 +37,19 @@ public abstract class MetaDataGetterFactory {
 					String className = FlinkJobsContext.getProperty(COLUMNS_GETTER_KEY_PREFIX + connector);
 					if (className == null) {
 						throw new IllegalArgumentException(
-								"ColumnsGetter for connector '" + connector + "' is not supported");
+								"MetaDataGetter for connector '" + connector + "' is not supported");
 					} else if (StringUtils.isBlank(className)) {
 						throw new IllegalArgumentException(
-								"Cannot find ColumnsGetter for connector '" + connector + "'");
+								"Cannot find MetaDataGetter for connector '" + connector + "'");
 					} else {
 						try {
 							columnsGetter = (MetaDataGetter) Class.forName(className).newInstance();
 						} catch (InstantiationException | IllegalAccessException e) {
 							throw new IllegalArgumentException(
-									"Cannot instantiate ColumnsGetter for connector '" + connector + "'", e);
+									"Cannot instantiate MetaDataGetter for connector '" + connector + "'", e);
 						} catch (ClassNotFoundException e) {
 							throw new IllegalArgumentException(
-									"Wrong ColumnsGetter configuration for connector " + connector + "'", e);
+									"Wrong MetaDataGetter configuration for connector " + connector + "'", e);
 						}
 					}
 					COLUMNS_GETTERS.put(connector, columnsGetter);
