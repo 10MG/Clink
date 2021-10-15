@@ -523,7 +523,7 @@ datasource.hivedb.hive-conf-dir=/etc/hive/conf
 </flink-jobs>
 ```
 
-#### 运行数据不同任务
+#### 运行数据同步任务
 
 以下为通过Debezium实现异构数据库同步任务XML配置文件：
 <?xml version="1.0" encoding="UTF-8"?>
