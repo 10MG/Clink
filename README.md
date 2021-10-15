@@ -526,6 +526,8 @@ datasource.hivedb.hive-conf-dir=/etc/hive/conf
 #### 运行数据同步任务
 
 以下为通过Debezium实现异构数据库同步任务XML配置文件：
+
+```
 <?xml version="1.0" encoding="UTF-8"?>
 <flink-jobs xmlns="http://www.10mg.cn/schema/flink-jobs"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -538,6 +540,7 @@ datasource.hivedb.hive-conf-dir=/etc/hive/conf
                 <!-- 另外，如果关闭智能模式，需要列出所有列的信息详细信息。 -->
 	</data-sync>
 </flink-jobs>
+```
 
 ### 参与贡献
 
