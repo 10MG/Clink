@@ -534,10 +534,10 @@ datasource.hivedb.hive-conf-dir=/etc/hive/conf
 	xsi:schemaLocation="http://www.10mg.cn/schema/flink-jobs http://www.10mg.cn/schema/flink-jobs-1.1.2.xsd">
 	<data-sync table="od_order_info" to="data_skyline"
 		from="kafka" topic="testdb.testdb.od_order_info">
-                <!-- 在数据源和目标库表结构相同（字段名及类型均相同）的情况下，智能模式可自动从目标库获取表元数据信息，只要少量配就能完成数据同步。 -->
-                <!-- 在数据源和目标库表结构不同（字段名或类型不同）的情况，需要自定义列的差异信息，例如自定来源类型和转换函数： -->
+		<!-- 在数据源和目标库表结构相同（字段名及类型均相同）的情况下，智能模式可自动从目标库获取表元数据信息，只要少量配就能完成数据同步。 -->
+		<!-- 在数据源和目标库表结构不同（字段名或类型不同）的情况，需要自定义列的差异信息，例如自定来源类型和转换函数： -->
 		<column fromName="UPDATE_TIME" fromType="BIGINT">TO_TIMESTAMP(FROM_UNIXTIME(UPDATE_TIME/1000, 'yyyy-MM-dd HH:mm:ss'))</column>
-                <!-- 另外，如果关闭智能模式，需要列出所有列的信息详细信息。 -->
+		<!-- 另外，如果关闭智能模式，需要列出所有列的信息详细信息。 -->
 	</data-sync>
 </flink-jobs>
 ```
