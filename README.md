@@ -523,14 +523,21 @@ datasource.hivedb.hive-conf-dir=/etc/hive/conf
 </flink-jobs>
 ```
 
-### 发布计划
+#### 运行数据不同任务
 
-计划将在1.1.2中发布以下功能：
-
-标签       | 功能     | 说明
------------|---------|--------
-`DataSync` | 数据同步 | 实现基于Debezuim的数据同步，以便简化通过`ExecuteSql`实现的数据同步功能。
- 组件升级   | DSL升级 | 升级dsl到1.2.0，增强注释支持，注释中的所有内容（包括参数表达式、动态片段）原样保留。
+以下为通过Debezium实现异构数据库同步任务XML配置文件：
+<?xml version="1.0" encoding="UTF-8"?>
+<flink-jobs xmlns="http://www.10mg.cn/schema/flink-jobs"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.10mg.cn/schema/flink-jobs http://www.10mg.cn/schema/flink-jobs-1.1.2.xsd">
+	<data-sync table="od_order_info" to="data_skyline"
+		from="kafka" topic="testdb.testdb.od_order_info">
+                <!-- 在数据源和目标库表结构相同（字段名及类型均相同）的情况下，智能模式可自动从目标库获取表元数据信息，只要少量配就能完成数据同步。 -->
+                <!-- 在数据源和目标库表结构不同（字段名或类型不同）的情况，需要自定义列的差异信息，例如自定来源类型和转换函数： -->
+		<column fromName="UPDATE_TIME" fromType="BIGINT">TO_TIMESTAMP(FROM_UNIXTIME(UPDATE_TIME/1000, 'yyyy-MM-dd HH:mm:ss'))</column>
+                <!-- 另外，如果关闭智能模式，需要列出所有列的信息详细信息。 -->
+	</data-sync>
+</flink-jobs>
 
 ### 参与贡献
 
