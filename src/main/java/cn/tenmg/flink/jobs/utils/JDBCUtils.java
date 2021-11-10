@@ -44,22 +44,16 @@ public abstract class JDBCUtils {
 	}
 
 	/**
-	 * 加载JDBC驱动程序
+	 * 根据数据源配置获取JDBC数据库连接
 	 * 
 	 * @param dataSource
-	 *            数据源配置查找表
+	 *            数据源配置
+	 * @return 返回JDBC数据库连接
+	 * @throws SQLException
+	 *             SQL异常
 	 * @throws ClassNotFoundException
-	 *             未找到驱动类异常
+	 *             类未找到异常
 	 */
-	@Deprecated
-	public static final void loadDriver(Map<String, String> dataSource) throws ClassNotFoundException {
-		String driver = dataSource.get("driver"), url = dataSource.get("url");
-		if (StringUtils.isBlank(driver)) {
-			driver = FlinkJobsContext.getDefaultJDBCDriver(getProduct(url));
-		}
-		Class.forName(driver);
-	}
-
 	public static final Connection getConnection(Map<String, String> dataSource)
 			throws SQLException, ClassNotFoundException {
 		String driver = dataSource.get("driver"), url = dataSource.get("url");
