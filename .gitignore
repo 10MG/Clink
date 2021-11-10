@@ -12,3 +12,4 @@ buildNumber.properties
 /.project
 /.classpath
 /deploy.bat
+/install.bat
