@@ -78,8 +78,7 @@ public abstract class FlinkJobsContext {
 		} catch (Exception e) {
 		}
 		try {
-			configProperties = PropertiesLoaderUtils
-					.loadFromClassPath(defaultProperties.getProperty(CONFIG_LOCATION_KEY, "flink-jobs.properties"));
+			configProperties = PropertiesLoaderUtils.loadFromClassPath(getConfigurationFile());
 			Entry<Object, Object> entry;
 			Object value;
 			for (Iterator<Entry<Object, Object>> it = configProperties.entrySet().iterator(); it.hasNext();) {
@@ -244,6 +243,15 @@ public abstract class FlinkJobsContext {
 	}
 
 	/**
+	 * 获取实际使用的配置文件
+	 * 
+	 * @return 返回实际使用的配置文件
+	 */
+	public static String getConfigurationFile() {
+		return defaultProperties.getProperty(CONFIG_LOCATION_KEY, "flink-jobs.properties");
+	}
+
+	/**
 	 * 根据数据源名称获取数据源。如果指定数据源不存在将抛出cn.tenmg.flink.jobs.exception.DataSourceNotFoundException
 	 * 
 	 * @param name
@@ -253,9 +261,8 @@ public abstract class FlinkJobsContext {
 	public static Map<String, String> getDatasource(String name) {
 		Map<String, String> dataSource = dataSources.get(name);
 		if (dataSource == null) {
-			throw new DataSourceNotFoundException(
-					"DataSource named " + name + " not found, Please check the configuration file "
-							+ defaultProperties.getProperty(CONFIG_LOCATION_KEY));
+			throw new DataSourceNotFoundException("DataSource named " + name
+					+ " not found, Please check the configuration file " + getConfigurationFile());
 		}
 		return dataSource;
 	}

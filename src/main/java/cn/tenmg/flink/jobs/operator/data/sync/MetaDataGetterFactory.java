@@ -3,9 +3,9 @@ package cn.tenmg.flink.jobs.operator.data.sync;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.commons.lang3.StringUtils;
-
+import cn.tenmg.dsl.utils.StringUtils;
 import cn.tenmg.flink.jobs.context.FlinkJobsContext;
+import cn.tenmg.flink.jobs.exception.IllegalConfigurationException;
 
 /**
  * 元数据获取器工厂
@@ -34,13 +34,16 @@ public abstract class MetaDataGetterFactory {
 			synchronized (COLUMNS_GETTERS) {
 				columnsGetter = COLUMNS_GETTERS.get(connector);
 				if (columnsGetter == null) {
-					String className = FlinkJobsContext.getProperty(COLUMNS_GETTER_KEY_PREFIX + connector);
+					String key = COLUMNS_GETTER_KEY_PREFIX + connector, className = FlinkJobsContext.getProperty(key);
 					if (className == null) {
-						throw new IllegalArgumentException(
-								"MetaDataGetter for connector '" + connector + "' is not supported");
+						throw new IllegalArgumentException("MetaDataGetter for connector '" + connector
+								+ "' is not supported, Please consider manually implementing the interface "
+								+ MetaDataGetter.class.getName() + " and specifying the configuration key '" + key
+								+ "' to your own class name in the configuration file "
+								+ FlinkJobsContext.getConfigurationFile());
 					} else if (StringUtils.isBlank(className)) {
-						throw new IllegalArgumentException(
-								"Cannot find MetaDataGetter for connector '" + connector + "'");
+						throw new IllegalConfigurationException(
+								"The configuration of key '" + key + "' must be not blank");
 					} else {
 						try {
 							columnsGetter = (MetaDataGetter) Class.forName(className).newInstance();
