@@ -11,8 +11,6 @@ import java.util.Set;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import cn.tenmg.dsl.utils.DSLUtils;
 import cn.tenmg.flink.jobs.context.FlinkJobsContext;
@@ -23,6 +21,7 @@ import cn.tenmg.flink.jobs.operator.data.sync.MetaDataGetter.TableMetaData;
 import cn.tenmg.flink.jobs.operator.data.sync.MetaDataGetterFactory;
 import cn.tenmg.flink.jobs.utils.ConfigurationUtils;
 import cn.tenmg.flink.jobs.utils.MapUtils;
+import cn.tenmg.flink.jobs.utils.PlaceHolderUtils;
 import cn.tenmg.flink.jobs.utils.SQLUtils;
 
 /**
@@ -34,11 +33,36 @@ import cn.tenmg.flink.jobs.utils.SQLUtils;
  */
 public class DataSyncOperator extends AbstractOperator<DataSync> {
 
-	private static final Logger log = LogManager.getLogger(DataSyncOperator.class);
-
 	private static final String SMART_KEY = "data.sync.smart", FROM_TABLE_PREFIX_KEY = "data.sync.from_table_prefix",
 			TOPIC_KEY = "topic", GROUP_ID_KEY = "properties.group.id",
 			GROUP_ID_PREFIX_KEY = "data.sync.group_id_prefix";
+
+	private static final ColumnConverter columnConverter;
+
+	static {
+		String byToType = FlinkJobsContext.getProperty("data.sync.convert.by_to_type");
+		if (byToType == null) {
+			columnConverter = new ColumnConverter() {
+				@Override
+				public String convert(Column column) {
+					return column.getFromName();
+				}
+			};
+		} else {
+			String[] args = byToType.split(":", 2);
+			columnConverter = new ColumnConverter() {
+				@Override
+				public String convert(Column column) {
+					String type = getToType(column);
+					if (args[0].equalsIgnoreCase(type)) {
+						return PlaceHolderUtils.replace(args[1], "columnName", column.getFromName());
+					} else {
+						return column.getFromName();
+					}
+				}
+			};
+		}
+	}
 
 	@Override
 	Object execute(StreamExecutionEnvironment env, DataSync dataSync, Map<String, Object> params) throws Exception {
@@ -98,15 +122,18 @@ public class DataSyncOperator extends AbstractOperator<DataSync> {
 			}
 		}
 		String sql = fromCreateTableSQL(fromDataSource, topic, table, fromTable, columns, primaryKey, fromConfig);
-		log.info(sql);
+		System.out.println("Execute Flink SQL:");
+		System.out.println(sql);
 		tableEnv.executeSql(sql);
 
 		sql = toCreateTableSQL(toDataSource, table, columns, primaryKey, dataSync.getToConfig());
-		log.info(sql);
+		System.out.println("Execute Flink SQL:");
+		System.out.println(sql);
 		tableEnv.executeSql(sql);
 
 		sql = insertSQL(table, fromTable, columns);
-		log.info(sql);
+		System.out.println("Execute Flink SQL:");
+		System.out.println(sql);
 		return tableEnv.executeSql(sql);
 	}
 
@@ -129,11 +156,11 @@ public class DataSyncOperator extends AbstractOperator<DataSync> {
 		StringBuffer sqlBuffer = new StringBuffer();
 		sqlBuffer.append("CREATE TABLE ").append(fromTable).append("(");
 		Column column = columns.get(0);
-		sqlBuffer.append(column.getFromName()).append(DSLUtils.BLANK_SPACE).append(column.getFromType());
+		sqlBuffer.append(column.getFromName()).append(DSLUtils.BLANK_SPACE).append(getFromType(column));
 		for (int i = 1, size = columns.size(); i < size; i++) {
 			column = columns.get(i);
 			sqlBuffer.append(DSLUtils.COMMA).append(DSLUtils.BLANK_SPACE).append(column.getFromName())
-					.append(DSLUtils.BLANK_SPACE).append(column.getFromType());
+					.append(DSLUtils.BLANK_SPACE).append(getFromType(column));
 		}
 		if (StringUtils.isNotBlank(primaryKey)) {
 			sqlBuffer.append(DSLUtils.COMMA).append(DSLUtils.BLANK_SPACE).append("PRIMARY KEY (").append(primaryKey)
@@ -168,16 +195,15 @@ public class DataSyncOperator extends AbstractOperator<DataSync> {
 		StringBuffer sqlBuffer = new StringBuffer();
 		sqlBuffer.append("CREATE TABLE ").append(table).append("(");
 		Column column = columns.get(0);
-		String toName = column.getToName(), toType = column.getToType();
+		String toName = column.getToName();
 		sqlBuffer.append(toName == null ? column.getFromName() : toName).append(DSLUtils.BLANK_SPACE)
-				.append(toType == null ? column.getFromType() : toType);
+				.append(getToType(column));
 		for (int i = 1, size = columns.size(); i < size; i++) {
 			column = columns.get(i);
 			toName = column.getToName();
-			toType = column.getToType();
 			sqlBuffer.append(DSLUtils.COMMA).append(DSLUtils.BLANK_SPACE)
 					.append(toName == null ? column.getFromName() : toName).append(DSLUtils.BLANK_SPACE)
-					.append(toType == null ? column.getFromType() : toType);
+					.append(getToType(column));
 		}
 		if (StringUtils.isNotBlank(primaryKey)) {
 			sqlBuffer.append(DSLUtils.COMMA).append(DSLUtils.BLANK_SPACE).append("PRIMARY KEY (").append(primaryKey)
@@ -216,17 +242,31 @@ public class DataSyncOperator extends AbstractOperator<DataSync> {
 		sqlBuffer.append(") SELECT ");
 		column = columns.get(0);
 		String script = column.getScript();
-		sqlBuffer.append(script == null ? column.getFromName() : script);
+		sqlBuffer.append(StringUtils.isBlank(script) ? columnConverter.convert(column) : script);
 		for (int i = 1, size = columns.size(); i < size; i++) {
 			column = columns.get(i);
 			script = column.getScript();
 			sqlBuffer.append(DSLUtils.COMMA).append(DSLUtils.BLANK_SPACE)
-					.append(script == null ? column.getFromName() : script);
+					.append(StringUtils.isBlank(script) ? columnConverter.convert(column) : script);
 		}
 
 		sqlBuffer.append(" FROM ").append(fromTable);
 		return sqlBuffer.toString();
 
+	}
+
+	private static String getFromType(Column column) {
+		String fromType = column.getFromType();
+		return fromType == null ? column.getToType() : fromType;
+	}
+
+	private static String getToType(Column column) {
+		String toType = column.getToType();
+		return toType == null ? column.getFromType() : toType;
+	}
+
+	private static interface ColumnConverter {
+		String convert(Column column);
 	}
 
 }
