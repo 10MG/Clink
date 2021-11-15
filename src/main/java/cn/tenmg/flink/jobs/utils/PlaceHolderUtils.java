@@ -64,10 +64,10 @@ public abstract class PlaceHolderUtils {
 			while (m.find()) {
 				name = m.group();
 				value = getParam(params, name.substring(2, name.length() - 1));
-				if (value != null) {
-					m.appendReplacement(sb, value.toString());
-				} else {
+				if (value == null) {
 					m.appendReplacement(sb, "");
+				} else {
+					m.appendReplacement(sb, value.toString());
 				}
 			}
 			m.appendTail(sb);

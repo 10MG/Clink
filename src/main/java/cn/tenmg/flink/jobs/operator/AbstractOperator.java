@@ -55,5 +55,5 @@ public abstract class AbstractOperator<T extends Operate> implements Operator {
 	 * @throws Exception
 	 *             发生异常
 	 */
-	abstract Object execute(StreamExecutionEnvironment env, T operate, Map<String, Object> params) throws Exception;
+	public abstract Object execute(StreamExecutionEnvironment env, T operate, Map<String, Object> params) throws Exception;
 }

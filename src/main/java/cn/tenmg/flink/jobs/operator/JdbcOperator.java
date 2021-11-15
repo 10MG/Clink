@@ -31,7 +31,7 @@ import cn.tenmg.flink.jobs.utils.JDBCUtils;
 public class JdbcOperator extends AbstractOperator<Jdbc> {
 
 	@Override
-	Object execute(StreamExecutionEnvironment env, Jdbc jdbc, Map<String, Object> params) throws Exception {
+	public Object execute(StreamExecutionEnvironment env, Jdbc jdbc, Map<String, Object> params) throws Exception {
 		NamedScript namedScript = DSLUtils.parse(jdbc.getScript(), params);
 		String datasource = jdbc.getDataSource();
 		Script<List<Object>> sql = DSLUtils.toScript(namedScript.getScript(), namedScript.getParams(),
@@ -47,7 +47,7 @@ public class JdbcOperator extends AbstractOperator<Jdbc> {
 				ps = con.prepareStatement(statement);
 				List<Object> paramters = sql.getParams();
 				JDBCUtils.setParams(ps, paramters);
-				
+
 				StringBuilder sb = new StringBuilder();
 				sb.append("Execute SQL: ").append(statement).append(", ").append("parameters: ")
 						.append(toJSONString(params));

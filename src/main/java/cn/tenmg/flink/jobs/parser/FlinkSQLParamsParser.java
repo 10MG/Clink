@@ -20,7 +20,7 @@ public class FlinkSQLParamsParser extends PlaintextParamsParser {
 
 	private static final FlinkSQLParamsParser INSTANCE = new FlinkSQLParamsParser();
 
-	private FlinkSQLParamsParser() {
+	protected FlinkSQLParamsParser() {
 		super();
 	}
 

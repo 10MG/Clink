@@ -17,7 +17,6 @@ import cn.tenmg.dsl.utils.DSLUtils;
 import cn.tenmg.dsl.utils.StringUtils;
 import cn.tenmg.flink.jobs.context.FlinkJobsContext;
 import cn.tenmg.flink.jobs.model.ExecuteSql;
-import cn.tenmg.flink.jobs.parser.FlinkSQLParamsParser;
 import cn.tenmg.flink.jobs.utils.ConfigurationUtils;
 import cn.tenmg.flink.jobs.utils.JDBCUtils;
 import cn.tenmg.flink.jobs.utils.JSONUtils;
@@ -77,9 +76,7 @@ public class ExecuteSqlOperator extends AbstractSqlOperator<ExecuteSql> {
 					JDBCUtils.close(con);
 				}
 			} else {
-				statement = DSLUtils
-						.toScript(namedScript.getScript(), namedScript.getParams(), FlinkSQLParamsParser.getInstance())
-						.getValue();
+				statement = SQLUtils.toSQL(namedScript);
 			}
 			statement = wrapDataSource(statement, dataSource);
 		}

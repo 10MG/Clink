@@ -22,7 +22,7 @@ public class BshOperator extends AbstractOperator<Bsh> {
 	private static final String ENV = "env", DATA_HOLDER = "DataHolder";
 
 	@Override
-	Object execute(StreamExecutionEnvironment env, Bsh bsh, Map<String, Object> params) throws Exception {
+	public Object execute(StreamExecutionEnvironment env, Bsh bsh, Map<String, Object> params) throws Exception {
 		Interpreter interpreter = new Interpreter();
 		String java = bsh.getJava();
 		List<Var> vars = bsh.getVars();

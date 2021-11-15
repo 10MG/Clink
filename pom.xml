@@ -14,7 +14,7 @@
 
 	<properties>
 		<encoding>UTF-8</encoding>
-		<flink.version>1.13.1</flink.version>
+		<flink.version>1.13.3</flink.version>
 		<scala.binary.version>2.11</scala.binary.version>
 	</properties>
 	<dependencies>
@@ -29,7 +29,7 @@
 		<dependency>
 			<groupId>cn.tenmg</groupId>
 			<artifactId>dsl</artifactId>
-			<version>1.2.1</version>
+			<version>1.2.2</version>
 		</dependency>
 
 		<!-- https://mvnrepository.com/artifact/org.apache.flink/flink-clients -->
@@ -44,7 +44,7 @@
 		<dependency>
 			<groupId>org.apache.flink</groupId>
 			<artifactId>flink-connector-hive_2.11</artifactId>
-			<version>1.13.1</version>
+			<version>${flink.version}</version>
 			<scope>provided</scope>
 		</dependency>
 
@@ -56,12 +56,11 @@
 			<scope>provided</scope>
 		</dependency>
 
-		<!-- https://mvnrepository.com/artifact/org.beanshell/bsh -->
+		<!-- https://mvnrepository.com/artifact/org.apache-extras.beanshell/bsh -->
 		<dependency>
-			<groupId>org.beanshell</groupId>
+			<groupId>org.apache-extras.beanshell</groupId>
 			<artifactId>bsh</artifactId>
-			<version>2.0b5</version>
-			<optional>true</optional>
+			<version>2.0b6</version>
 		</dependency>
 
 		<!-- https://mvnrepository.com/artifact/org.apache.flink/flink-connector-kafka -->

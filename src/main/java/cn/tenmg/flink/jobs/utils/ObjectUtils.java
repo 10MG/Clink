@@ -9,7 +9,6 @@ import java.util.Map;
  * 
  * @author 赵伟均 wjzhao@aliyun.com
  *
- * @since 1.1.1
  */
 public abstract class ObjectUtils {
 
@@ -18,12 +17,9 @@ public abstract class ObjectUtils {
 	/**
 	 * 获取指定对象中的指定成员变量
 	 * 
-	 * @param object
-	 *            指定对象
-	 * @param fieldName
-	 *            指定成员变量
-	 * @param <T>
-	 *            返回类型
+	 * @param object    指定对象
+	 * @param fieldName 指定成员变量
+	 * @param <T>       返回类型
 	 * @return 返回指定成员变量的值
 	 */
 	@SuppressWarnings("unchecked")
