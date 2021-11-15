@@ -2,6 +2,7 @@ package cn.tenmg.flink.jobs.operator;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -14,6 +15,7 @@ import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
 
 import cn.tenmg.dsl.utils.DSLUtils;
 import cn.tenmg.flink.jobs.context.FlinkJobsContext;
+import cn.tenmg.flink.jobs.exception.IllegalConfigurationException;
 import cn.tenmg.flink.jobs.model.DataSync;
 import cn.tenmg.flink.jobs.model.data.sync.Column;
 import cn.tenmg.flink.jobs.operator.data.sync.MetaDataGetter;
@@ -37,30 +39,26 @@ public class DataSyncOperator extends AbstractOperator<DataSync> {
 			TOPIC_KEY = "topic", GROUP_ID_KEY = "properties.group.id",
 			GROUP_ID_PREFIX_KEY = "data.sync.group_id_prefix";
 
-	private static final ColumnConverter columnConverter;
+	private static final Map<String, ColumnConvertArgs> columnConvertArgsMap = new HashMap<String, ColumnConvertArgs>();
 
 	static {
-		String byToType = FlinkJobsContext.getProperty("data.sync.convert.by_to_type");
-		if (byToType == null) {
-			columnConverter = new ColumnConverter() {
-				@Override
-				public String convert(Column column) {
-					return column.getFromName();
+		String convert = FlinkJobsContext.getProperty("data.sync.columns.convert");
+		if (convert != null) {
+			String args[] = convert.split(";");
+			for (int i = 0; i < args.length; i++) {
+				String arg[] = args[i].split(",", 2), fromType = arg[0];
+				if (args.length < 2) {
+					throw new IllegalConfigurationException(
+							"The configuration of key 'data.sync.columns.convert' must be in the form of '${fromtype1},${totype1}:${script1};${fromtype2},${totype2}:${script2}…'");
 				}
-			};
-		} else {
-			String[] args = byToType.split(":", 2);
-			columnConverter = new ColumnConverter() {
-				@Override
-				public String convert(Column column) {
-					String type = getToType(column);
-					if (args[0].equalsIgnoreCase(type)) {
-						return PlaceHolderUtils.replace(args[1], "columnName", column.getFromName());
-					} else {
-						return column.getFromName();
-					}
+				arg = arg[1].split(":", 2);
+				if (args.length < 2) {
+					throw new IllegalConfigurationException(
+							"The configuration of key 'data.sync.columns.convert' must be in the form of '${fromtype1},${totype1}:${script1};${fromtype2},${totype2}:${script2}…'");
 				}
-			};
+				String toType = arg[0], script = arg[1];
+				columnConvertArgsMap.put(toType.toUpperCase(), new ColumnConvertArgs(fromType, script));
+			}
 		}
 	}
 
@@ -71,57 +69,20 @@ public class DataSyncOperator extends AbstractOperator<DataSync> {
 			throw new IllegalArgumentException("The property 'from', 'to' or 'table' cannot be blank.");
 		}
 		StreamTableEnvironment tableEnv = FlinkJobsContext.getOrCreateStreamTableEnvironment(env);
-		String primaryKey = dataSync.getPrimaryKey(), topic = dataSync.getTopic(),
-				currentCatalog = tableEnv.getCurrentCatalog(),
+		String currentCatalog = tableEnv.getCurrentCatalog(),
 				defaultCatalog = FlinkJobsContext.getDefaultCatalog(tableEnv),
 				fromTable = FlinkJobsContext.getProperty(FROM_TABLE_PREFIX_KEY) + table,
 				fromConfig = dataSync.getFromConfig();
 		if (!defaultCatalog.equals(currentCatalog)) {
 			tableEnv.useCatalog(defaultCatalog);
 		}
+
 		Map<String, String> fromDataSource = FlinkJobsContext.getDatasource(from),
 				toDataSource = FlinkJobsContext.getDatasource(to);
+		String primaryKey = collation(dataSync, fromDataSource, toDataSource);
 		List<Column> columns = dataSync.getColumns();
-		Boolean smart = dataSync.getSmart();
-		if (smart == null) {
-			smart = Boolean.valueOf(FlinkJobsContext.getProperty(SMART_KEY));
-		}
-		if (Boolean.TRUE.equals(smart)) {// 智能模式，自动查询列名、数据类型
-			MetaDataGetter metaDataGetter = MetaDataGetterFactory.getMetaDataGetter(toDataSource);
-			TableMetaData tableMetaData = metaDataGetter.getTableMetaData(toDataSource, table);
-			Set<String> primaryKeys = tableMetaData.getPrimaryKeys();
-			if (primaryKey == null && primaryKeys != null && !primaryKeys.isEmpty()) {
-				primaryKey = String.join(",", primaryKeys);
-			}
-			Map<String, String> columnsMap = tableMetaData.getColumns();
-			if (columns == null) {
-				columns = new ArrayList<Column>();
-				addColumns(columns, columnsMap);
-			} else if (columns.isEmpty()) {
-				addColumns(columns, columnsMap);
-			} else {
-				String toName;
-				for (int i = 0, size = columns.size(); i < size; i++) {
-					Column column = columns.get(i);
-					toName = column.getToName();
-					if (StringUtils.isBlank(toName)) {
-						toName = column.getFromName();
-					}
-					String toType = columnsMap.get(toName);
-					if (toType != null) {
-						if (StringUtils.isBlank(column.getFromType())) {
-							column.setFromType(toType);
-						}
-						if (StringUtils.isBlank(column.getToType())) {
-							column.setToType(toType);
-						}
-						columnsMap.remove(toName);
-					}
-				}
-				addColumns(columns, columnsMap);
-			}
-		}
-		String sql = fromCreateTableSQL(fromDataSource, topic, table, fromTable, columns, primaryKey, fromConfig);
+		String sql = fromCreateTableSQL(fromDataSource, dataSync.getTopic(), table, fromTable, columns, primaryKey,
+				fromConfig);
 		System.out.println("Execute Flink SQL:");
 		System.out.println(sql);
 		tableEnv.executeSql(sql);
@@ -137,6 +98,137 @@ public class DataSyncOperator extends AbstractOperator<DataSync> {
 		return tableEnv.executeSql(sql);
 	}
 
+	/**
+	 * 校对和整理列配置并返回主键字段（多个字段之间使用“,”分隔）
+	 * 
+	 * @param dataSync
+	 *            数据同步配置对象
+	 * @param fromDataSource
+	 *            来源数据源
+	 * @param toDataSource
+	 *            目标数据源
+	 * @return 返回主键
+	 * @throws Exception
+	 *             发生异常
+	 */
+	private static String collation(DataSync dataSync, Map<String, String> fromDataSource,
+			Map<String, String> toDataSource) throws Exception {
+		List<Column> columns = dataSync.getColumns();
+		Boolean smart = dataSync.getSmart();
+		if (smart == null) {
+			smart = Boolean.valueOf(FlinkJobsContext.getProperty(SMART_KEY));
+		}
+		String primaryKey = dataSync.getPrimaryKey();
+		if (Boolean.TRUE.equals(smart)) {// 智能模式，自动查询列名、数据类型
+			MetaDataGetter metaDataGetter = MetaDataGetterFactory.getMetaDataGetter(toDataSource);
+			TableMetaData tableMetaData = metaDataGetter.getTableMetaData(toDataSource, dataSync.getTable());
+			Set<String> primaryKeys = tableMetaData.getPrimaryKeys();
+			if (primaryKey == null && primaryKeys != null && !primaryKeys.isEmpty()) {
+				primaryKey = String.join(",", primaryKeys);
+			}
+			Map<String, String> columnsMap = tableMetaData.getColumns();
+			if (columns == null) {// 没有用户自定义列
+				columns = new ArrayList<Column>();
+				dataSync.setColumns(columns);
+				addColumns(columns, columnsMap);
+			} else if (columns.isEmpty()) {// 没有用户自定义列
+				addColumns(columns, columnsMap);
+			} else {// 有用户自定义列
+				String toName, fromName, fromType, toType;
+				for (int i = 0, size = columns.size(); i < size; i++) {
+					Column column = columns.get(i);
+					fromName = column.getFromName();
+					toName = column.getToName();
+					if (StringUtils.isBlank(fromName)) {
+						if (StringUtils.isBlank(toName)) {
+							throw new IllegalArgumentException(
+									"One of the properties 'fromName' or 'toName' cannot be blank, column index: " + i);
+						} else {
+							column.setFromName(toName);
+						}
+					} else if (StringUtils.isBlank(toName)) {
+						column.setToName(fromName);
+					}
+
+					toType = columnsMap.get(toName);
+					if (toType != null) {// 使用用户自定义列覆盖智能获取的列
+						if (StringUtils.isBlank(column.getToType())) {
+							column.setToType(toType);
+						}
+						ColumnConvertArgs columnConvertArgs = columnConvertArgsMap.get(toType.toUpperCase());
+						if (columnConvertArgs == null) {// 无类型转换配置
+							column.setFromType(toType);
+						} else {// 有类型转换配置
+							column.setFromType(columnConvertArgs.fromType);
+							column.setScript(PlaceHolderUtils.replace(columnConvertArgs.script, "${columnName}",
+									column.getFromName()));
+						}
+						columnsMap.remove(toName);
+					} else {// 类型补全
+						fromType = column.getFromType();
+						toType = column.getToType();
+						if (StringUtils.isBlank(fromType)) {
+							if (StringUtils.isBlank(toType)) {
+								throw new IllegalArgumentException(
+										"One of the properties 'fromType' or 'toType' cannot be blank, column index: "
+												+ i);
+							} else {
+								column.setFromType(toType);
+							}
+						} else if (StringUtils.isBlank(toType)) {
+							column.setToType(toType);
+						}
+					}
+				}
+				addColumns(columns, columnsMap);
+			}
+		} else if (columns == null || columns.isEmpty()) {// 没有用户自定义列
+			throw new IllegalArgumentException(
+					"At least one column must be configured in manual mode, or set the configuration '" + SMART_KEY
+							+ "=true' at " + FlinkJobsContext.getConfigurationFile()
+							+ " to enable automatic column acquisition in smart mode");
+		} else {
+			String fromName, toName, fromType, toType;
+			for (int i = 0, size = columns.size(); i < size; i++) {
+				Column column = columns.get(i);
+				fromName = column.getFromName();
+				toName = column.getToName();
+				if (StringUtils.isBlank(fromName)) {
+					if (StringUtils.isBlank(toName)) {
+						throw new IllegalArgumentException(
+								"One of the properties 'fromName' or 'toName' cannot be blank, column index: " + i);
+					} else {
+						column.setFromName(toName);
+					}
+				} else if (StringUtils.isBlank(toName)) {
+					column.setToName(fromName);
+				}
+
+				fromType = column.getFromType();
+				toType = column.getToType();
+				if (StringUtils.isBlank(fromType)) {
+					if (StringUtils.isBlank(toType)) {
+						throw new IllegalArgumentException(
+								"One of the properties 'fromType' or 'toType' cannot be blank, column index: " + i);
+					} else {
+						column.setFromType(toType);
+					}
+				} else if (StringUtils.isBlank(toType)) {
+					column.setToType(toType);
+				}
+				ColumnConvertArgs columnConvertArgs = columnConvertArgsMap.get(column.getToType().toUpperCase());
+				if (columnConvertArgs == null) {// 无类型转换配置
+					column.setFromType(toType);
+				} else if (columnConvertArgs.fromType.equalsIgnoreCase(column.getFromName())) {// 有类型转换配置
+					column.setFromType(columnConvertArgs.fromType);
+					column.setScript(
+							PlaceHolderUtils.replace(columnConvertArgs.script, "${columnName}", column.getFromName()));
+				}
+			}
+		}
+		return primaryKey;
+	}
+
 	private static void addColumns(List<Column> columns, Map<String, String> columnsMap) {
 		for (Iterator<Entry<String, String>> it = columnsMap.entrySet().iterator(); it.hasNext();) {
 			Entry<String, String> column = it.next();
@@ -144,10 +236,17 @@ public class DataSyncOperator extends AbstractOperator<DataSync> {
 		}
 	}
 
-	private static void addColumn(List<Column> columns, String fromName, String fromType) {
+	private static void addColumn(List<Column> columns, String toName, String toType) {
 		Column column = new Column();
-		column.setFromName(fromName);
-		column.setFromType(fromType);
+		column.setFromName(toName);// 原来字段名和目标字段名相同
+		column.setToName(toName);
+		column.setToType(toType);
+		ColumnConvertArgs columnConvertArgs = columnConvertArgsMap.get(toType.toUpperCase());
+		if (columnConvertArgs == null) {// 无类型转换配置
+			column.setFromType(toType);
+		} else {// 有类型转换配置
+			column.setFromType(columnConvertArgs.fromType);
+		}
 		columns.add(column);
 	}
 
@@ -156,11 +255,11 @@ public class DataSyncOperator extends AbstractOperator<DataSync> {
 		StringBuffer sqlBuffer = new StringBuffer();
 		sqlBuffer.append("CREATE TABLE ").append(fromTable).append("(");
 		Column column = columns.get(0);
-		sqlBuffer.append(column.getFromName()).append(DSLUtils.BLANK_SPACE).append(getFromType(column));
+		sqlBuffer.append(column.getFromName()).append(DSLUtils.BLANK_SPACE).append(column.getFromType());
 		for (int i = 1, size = columns.size(); i < size; i++) {
 			column = columns.get(i);
 			sqlBuffer.append(DSLUtils.COMMA).append(DSLUtils.BLANK_SPACE).append(column.getFromName())
-					.append(DSLUtils.BLANK_SPACE).append(getFromType(column));
+					.append(DSLUtils.BLANK_SPACE).append(column.getFromType());
 		}
 		if (StringUtils.isNotBlank(primaryKey)) {
 			sqlBuffer.append(DSLUtils.COMMA).append(DSLUtils.BLANK_SPACE).append("PRIMARY KEY (").append(primaryKey)
@@ -197,13 +296,13 @@ public class DataSyncOperator extends AbstractOperator<DataSync> {
 		Column column = columns.get(0);
 		String toName = column.getToName();
 		sqlBuffer.append(toName == null ? column.getFromName() : toName).append(DSLUtils.BLANK_SPACE)
-				.append(getToType(column));
+				.append(column.getToType());
 		for (int i = 1, size = columns.size(); i < size; i++) {
 			column = columns.get(i);
 			toName = column.getToName();
 			sqlBuffer.append(DSLUtils.COMMA).append(DSLUtils.BLANK_SPACE)
 					.append(toName == null ? column.getFromName() : toName).append(DSLUtils.BLANK_SPACE)
-					.append(getToType(column));
+					.append(column.getToType());
 		}
 		if (StringUtils.isNotBlank(primaryKey)) {
 			sqlBuffer.append(DSLUtils.COMMA).append(DSLUtils.BLANK_SPACE).append("PRIMARY KEY (").append(primaryKey)
@@ -242,12 +341,12 @@ public class DataSyncOperator extends AbstractOperator<DataSync> {
 		sqlBuffer.append(") SELECT ");
 		column = columns.get(0);
 		String script = column.getScript();
-		sqlBuffer.append(StringUtils.isBlank(script) ? columnConverter.convert(column) : script);
+		sqlBuffer.append(StringUtils.isBlank(script) ? column.getFromName() : script);
 		for (int i = 1, size = columns.size(); i < size; i++) {
 			column = columns.get(i);
 			script = column.getScript();
 			sqlBuffer.append(DSLUtils.COMMA).append(DSLUtils.BLANK_SPACE)
-					.append(StringUtils.isBlank(script) ? columnConverter.convert(column) : script);
+					.append(StringUtils.isBlank(script) ? column.getFromName() : script);
 		}
 
 		sqlBuffer.append(" FROM ").append(fromTable);
@@ -255,18 +354,18 @@ public class DataSyncOperator extends AbstractOperator<DataSync> {
 
 	}
 
-	private static String getFromType(Column column) {
-		String fromType = column.getFromType();
-		return fromType == null ? column.getToType() : fromType;
-	}
+	private static class ColumnConvertArgs {
 
-	private static String getToType(Column column) {
-		String toType = column.getToType();
-		return toType == null ? column.getFromType() : toType;
-	}
+		private String fromType;
 
-	private static interface ColumnConverter {
-		String convert(Column column);
+		private String script;
+
+		public ColumnConvertArgs(String fromType, String script) {
+			super();
+			this.fromType = fromType;
+			this.script = script;
+		}
+
 	}
 
 }
