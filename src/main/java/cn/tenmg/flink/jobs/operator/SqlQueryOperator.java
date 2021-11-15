@@ -9,7 +9,7 @@ import cn.tenmg.dsl.NamedScript;
 import cn.tenmg.dsl.utils.DSLUtils;
 import cn.tenmg.flink.jobs.context.FlinkJobsContext;
 import cn.tenmg.flink.jobs.model.SqlQuery;
-import cn.tenmg.flink.jobs.parser.FlinkSQLParamsParser;
+import cn.tenmg.flink.jobs.utils.SQLUtils;
 
 /**
  * SQL操作执行器
@@ -23,9 +23,7 @@ public class SqlQueryOperator extends AbstractSqlOperator<SqlQuery> {
 	@Override
 	Object execute(StreamTableEnvironment tableEnv, SqlQuery sqlQuery, Map<String, Object> params) throws Exception {
 		NamedScript namedScript = DSLUtils.parse(sqlQuery.getScript(), params);
-		String saveAs = sqlQuery.getSaveAs(), statement = DSLUtils
-				.toScript(namedScript.getScript(), namedScript.getParams(), FlinkSQLParamsParser.getInstance())
-				.getValue();
+		String saveAs = sqlQuery.getSaveAs(), statement = SQLUtils.toSQL(namedScript);
 		System.out.println(statement);
 		Table table = tableEnv.sqlQuery(statement);
 		String defaultCatalog = FlinkJobsContext.getDefaultCatalog(tableEnv);

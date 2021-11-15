@@ -4,7 +4,9 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import cn.tenmg.dsl.NamedScript;
 import cn.tenmg.dsl.utils.DSLUtils;
+import cn.tenmg.flink.jobs.parser.FlinkSQLParamsParser;
 
 /**
  * SQL工具类
@@ -16,6 +18,30 @@ import cn.tenmg.dsl.utils.DSLUtils;
 public abstract class SQLUtils {
 
 	public static final String SINGLE_QUOTATION_MARK = "'", SPACE_EQUALS_SPACE = " = ";
+
+	/**
+	 * 将使用命名参数的脚本对象模型转换为可运行的Flink SQL
+	 * 
+	 * @param namedScript
+	 *            使用命名参数的脚本对象模型
+	 * @return 返回可运行的Flink SQL
+	 */
+	public static String toSQL(NamedScript namedScript) {
+		return toSQL(namedScript.getScript(), namedScript.getParams());
+	}
+
+	/**
+	 * 根据参数查找表将使用命名参数的脚本转换为可运行的Flink SQL
+	 * 
+	 * @param namedscript
+	 *            使用命名参数的脚本
+	 * @param params
+	 *            参数查找表
+	 * @return 返回可运行的Flink SQL
+	 */
+	public static String toSQL(String namedscript, Map<String, ?> params) {
+		return DSLUtils.toScript(namedscript, params, FlinkSQLParamsParser.getInstance()).getValue();
+	}
 
 	/**
 	 * 向SQL追加数据源配置
