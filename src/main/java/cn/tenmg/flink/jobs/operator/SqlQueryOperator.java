@@ -4,8 +4,6 @@ import java.util.Map;
 
 import org.apache.flink.table.api.Table;
 import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import cn.tenmg.dsl.NamedScript;
 import cn.tenmg.dsl.utils.DSLUtils;
@@ -22,17 +20,13 @@ import cn.tenmg.flink.jobs.parser.FlinkSQLParamsParser;
  */
 public class SqlQueryOperator extends AbstractSqlOperator<SqlQuery> {
 
-	private static final Logger log = LogManager.getLogger(SqlQueryOperator.class);
-
 	@Override
 	Object execute(StreamTableEnvironment tableEnv, SqlQuery sqlQuery, Map<String, Object> params) throws Exception {
 		NamedScript namedScript = DSLUtils.parse(sqlQuery.getScript(), params);
 		String saveAs = sqlQuery.getSaveAs(), statement = DSLUtils
 				.toScript(namedScript.getScript(), namedScript.getParams(), FlinkSQLParamsParser.getInstance())
 				.getValue();
-		if (log.isInfoEnabled()) {
-			log.info(statement);
-		}
+		System.out.println(statement);
 		Table table = tableEnv.sqlQuery(statement);
 		String defaultCatalog = FlinkJobsContext.getDefaultCatalog(tableEnv);
 		if (!defaultCatalog.equals(tableEnv.getCurrentCatalog())) {

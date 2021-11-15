@@ -9,8 +9,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import cn.tenmg.dsl.NamedScript;
 import cn.tenmg.dsl.Script;
@@ -34,8 +32,6 @@ import cn.tenmg.flink.jobs.utils.SQLUtils;
  * @since 1.1.0
  */
 public class ExecuteSqlOperator extends AbstractSqlOperator<ExecuteSql> {
-
-	private static final Logger log = LogManager.getLogger(ExecuteSqlOperator.class);
 
 	private static final String TABLE_NAME = "table-name",
 			/**
@@ -72,9 +68,7 @@ public class ExecuteSqlOperator extends AbstractSqlOperator<ExecuteSql> {
 					ps = con.prepareStatement(statement);
 					List<Object> parameters = script.getParams();
 					JDBCUtils.setParams(ps, parameters);
-					if (log.isInfoEnabled()) {
-						log.info("SQL: " + statement + ", parameters: " + JSONUtils.toJSONString(parameters));
-					}
+					System.out.println("SQL: " + statement + ", parameters: " + JSONUtils.toJSONString(parameters));
 					return ps.executeLargeUpdate();// 执行删除
 				} catch (Exception e) {
 					throw e;
@@ -89,9 +83,7 @@ public class ExecuteSqlOperator extends AbstractSqlOperator<ExecuteSql> {
 			}
 			statement = wrapDataSource(statement, dataSource);
 		}
-		if (log.isInfoEnabled()) {
-			log.info(statement);
-		}
+		System.out.println(statement);
 		return tableEnv.executeSql(statement);
 	}
 

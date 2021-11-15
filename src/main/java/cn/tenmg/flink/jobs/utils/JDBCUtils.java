@@ -9,9 +9,6 @@ import java.sql.Statement;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import cn.tenmg.dsl.utils.StringUtils;
 import cn.tenmg.flink.jobs.context.FlinkJobsContext;
 
@@ -23,8 +20,6 @@ import cn.tenmg.flink.jobs.context.FlinkJobsContext;
  * @since 1.1.0
  */
 public abstract class JDBCUtils {
-
-	private static final Logger log = LogManager.getLogger(JDBCUtils.class);
 
 	private static final String JDBC_PRODUCT_SPLIT = ":";
 
@@ -75,14 +70,8 @@ public abstract class JDBCUtils {
 			try {
 				con.close();
 			} catch (SQLException ex) {
-				if (log.isErrorEnabled()) {
-					log.error("Could not close JDBC Connection", ex);
-				}
 				ex.printStackTrace();
 			} catch (Throwable ex) {
-				if (log.isErrorEnabled()) {
-					log.error("Unexpected exception on closing JDBC Connection", ex);
-				}
 				ex.printStackTrace();
 			}
 		}
@@ -98,14 +87,8 @@ public abstract class JDBCUtils {
 			try {
 				st.close();
 			} catch (SQLException ex) {
-				if (log.isErrorEnabled()) {
-					log.error("Could not close JDBC Statement", ex);
-				}
 				ex.printStackTrace();
 			} catch (Throwable ex) {
-				if (log.isErrorEnabled()) {
-					log.error("Unexpected exception on closing JDBC Statement", ex);
-				}
 				ex.printStackTrace();
 			}
 		}
@@ -121,14 +104,10 @@ public abstract class JDBCUtils {
 		if (rs != null) {
 			try {
 				rs.close();
-			} catch (SQLException ex) {
-				if (log.isErrorEnabled()) {
-					log.error("Could not close JDBC ResultSet", ex);
-				}
-			} catch (Throwable ex) {
-				if (log.isErrorEnabled()) {
-					log.error("Unexpected exception on closing JDBC ResultSet", ex);
-				}
+			} catch (SQLException e) {
+				e.printStackTrace();
+			} catch (Throwable e) {
+				e.printStackTrace();
 			}
 		}
 	}

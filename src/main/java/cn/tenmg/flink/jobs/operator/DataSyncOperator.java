@@ -44,19 +44,42 @@ public class DataSyncOperator extends AbstractOperator<DataSync> {
 	static {
 		String convert = FlinkJobsContext.getProperty("data.sync.columns.convert");
 		if (convert != null) {
-			String args[] = convert.split(";");
-			for (int i = 0; i < args.length; i++) {
-				String arg[] = args[i].split(",", 2), fromType = arg[0];
-				if (args.length < 2) {
-					throw new IllegalConfigurationException(
-							"The configuration of key 'data.sync.columns.convert' must be in the form of '${fromtype1},${totype1}:${script1};${fromtype2},${totype2}:${script2}…'");
+			String argsArr[] = convert.split(";"), args[], argsStr, fromType = null, toType, script;
+			StringBuilder typeBuilder = new StringBuilder();
+			for (int i = 0; i < argsArr.length; i++) {
+				argsStr = argsArr[i];
+				int j = 0, len = argsStr.length();
+				boolean sameType = false;
+				while (j < len) {
+					char c = argsStr.charAt(j++);
+					if (c == ',') {
+						fromType = typeBuilder.toString().trim();
+						break;
+					} else if (c == ':') {
+						sameType = true;
+						break;
+					} else {
+						typeBuilder.append(c);
+					}
 				}
-				arg = arg[1].split(":", 2);
-				if (args.length < 2) {
-					throw new IllegalConfigurationException(
-							"The configuration of key 'data.sync.columns.convert' must be in the form of '${fromtype1},${totype1}:${script1};${fromtype2},${totype2}:${script2}…'");
+				typeBuilder.setLength(0);
+
+				if (sameType) {
+					toType = fromType;
+					script = argsStr.substring(j);
+					if (StringUtils.isBlank(script)) {
+						throw new IllegalConfigurationException(
+								"Each item of the configuration for the key 'data.sync.columns.convert' must be in the form of '{type}:{script}' or '{fromtype},{totype}:{script}'");
+					}
+				} else {
+					args = argsStr.substring(j).split(":", 2);
+					if (args.length < 2) {
+						throw new IllegalConfigurationException(
+								"Each item of the configuration for the key 'data.sync.columns.convert' must be in the form of '{type}:{script}' or '{fromtype},{totype}:{script}'");
+					}
+					toType = args[0];
+					script = args[1];
 				}
-				String toType = arg[0], script = arg[1];
 				columnConvertArgsMap.put(toType.toUpperCase(), new ColumnConvertArgs(fromType, script));
 			}
 		}
@@ -151,20 +174,7 @@ public class DataSyncOperator extends AbstractOperator<DataSync> {
 					}
 
 					toType = columnsMap.get(toName);
-					if (toType != null) {// 使用用户自定义列覆盖智能获取的列
-						if (StringUtils.isBlank(column.getToType())) {
-							column.setToType(toType);
-						}
-						ColumnConvertArgs columnConvertArgs = columnConvertArgsMap.get(toType.toUpperCase());
-						if (columnConvertArgs == null) {// 无类型转换配置
-							column.setFromType(toType);
-						} else {// 有类型转换配置
-							column.setFromType(columnConvertArgs.fromType);
-							column.setScript(PlaceHolderUtils.replace(columnConvertArgs.script, "${columnName}",
-									column.getFromName()));
-						}
-						columnsMap.remove(toName);
-					} else {// 类型补全
+					if (toType == null) {// 类型补全
 						fromType = column.getFromType();
 						toType = column.getToType();
 						if (StringUtils.isBlank(fromType)) {
@@ -178,6 +188,25 @@ public class DataSyncOperator extends AbstractOperator<DataSync> {
 						} else if (StringUtils.isBlank(toType)) {
 							column.setToType(toType);
 						}
+					} else {// 使用用户自定义列覆盖智能获取的列
+						if (StringUtils.isBlank(column.getToType())) {
+							column.setToType(toType);
+						}
+						ColumnConvertArgs columnConvertArgs = columnConvertArgsMap.get(toType.toUpperCase());
+						if (columnConvertArgs == null) {// 无类型转换配置
+							column.setFromType(toType);
+						} else {// 有类型转换配置
+							fromType = column.getFromType();
+							if (StringUtils.isBlank(fromType)) {
+								column.setFromType(columnConvertArgs.fromType);
+								column.setScript(PlaceHolderUtils.replace(columnConvertArgs.script, "${columnName}",
+										column.getFromName()));
+							} else if (columnConvertArgs.fromType.equalsIgnoreCase(fromType)) {
+								column.setScript(PlaceHolderUtils.replace(columnConvertArgs.script, "${columnName}",
+										column.getFromName()));
+							}
+						}
+						columnsMap.remove(toName);
 					}
 				}
 				addColumns(columns, columnsMap);
@@ -219,7 +248,7 @@ public class DataSyncOperator extends AbstractOperator<DataSync> {
 				ColumnConvertArgs columnConvertArgs = columnConvertArgsMap.get(column.getToType().toUpperCase());
 				if (columnConvertArgs == null) {// 无类型转换配置
 					column.setFromType(toType);
-				} else if (columnConvertArgs.fromType.equalsIgnoreCase(column.getFromName())) {// 有类型转换配置
+				} else if (columnConvertArgs.fromType.equalsIgnoreCase(column.getFromType())) {// 有类型转换配置
 					column.setFromType(columnConvertArgs.fromType);
 					column.setScript(
 							PlaceHolderUtils.replace(columnConvertArgs.script, "${columnName}", column.getFromName()));
@@ -246,6 +275,7 @@ public class DataSyncOperator extends AbstractOperator<DataSync> {
 			column.setFromType(toType);
 		} else {// 有类型转换配置
 			column.setFromType(columnConvertArgs.fromType);
+			column.setScript(PlaceHolderUtils.replace(columnConvertArgs.script, "${columnName}", toName));
 		}
 		columns.add(column);
 	}
