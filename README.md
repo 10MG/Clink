@@ -202,7 +202,7 @@ script     | `String` | 是 | 基于[DSL](https://gitee.com/tenmg/dsl)的SQL脚�
 
 #### DataSync操作
 
-DataSync操作的作用是运行基于Flink SQL的流式任务实现数据同步，支持版本：1.1.2+，相关属性及说明如下：
+DataSync操作的作用是运行基于Flink SQL的流式任务实现数据同步，其原理是根据配置信息自动生成并执行Flink SQL。支持版本：1.1.2+，相关属性及说明如下：
 
 属性       | 类型            | 必需 | 说明
 -----------|----------------|----|--------
@@ -227,6 +227,14 @@ fromType | `String` | 否 | 来源数据类型。如果缺省，则如果开启�
 toName   | `String` | 否 | 目标列名。默认为来源列名。
 toType   | `String` | 否 | 目标列数据类型。如果缺省，则如果开启智能模式会自动获取，如果关闭智能模式则默认为来源列数据类型。
 script   | `String` | 否 | 自定义脚本。通常是需要进行函数转换时使用。
+
+#### 相关配置
+
+[配置文件](https://gitee.com/tenmg/flink-jobs#%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6)中可以增加数据同步的相关配置，各配置说明如下：
+
+##### data.sync.columns.convert
+
+`data.sync.columns.convert`用于配置数据同步的SELECT子句的列转换函数，可使用`#columnName`占位符表示当前列名，flink-jobs会在运行时将转换函数作为一个SQL片段一个`INSERT INTO …… SELECT …… FROM ……`语句的的一个片段。示例：`BIGINT,TIMESTAMP:TO_TIMESTAMP(FROM_UNIXTIME(#columnName/1000 - 8*60*60, 'yyyy-MM-dd HH:mm:ss'))`。
 
 ### 配置文件
 
