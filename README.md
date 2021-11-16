@@ -242,6 +242,15 @@ data.sync.columns.convert=BIGINT,TIMESTAMP:TO_TIMESTAMP(FROM_UNIXTIME(#columnNam
 
 ```
 
+上述配置旨在将`BIGINT`类型表示的时间转换为`TIMESTAMP`类型的时间，同时减去8个小时（时区转换，Debezium的时间通常是UTC时间）转换为北京时间。改配置包含几层含义：
+
+1. 如果没有指明同步的列信息，且开启智能模式（配置`data.sync.smart=true`），则从目标库中加载元数据，确定列名并自动将JDBC类型对应到Flink SQL的类型上，并作为创建目标（`Sink`）表的依据。当某字段类型为`TIMESTAMP`时，会在同步时应用该转换函数。此时，其源表对应字段类型则为`BIGINT`，否则源表对应字段类型和目标（`Sink`）表的一致；字段名方面，默认源表对应字段名和目标（`Sink`）表字段名一致。最后根据列的相关信息生成并执行相关同步SQL。
+
+2. 如果部分指定了同步的列信息，且开启智能模式（配置`data.sync.smart=true`），则从目标库中加载元数据，并自动补全用户未配置的部分列信息后，再生成并执行相关同步SQL。
+
+3. 如果完全指明同步的列信息，则根据指定的信息分别生成并执行相关同步SQL。
+
+
 ### 配置文件
 
 默认的配置文件为flink-jobs.properties（注意：需在classpath下），可通过flink-jobs-context-loader.properties配置文件的`config.location`修改配置文件路径和名称。配置项的值允许通过占位符`${}`引用，例如`key=${anotherKey}`。
