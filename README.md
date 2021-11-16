@@ -294,6 +294,21 @@ datasource.hivedb.default-database=default
 datasource.hivedb.hive-conf-dir=/etc/hive/conf
 ```
 
+#StarRocks
+#配置名称为starrocks的数据源
+datasource.starrocks.jdbc-url=jdbc:mysql://192.168.10.140:9030
+datasource.starrocks.load-url=192.168.10.140:8030
+datasource.starrocks.username=your_name
+datasource.starrocks.password=your_password
+datasource.starrocks.sink.properties.column_separator=\\x01
+datasource.starrocks.sink.properties.row_delimiter=\\x02
+# the flushing time interval, range: [1000ms, 3600000ms].
+datasource.starrocks.sink.buffer-flush.interval-ms=10000
+# max retry times of the stream load request, range: [0, 10].
+datasource.starrocks.sink.max-retries=3
+datasource.starrocks.connector=starrocks
+datasource.starrocks.database-name=your_db
+
 #### Table API & SQL
 
 [Flink](http://)的Table API & SQL配置除了在Flink配置文件中指定之外，也可以在flink-jobs的配置文件中指定。例如：
