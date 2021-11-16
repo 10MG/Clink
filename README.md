@@ -292,7 +292,6 @@ datasource.sqltool.password=your_password
 datasource.hivedb.type=hive
 datasource.hivedb.default-database=default
 datasource.hivedb.hive-conf-dir=/etc/hive/conf
-```
 
 #StarRocks
 #配置名称为starrocks的数据源
@@ -308,6 +307,7 @@ datasource.starrocks.sink.buffer-flush.interval-ms=10000
 datasource.starrocks.sink.max-retries=3
 datasource.starrocks.connector=starrocks
 datasource.starrocks.database-name=your_db
+```
 
 #### Table API & SQL
 
