@@ -234,7 +234,7 @@ script   | `String` | 否 | 自定义脚本。通常是需要进行函数转换�
 
 ###### data.sync.columns.convert
 
-`data.sync.columns.convert`用于配置数据同步的SELECT子句的列转换函数，可使用`#columnName`占位符表示当前列名，flink-jobs会在运行时将转换函数作为一个SQL片段一个`INSERT INTO …… SELECT …… FROM ……`语句的的一个片段。示例：
+1.1.3版本开始支持`data.sync.columns.convert`，用于配置数据同步的SELECT子句的列转换函数，可使用`#columnName`占位符表示当前列名，flink-jobs会在运行时将转换函数作为一个SQL片段一个`INSERT INTO …… SELECT …… FROM ……`语句的的一个片段。示例：
 
 ```
 
