@@ -548,7 +548,7 @@ datasource.starrocks.database-name=your_db
 
 #### 运行数据同步任务
 
-以下为通过Debezium实现异构数据库同步任务XML配置文件：
+以下为通过kafka（配合Debezium、Cannal或Maxwell等）实现异构数据库同步任务XML配置文件：
 
 ```
 <?xml version="1.0" encoding="UTF-8"?>
