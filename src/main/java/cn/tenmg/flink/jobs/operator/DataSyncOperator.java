@@ -88,7 +88,8 @@ public class DataSyncOperator extends AbstractOperator<DataSync> {
 	}
 
 	@Override
-	public Object execute(StreamExecutionEnvironment env, DataSync dataSync, Map<String, Object> params) throws Exception {
+	public Object execute(StreamExecutionEnvironment env, DataSync dataSync, Map<String, Object> params)
+			throws Exception {
 		String from = dataSync.getFrom(), to = dataSync.getTo(), table = dataSync.getTable();
 		if (StringUtils.isBlank(from) || StringUtils.isBlank(to) || StringUtils.isBlank(table)) {
 			throw new IllegalArgumentException("The property 'from', 'to' or 'table' cannot be blank.");
@@ -106,20 +107,18 @@ public class DataSyncOperator extends AbstractOperator<DataSync> {
 				toDataSource = FlinkJobsContext.getDatasource(to);
 		String primaryKey = collation(dataSync, fromDataSource, toDataSource, params);
 		List<Column> columns = dataSync.getColumns();
+
 		String sql = fromCreateTableSQL(fromDataSource, dataSync.getTopic(), table, fromTable, columns, primaryKey,
 				fromConfig);
-		System.out.println("Execute Flink SQL:");
-		System.out.println(sql);
+		System.out.println("Create source table by Flink SQL: " + sql);
 		tableEnv.executeSql(sql);
 
 		sql = toCreateTableSQL(toDataSource, table, columns, primaryKey, dataSync.getToConfig());
-		System.out.println("Execute Flink SQL:");
-		System.out.println(sql);
+		System.out.println("Create sink table by Flink SQL: " + sql);
 		tableEnv.executeSql(sql);
 
 		sql = insertSQL(table, fromTable, columns);
-		System.out.println("Execute Flink SQL:");
-		System.out.println(sql);
+		System.out.println("Execute Flink SQL: " + sql);
 		return tableEnv.executeSql(sql);
 	}
 

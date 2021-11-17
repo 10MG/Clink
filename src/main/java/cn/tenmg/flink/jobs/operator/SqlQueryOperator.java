@@ -24,7 +24,8 @@ public class SqlQueryOperator extends AbstractSqlOperator<SqlQuery> {
 	Object execute(StreamTableEnvironment tableEnv, SqlQuery sqlQuery, Map<String, Object> params) throws Exception {
 		NamedScript namedScript = DSLUtils.parse(sqlQuery.getScript(), params);
 		String saveAs = sqlQuery.getSaveAs(), statement = SQLUtils.toSQL(namedScript);
-		System.out.println(statement);
+
+		System.out.println("Execute query by Flink SQL: " + statement);
 		Table table = tableEnv.sqlQuery(statement);
 		String defaultCatalog = FlinkJobsContext.getDefaultCatalog(tableEnv);
 		if (!defaultCatalog.equals(tableEnv.getCurrentCatalog())) {

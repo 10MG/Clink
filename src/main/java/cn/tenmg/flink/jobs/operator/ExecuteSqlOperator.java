@@ -67,7 +67,8 @@ public class ExecuteSqlOperator extends AbstractSqlOperator<ExecuteSql> {
 					ps = con.prepareStatement(statement);
 					List<Object> parameters = script.getParams();
 					JDBCUtils.setParams(ps, parameters);
-					System.out.println("SQL: " + statement + ", parameters: " + JSONUtils.toJSONString(parameters));
+					System.out.println(String.format("Execute JDBC SQL: %s; parameters: %s", statement,
+							JSONUtils.toJSONString(parameters)));
 					return ps.executeLargeUpdate();// 执行删除
 				} catch (Exception e) {
 					throw e;
@@ -80,7 +81,7 @@ public class ExecuteSqlOperator extends AbstractSqlOperator<ExecuteSql> {
 			}
 			statement = wrapDataSource(statement, dataSource);
 		}
-		System.out.println(statement);
+		System.out.println("Execute Flink SQL: " + statement);
 		return tableEnv.executeSql(statement);
 	}
 

@@ -1,12 +1,7 @@
 package cn.tenmg.flink.jobs.operator;
 
-import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
-import java.util.Calendar;
-import java.util.Collection;
-import java.util.Date;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -20,6 +15,7 @@ import cn.tenmg.dsl.utils.StringUtils;
 import cn.tenmg.flink.jobs.context.FlinkJobsContext;
 import cn.tenmg.flink.jobs.model.Jdbc;
 import cn.tenmg.flink.jobs.utils.JDBCUtils;
+import cn.tenmg.flink.jobs.utils.JSONUtils;
 
 /**
  * JBDC操作执行器
@@ -48,11 +44,8 @@ public class JdbcOperator extends AbstractOperator<Jdbc> {
 				List<Object> paramters = sql.getParams();
 				JDBCUtils.setParams(ps, paramters);
 
-				StringBuilder sb = new StringBuilder();
-				sb.append("Execute SQL: ").append(statement).append(", ").append("parameters: ")
-						.append(toJSONString(params));
-				System.out.println(sb.toString());
-
+				System.out.println(String.format("Execute JDBC SQL: %s; parameters: %s", statement,
+						JSONUtils.toJSONString(params)));
 				String method = jdbc.getMethod();
 				if ("executeLargeUpdate".equals(method)) {
 					return ps.executeLargeUpdate();
@@ -71,78 +64,5 @@ public class JdbcOperator extends AbstractOperator<Jdbc> {
 		} else {
 			throw new IllegalArgumentException("dataSource must be not null");
 		}
-	}
-
-	/**
-	 * 将参数集转化为JSON字符串
-	 * 
-	 * @param params
-	 *            参数集
-	 * @return 返回参数集的JSON字符串
-	 */
-	private static final String toJSONString(Collection<Object> params) {
-		if (params != null) {
-			StringBuilder sb = new StringBuilder("[");
-			boolean flag = false;
-			for (Iterator<Object> it = params.iterator(); it.hasNext();) {
-				Object value = it.next();
-				if (flag) {
-					sb.append(", ");
-				} else {
-					flag = true;
-				}
-				append(sb, value);
-			}
-			sb.append("]");
-			return sb.toString();
-		}
-		return null;
-	}
-
-	/**
-	 * 将参数集转化为JSON字符串
-	 * 
-	 * @param params
-	 *            参数集
-	 * @return 返回参数集的JSON字符串
-	 */
-	private static final String toJSONString(Object... params) {
-		if (params != null) {
-			StringBuilder sb = new StringBuilder("[");
-			for (int i = 0; i < params.length; i++) {
-				Object value = params[i];
-				if (i > 0) {
-					sb.append(", ");
-				}
-				append(sb, value);
-			}
-			sb.append("]");
-			return sb.toString();
-		}
-		return null;
-	}
-
-	@SuppressWarnings("unchecked")
-	private static final void append(StringBuilder sb, Object value) {
-		if (value == null) {
-			sb.append("null");
-		} else {
-			if (value instanceof String) {
-				appendString(sb, (String) value);
-			} else if (value instanceof Number || value instanceof Date || value instanceof Calendar
-					|| value instanceof Boolean || value instanceof BigDecimal) {
-				sb.append(value.toString());
-			} else if (value instanceof Collection) {
-				sb.append(toJSONString((Collection<Object>) value));
-			} else if (value instanceof Object[]) {
-				sb.append(toJSONString((Object[]) value));
-			} else {
-				appendString(sb, value.toString());
-			}
-		}
-	}
-
-	private static final void appendString(StringBuilder sb, String s) {
-		sb.append("\"").append(s).append("\"");
 	}
 }
