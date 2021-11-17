@@ -5,11 +5,12 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * 对象工具类
+ * 对象工具类。已废弃，将在下一版本移除，请使用cn.tenmg.dsl.utils.ObjectUtils替换
  * 
  * @author 赵伟均 wjzhao@aliyun.com
  *
  */
+@Deprecated
 public abstract class ObjectUtils {
 
 	private static volatile Map<Class<?>, Map<String, Field>> fieldMap = new HashMap<Class<?>, Map<String, Field>>();
@@ -17,9 +18,12 @@ public abstract class ObjectUtils {
 	/**
 	 * 获取指定对象中的指定成员变量
 	 * 
-	 * @param object    指定对象
-	 * @param fieldName 指定成员变量
-	 * @param <T>       返回类型
+	 * @param object
+	 *            指定对象
+	 * @param fieldName
+	 *            指定成员变量
+	 * @param <T>
+	 *            返回类型
 	 * @return 返回指定成员变量的值
 	 */
 	@SuppressWarnings("unchecked")

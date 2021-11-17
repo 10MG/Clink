@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import cn.tenmg.dsl.utils.ParamsUtils;
 import cn.tenmg.dsl.utils.StringUtils;
 
 /**
@@ -63,7 +64,7 @@ public abstract class PlaceHolderUtils {
 			Object value;
 			while (m.find()) {
 				name = m.group();
-				value = getParam(params, name.substring(2, name.length() - 1));
+				value = ParamsUtils.getParam(params, name.substring(2, name.length() - 1));
 				if (value == null) {
 					m.appendReplacement(sb, "");
 				} else {
@@ -76,7 +77,7 @@ public abstract class PlaceHolderUtils {
 	}
 
 	/**
-	 * 获取参数集中的参数值。参数名支持使用“key.name”访问参数值的属性值，层级数不限，支持使用“[*]”访问数组值，维数不限，“key.name”和“[*]”也可以配合使用
+	 * 获取参数集中的参数值。参数名支持使用“key.name”访问参数值的属性值，层级数不限，支持使用“[*]”访问数组值，维数不限，“key.name”和“[*]”也可以配合使用。已废弃，将在下一版本移除，请使用cn.tenmg.dsl.utils.ParamsUtils.getParam替换
 	 * 
 	 * @param params
 	 *            参数集
@@ -84,6 +85,7 @@ public abstract class PlaceHolderUtils {
 	 *            参数名
 	 * @return 如果参数集的参数存在则，返回它的值；否则，返回null
 	 */
+	@Deprecated
 	public static Object getParam(Map<?, ?> params, String name) {
 		Object value = params.get(name);
 		if (value == null) {
@@ -129,6 +131,7 @@ public abstract class PlaceHolderUtils {
 	 *            参数名
 	 * @return 如果含有“[*]”符号，则获取数组的值或者Map对象的属性值；否则返回null
 	 */
+	@Deprecated
 	private static final Object getMaybeArrayOrMapValue(Map<?, ?> params, String name) {
 		Object value = null;
 		Matcher m = arrayPattern.matcher(name);
@@ -143,6 +146,7 @@ public abstract class PlaceHolderUtils {
 		return value;
 	}
 
+	@Deprecated
 	private static final Object getArrayOrMapValue(Object value, Map<?, ?> params, Matcher m) {
 		value = getArrayOrMapValue(value, params, m.group());
 		while (value != null && m.find()) {
@@ -151,6 +155,7 @@ public abstract class PlaceHolderUtils {
 		return value;
 	}
 
+	@Deprecated
 	private static final Object getArrayOrMapValue(Object value, Map<?, ?> params, String group) {
 		String name = group.substring(1, group.length() - 1);
 		return getValue(value, params, name);
