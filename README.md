@@ -332,100 +332,6 @@ datasource.starrocks.database-name=your_db
 
 注意：如果是在flink-jobs的配置文件中配置这些参数，当执行自定义Java服务时，只有通过`FlinkJobsContext.getOrCreateStreamTableEnvironment()`或`FlinkJobsContext.getOrCreateStreamTableEnvironment(env)`方法获取的`StreamTableEnvironment`执行Table API & SQL，这些配置才会生效。
 
-### DSL
-
-[DSL](https://gitee.com/tenmg/dsl)的全称是动态脚本语言(Dynamic Script Language)，它使用特殊字符`#[]`标记脚本片段，片段内使用若干个参数，一起构成动态片段（支持嵌套使用）。当使用flink-jobs运行Flink SQL时，判断实际传入参数值是否为空（`null`）决定是否保留该片段（同时自动去除`#[]`），形成最终可执行的脚本提交执行。使用[DSL](https://gitee.com/tenmg/dsl)可以有效避免程序员手动拼接繁杂的SQL，使得程序员能从繁杂的业务逻辑中解脱出来。
-
-#### 简单例子
-
-假设有如下动态查询语句：
-
-```
-SELECT
-  *
-FROM STAFF_INFO S
-WHERE S.STATUS = 'VALID'
-#[AND S.STAFF_ID = :staffId]
-#[AND S.STAFF_NAME LIKE :staffName]
-```
-
-参数staffId为空（`null`），而staffName为非空（非`null`）时，实际执行的语句为：
-
-```
-SELECT
-   *
- FROM STAFF_INFO S
- WHERE S.STATUS = 'VALID'
- AND S.STAFF_NAME LIKE :staffName
-```
-
-相反，参数staffName为空（`null`），而staffId为非空（非`null`）时，实际执行的语句为：
-
-
-```
-SELECT
-   *
- FROM STAFF_INFO S
- WHERE S.STATUS = 'VALID'
- AND S.STAFF_ID = :staffId
-```
-
-或者，参数staffId、staffName均为空（`null`）时，实际执行的语句为：
-
-```
-SELECT
-   *
- FROM STAFF_INFO S
- WHERE S.STATUS = 'VALID'
-```
-
-最后，参数staffId、staffName均为非空（非`null`）时，实际执行的语句为：
-
-```
-SELECT
-   *
- FROM STAFF_INFO S
- WHERE S.STATUS = 'VALID'
- AND S.STAFF_ID = :staffId
- AND S.STAFF_NAME LIKE :staffName
-```
-
-通过上面这个小例子，我们看到了动态脚本语言（DSL）的魔力。这种魔力的来源是巧妙的运用了一个值：空(`null`)，因为该值往往在SQL中很少用到，而且即便使用也是往往作为特殊的常量使用，比如：
-```
-NVL(EMAIL,'无')
-```
-和
-```
-WHERE EMAIL IS NOT NULL
-```
-等等。
-
-#### 参数
-
-##### 普通参数
-
-使用`:`加参数名表示普通参数，例如，:staffName。
-
-##### 嵌入式参数
-
-使用`#`加参数名表示（例如，#staffName）嵌入式参数，嵌入式参数会被以字符串的形式嵌入到脚本中。 **值得注意的是：在SQL脚本中使用嵌入式参数，会有SQL注入风险，一定注意不要使用前端传参直接作为嵌入式参数使用** 。1.1.3版本开始支持嵌入式参数，即对应dsl版本为1.2.2，单独升级dsl也可以支持。
-
-##### 动态参数
-
-动态参数是指，根据具体情况确定是否在动态脚本中生效的参数，动态参数是动态片段的组成部分。动态参数既可以是普通参数，也可以嵌入式参数。
-
-##### 静态参数
-
-静态参数是相对动态参数而言的，它永远会在动态脚本中生效。在动态片段之外使用的参数就是静态参数。静态参数既可以是普通参数，也可以嵌入式参数。
-
-##### 参数访问符
-
-参数访问符包括两种，即`.`和`[]`, 使用`Map`传参时，优先获取键相等的值，只有键不存在时才会将键降级拆分一一访问对象，直到找到参数并返回，或未找到返回`null`。其中`.`用来访问对象的属性，例如`:staff.name`、`#staff.age`；`[]`用来访问数组、集合的元素，例如`:array[0]`、`#map[key]`。理论上，支持任意级嵌套使用，例如`:list[0][1].name`、`#map[key][1].staff.name`。1.1.3版本开始支持参数访问符，即对应dsl版本为1.2.2，单独升级dsl也可以支持。
-
-#### 进一步了解
-
-[DSL](https://gitee.com/tenmg/dsl)中的动态片段可以是任意使用特殊字符`#[]`标记且包含参数的片段，它可以应用于各种SQL语句中，包括但不限于`CREATE`、`DROP`、`SELECT`、`INSERT`、`UPDATE`、`DELETE`。更多有关[DSL](https://gitee.com/tenmg/dsl)的介绍，详见[https://gitee.com/tenmg/dsl](https://gitee.com/tenmg/dsl)
-
 ### 系统集成
 
 [flink-jobs-launcher](https://gitee.com/tenmg/flink-jobs-launcher)实现了使用XML配置文件来管理flink-jobs任务，这样开发Flink SQL任务会显得非常简单；同时，用户自定义的flink-jobs服务也可以被更轻松得集成到其他系统中。XML文件具有良好的可读性，并且在IDE环境下能够对配置进行自动提示。具体使用方法详见[flink-jobs-launcher开发文档](https://gitee.com/tenmg/flink-jobs-launcher)，以下介绍几种通过XML管理的flink-jobs任务：
@@ -673,6 +579,100 @@ WHERE EMAIL IS NOT NULL
 	</data-sync>
 </flink-jobs>
 ```
+
+### DSL
+
+[DSL](https://gitee.com/tenmg/dsl)的全称是动态脚本语言(Dynamic Script Language)，它使用特殊字符`#[]`标记脚本片段，片段内使用若干个参数，一起构成动态片段（支持嵌套使用）。当使用flink-jobs运行Flink SQL时，判断实际传入参数值是否为空（`null`）决定是否保留该片段（同时自动去除`#[]`），形成最终可执行的脚本提交执行。使用[DSL](https://gitee.com/tenmg/dsl)可以有效避免程序员手动拼接繁杂的SQL，使得程序员能从繁杂的业务逻辑中解脱出来。
+
+#### 简单例子
+
+假设有如下动态查询语句：
+
+```
+SELECT
+  *
+FROM STAFF_INFO S
+WHERE S.STATUS = 'VALID'
+#[AND S.STAFF_ID = :staffId]
+#[AND S.STAFF_NAME LIKE :staffName]
+```
+
+参数staffId为空（`null`），而staffName为非空（非`null`）时，实际执行的语句为：
+
+```
+SELECT
+   *
+ FROM STAFF_INFO S
+ WHERE S.STATUS = 'VALID'
+ AND S.STAFF_NAME LIKE :staffName
+```
+
+相反，参数staffName为空（`null`），而staffId为非空（非`null`）时，实际执行的语句为：
+
+
+```
+SELECT
+   *
+ FROM STAFF_INFO S
+ WHERE S.STATUS = 'VALID'
+ AND S.STAFF_ID = :staffId
+```
+
+或者，参数staffId、staffName均为空（`null`）时，实际执行的语句为：
+
+```
+SELECT
+   *
+ FROM STAFF_INFO S
+ WHERE S.STATUS = 'VALID'
+```
+
+最后，参数staffId、staffName均为非空（非`null`）时，实际执行的语句为：
+
+```
+SELECT
+   *
+ FROM STAFF_INFO S
+ WHERE S.STATUS = 'VALID'
+ AND S.STAFF_ID = :staffId
+ AND S.STAFF_NAME LIKE :staffName
+```
+
+通过上面这个小例子，我们看到了动态脚本语言（DSL）的魔力。这种魔力的来源是巧妙的运用了一个值：空(`null`)，因为该值往往在SQL中很少用到，而且即便使用也是往往作为特殊的常量使用，比如：
+```
+NVL(EMAIL,'无')
+```
+和
+```
+WHERE EMAIL IS NOT NULL
+```
+等等。
+
+#### 参数
+
+##### 普通参数
+
+使用`:`加参数名表示普通参数，例如，:staffName。
+
+##### 嵌入式参数
+
+使用`#`加参数名表示（例如，#staffName）嵌入式参数，嵌入式参数会被以字符串的形式嵌入到脚本中。 **值得注意的是：在SQL脚本中使用嵌入式参数，会有SQL注入风险，一定注意不要使用前端传参直接作为嵌入式参数使用** 。1.1.3版本开始支持嵌入式参数，即对应dsl版本为1.2.2，单独升级dsl也可以支持。
+
+##### 动态参数
+
+动态参数是指，根据具体情况确定是否在动态脚本中生效的参数，动态参数是动态片段的组成部分。动态参数既可以是普通参数，也可以嵌入式参数。
+
+##### 静态参数
+
+静态参数是相对动态参数而言的，它永远会在动态脚本中生效。在动态片段之外使用的参数就是静态参数。静态参数既可以是普通参数，也可以嵌入式参数。
+
+##### 参数访问符
+
+参数访问符包括两种，即`.`和`[]`, 使用`Map`传参时，优先获取键相等的值，只有键不存在时才会将键降级拆分一一访问对象，直到找到参数并返回，或未找到返回`null`。其中`.`用来访问对象的属性，例如`:staff.name`、`#staff.age`；`[]`用来访问数组、集合的元素，例如`:array[0]`、`#map[key]`。理论上，支持任意级嵌套使用，例如`:list[0][1].name`、`#map[key][1].staff.name`。1.1.3版本开始支持参数访问符，即对应dsl版本为1.2.2，单独升级dsl也可以支持。
+
+#### 进一步了解
+
+[DSL](https://gitee.com/tenmg/dsl)中的动态片段可以是任意使用特殊字符`#[]`标记且包含参数的片段，它可以应用于各种SQL语句中，包括但不限于`CREATE`、`DROP`、`SELECT`、`INSERT`、`UPDATE`、`DELETE`。更多有关[DSL](https://gitee.com/tenmg/dsl)的介绍，详见[https://gitee.com/tenmg/dsl](https://gitee.com/tenmg/dsl)
 
 ### 参与贡献
 
