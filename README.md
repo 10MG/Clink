@@ -1,9 +1,9 @@
 # flink-jobs
 
-### 介绍
+## 介绍
 flink-jobs为基于Flink的Java应用程序提供快速集成的能力，可通过继承FlinkJobsRunner快速构建基于Java的Flink流批一体应用程序。flink-jobs提供了数据源管理模块，通过flink-jobs运行Flink SQL会变得极其简单。而通过使用[flink-jobs-launcher](https://gitee.com/tenmg/flink-jobs-launcher)，实现基于Java API启动flink-jobs应用程序，更可以将flink任务实现通过XML配置文件来管理。
 
-### 起步
+## 起步
 
 以基于SpringBoot的Maven项目为例
 
@@ -107,11 +107,11 @@ public class HelloWorldService implements StreamService {
 
 - 此外，通过使用[flink-jobs-launcher](https://gitee.com/tenmg/flink-jobs-launcher)可以通过Java API的方式启动flink-jobs应用程序，这样启动操作就可以轻松集成到其他系统中（例如Java Web程序）。
 
-### 快速入门
+## 快速入门
 
 详见https://gitee.com/tenmg/flink-jobs-quickstart
 
-### 运行参数（arguments）
+## 运行参数（arguments）
 flink-jobs应用程序的运行参数通过JSON格式的字符串（注意，如果是命令行运行，JSON格式字符串前后需加上双引号或单引号，JSON格式字符串内部的双引号或单引号则需要转义）或者一个.json文件提供，结构如下：
 
 ```
@@ -146,7 +146,7 @@ runtimeMode | `String`             | 否 | 运行模式。可选值："BATCH"/"S
 params      | `Map<String,Object>` | 否 | 参数查找表。通常可用于SQL中，也可以在自定义服务中通过arguments参数获取。
 operates    | `List<Operate>`      | 否 | 操作列表。目前支持类型为[Bsh](#bsh%E6%93%8D%E4%BD%9C)、[ExecuteSql](#executesql%E6%93%8D%E4%BD%9C)、[SqlQuery](#sqlquery%E6%93%8D%E4%BD%9C)，[Jdbc](#jdbc%E6%93%8D%E4%BD%9C)和[DataSync](https://gitee.com/tenmg/flink-jobs#datasync%E6%93%8D%E4%BD%9C)5种类型操作。
 
-#### Bsh操作
+### Bsh操作
 
 Bsh操作的作用是运行基于Beanshell的java代码，支持版本：1.1.0+，相关属性及说明如下：
 
@@ -157,14 +157,14 @@ saveAs | `String`    | 否 | 操作结果另存为一个新的变量的名称。
 vars   | `List<Var>` | 否 | 参数声明列表。
 java   | `String`    | 是 | java代码。注意：使用泛型时，不能使用尖括号声明泛型。例如，使用Map不能使用“Map<String , String> map = new HashMap<String , String>();”，但可以使用“Map map = new HashMap();”。
 
-##### Var
+#### Var
 
 属性   | 类型    | 必需 | 说明
 ------|----------|----|--------
 name  | `String` | 是 | Beanshell中使用的变量名称
 value | `String` | 否 | 变量对应的值的名称。默认与name相同。flink-jobs会从参数查找表中查找名称为value值的参数值，如果指定参数存在且不是null，则该值作为该参数的值；否则，使用value值作为该变量的值。
 
-#### ExecuteSql操作
+### ExecuteSql操作
 
 ExecuteSql操作的作用是运行基于[DSL](https://gitee.com/tenmg/dsl)的SQL代码，支持版本：1.1.0+，相关属性及说明如下：
 
@@ -176,7 +176,7 @@ dataSource | `String` | 否 | 使用的数据源名称。
 catalog    | `String` | 否 | 执行SQL使用的Flink SQL的catalog名称。
 script     | `String` | 是 | 基于[DSL](https://gitee.com/tenmg/dsl)的SQL脚本。由于Flink SQL不支持DELETE、UPDATE语句，因此如果配置的SQL脚本是DELETE或者UPDATE语句，该语句将在程序main函数中采用JDBC执行。
 
-#### SqlQuery操作
+### SqlQuery操作
 
 SqlQuery操作的作用是运行基于[DSL](https://gitee.com/tenmg/dsl)的SQL查询代码，支持版本：1.1.0+，相关属性及说明如下：
 
@@ -186,7 +186,7 @@ saveAs     | `String` | 否 | 查询结果另存为临时表的表名及操作�
 catalog    | `String` | 否 | 执行SQL使用的Flink SQL的catalog名称。
 script     | `String` | 是 | 基于[DSL](https://gitee.com/tenmg/dsl)的SQL脚本。
 
-#### Jdbc操作
+### Jdbc操作
 
 Jdbc操作的作用是运行基于[DSL](https://gitee.com/tenmg/dsl)的JDBC SQL代码，支持版本：1.1.1+，相关属性及说明如下：
 
@@ -200,7 +200,7 @@ script     | `String` | 是 | 基于[DSL](https://gitee.com/tenmg/dsl)的SQL脚�
 
 目标JDBC SQL代码是在flink-jobs应用程序的main函数中运行的。
 
-#### DataSync操作
+### DataSync操作
 
 DataSync操作的作用是运行基于Flink SQL的流式任务实现数据同步，其原理是根据配置信息自动生成并执行Flink SQL。支持版本：1.1.2+，相关属性及说明如下：
 
@@ -218,7 +218,7 @@ columns    | `List<Column>` | 否 | 同步数据列。当开启智能模式时�
 primaryKey | `String`       | 否 | 主键，多个列名以“,”分隔。当开启智能模式时，会自动获取主键信息。
 smart      | `Boolean`      | 否 | 是否开启智能模式。不设置时，根据全局配置确定是否开启智能模式，全局默认配置为`data.sync.smart=true`。
 
-##### Column
+#### Column
 
 属性     | 类型     | 必需 | 说明
 ---------|----------|----|--------
@@ -232,19 +232,19 @@ script   | `String` | 否 | 自定义脚本。通常是需要进行函数转换�
 
 [配置文件](https://gitee.com/tenmg/flink-jobs#%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6)中可以增加数据同步的相关配置，各配置说明如下：
 
-###### data.sync.smart
+##### data.sync.smart
 
 是否开启数据同步的智能模式，默认为`true`。开启智能模式的潜台词是指，自动通过已实现的元数据获取器（也可自行扩展）获取同步的目标库的元数据以生成Flink SQL的源表（Source Table）、目标表（Slink Table）和相应的插入语句（`INSERT INTO … SELECT … FROM …`）。
 
-###### data.sync.from_table_prefix
+##### data.sync.from_table_prefix
 
 源表（Source Table）表名的前缀，默认为`SOURCE_`。该前缀和目标表（Slink Table）的表名拼接起来即为源表的表名。
 
-###### data.sync.group_id_prefix
+##### data.sync.group_id_prefix
 
 数据同步时消费消息队列（Kafka）的`groupid`的前缀，默认为`flink-jobs-data-sync.`。该前缀和目标表（Slink Table）的表名拼接起来构成消费消息队列（Kafka）的`groupid`，但用户在任务中指定`properties.group.id`的除外。
 
-###### data.sync.metadata.getter.*
+##### data.sync.metadata.getter.*
 
 用户可以需要实现`cn.tenmg.flink.jobs.operator.data.sync.MetaDataGetter`接口并通过该配置项来扩展元数据获取器，也可以使用自实现的元数据获取器来替换原有的元数据获取器。默认配置为：
 
@@ -253,7 +253,7 @@ data.sync.metadata.getter.jdbc=cn.tenmg.flink.jobs.operator.data.sync.getter.JDB
 data.sync.metadata.getter.starrocks=cn.tenmg.flink.jobs.operator.data.sync.getter.StarrocksMetaDataGetter
 ```
 
-###### data.sync.columns.convert
+##### data.sync.columns.convert
 
 1.1.3版本开始支持`data.sync.columns.convert`，用于配置数据同步的SELECT子句的列转换函数，可使用`#columnName`占位符表示当前列名，flink-jobs会在运行时将转换函数作为一个SQL片段一个`INSERT INTO …… SELECT …… FROM ……`语句的的一个片段。示例：
 
@@ -271,11 +271,11 @@ data.sync.columns.convert=BIGINT,TIMESTAMP:TO_TIMESTAMP(FROM_UNIXTIME(#columnNam
 
 3. 如果完全指明同步的列信息，则根据指定的信息分别生成并执行相关同步SQL。
 
-### 配置文件
+## 配置文件
 
 默认的配置文件为flink-jobs.properties（注意：需在classpath下），可通过flink-jobs-context-loader.properties配置文件的`config.location`修改配置文件路径和名称。配置项的值允许通过占位符`${}`引用，例如`key=${anotherKey}`。
 
-#### 数据源配置
+### 数据源配置
 
 每个数据源有一个唯一的命名，数据源配置以“datasource”为前缀，以“.”作为分隔符，格式为`datasource.${name}.${key}=${value}`。其中，第一和第二个“.”符号之间的是数据源名称，第二个“.”符号之后和“=”之前的是该数据源具体的配置项，“=”之后的是该配置项的值。数据源的配置项与[Flink](https://flink.apache.org)保持一致，具体配置项详见[Flink官方文档](https://flink.apache.org)。以下给出部分常用数据源配置示例：
 
@@ -344,7 +344,7 @@ datasource.starrocks.connector=starrocks
 datasource.starrocks.database-name=your_db
 ```
 
-#### Table API & SQL
+### Table API & SQL
 
 [Flink](http://)的Table API & SQL配置除了在Flink配置文件中指定之外，也可以在flink-jobs的配置文件中指定。例如：
 
@@ -352,11 +352,11 @@ datasource.starrocks.database-name=your_db
 
 注意：如果是在flink-jobs的配置文件中配置这些参数，当执行自定义Java服务时，只有通过`FlinkJobsContext.getOrCreateStreamTableEnvironment()`或`FlinkJobsContext.getOrCreateStreamTableEnvironment(env)`方法获取的`StreamTableEnvironment`执行Table API & SQL，这些配置才会生效。
 
-### 系统集成
+## 系统集成
 
 [flink-jobs-launcher](https://gitee.com/tenmg/flink-jobs-launcher)实现了使用XML配置文件来管理flink-jobs任务，这样开发Flink SQL任务会显得非常简单；同时，用户自定义的flink-jobs服务也可以被更轻松得集成到其他系统中。XML文件具有良好的可读性，并且在IDE环境下能够对配置进行自动提示。具体使用方法详见[flink-jobs-launcher开发文档](https://gitee.com/tenmg/flink-jobs-launcher)，以下介绍几种通过XML管理的flink-jobs任务：
 
-#### 运行自定义服务
+### 运行自定义服务
 
 以下为一个自定义服务任务XML配置文件：
 
@@ -369,7 +369,7 @@ datasource.starrocks.database-name=your_db
 </flink-jobs>
 ```
 
-#### 运行批处理SQL
+### 运行批处理SQL
 
 以下为一个简单订单量统计SQL批处理任务XML配置文件：
 
@@ -435,7 +435,7 @@ datasource.starrocks.database-name=your_db
 </flink-jobs>
 ```
 
-#### 运行流处理SQL
+### 运行流处理SQL
 
 以下为通过Debezium实现异构数据库同步任务XML配置文件：
 
@@ -581,7 +581,7 @@ datasource.starrocks.database-name=your_db
 </flink-jobs>
 ```
 
-#### 运行数据同步任务
+### 运行数据同步任务
 
 以下为通过kafka（配合Debezium、Cannal或Maxwell等）实现异构数据库同步任务XML配置文件：
 
@@ -600,11 +600,11 @@ datasource.starrocks.database-name=your_db
 </flink-jobs>
 ```
 
-### DSL
+## DSL
 
 [DSL](https://gitee.com/tenmg/dsl)的全称是动态脚本语言(Dynamic Script Language)，它使用特殊字符`#[]`标记脚本片段，片段内使用若干个参数，一起构成动态片段（支持嵌套使用）。当使用flink-jobs运行Flink SQL时，判断实际传入参数值是否为空（`null`）决定是否保留该片段（同时自动去除`#[]`），形成最终可执行的脚本提交执行。使用[DSL](https://gitee.com/tenmg/dsl)可以有效避免程序员手动拼接繁杂的SQL，使得程序员能从繁杂的业务逻辑中解脱出来。
 
-#### 简单例子
+### 简单例子
 
 假设有如下动态查询语句：
 
@@ -668,40 +668,40 @@ WHERE EMAIL IS NOT NULL
 ```
 等等。
 
-#### 参数
+### 参数
 
-##### 普通参数
+#### 普通参数
 
 使用`:`加参数名表示普通参数，例如，:staffName。
 
-##### 嵌入式参数
+#### 嵌入式参数
 
 使用`#`加参数名表示（例如，#staffName）嵌入式参数，嵌入式参数会被以字符串的形式嵌入到脚本中。 **值得注意的是：在SQL脚本中使用嵌入式参数，会有SQL注入风险，一定注意不要使用前端传参直接作为嵌入式参数使用** 。1.1.3版本开始支持嵌入式参数，即对应dsl版本为1.2.2，单独升级dsl也可以支持。
 
-##### 动态参数
+#### 动态参数
 
 动态参数是指，根据具体情况确定是否在动态脚本中生效的参数，动态参数是动态片段的组成部分。动态参数既可以是普通参数，也可以嵌入式参数。
 
-##### 静态参数
+#### 静态参数
 
 静态参数是相对动态参数而言的，它永远会在动态脚本中生效。在动态片段之外使用的参数就是静态参数。静态参数既可以是普通参数，也可以嵌入式参数。
 
-##### 参数访问符
+#### 参数访问符
 
 参数访问符包括两种，即`.`和`[]`, 使用`Map`传参时，优先获取键相等的值，只有键不存在时才会将键降级拆分一一访问对象，直到找到参数并返回，或未找到返回`null`。其中`.`用来访问对象的属性，例如`:staff.name`、`#staff.age`；`[]`用来访问数组、集合的元素，例如`:array[0]`、`#map[key]`。理论上，支持任意级嵌套使用，例如`:list[0][1].name`、`#map[key][1].staff.name`。1.1.3版本开始支持参数访问符，即对应dsl版本为1.2.2，单独升级dsl也可以支持。
 
-#### 进一步了解
+### 进一步了解
 
 [DSL](https://gitee.com/tenmg/dsl)中的动态片段可以是任意使用特殊字符`#[]`标记且包含参数的片段，它可以应用于各种SQL语句中，包括但不限于`CREATE`、`DROP`、`SELECT`、`INSERT`、`UPDATE`、`DELETE`。更多有关[DSL](https://gitee.com/tenmg/dsl)的介绍，详见[https://gitee.com/tenmg/dsl](https://gitee.com/tenmg/dsl)
 
-### 参与贡献
+## 参与贡献
 
 1.  Fork 本仓库
 2.  新建 Feat_xxx 分支
 3.  提交代码
 4.  新建 Pull Request
 
-### 相关链接
+## 相关链接
 
 flink-jobs-launcher开源地址：https://gitee.com/tenmg/flink-jobs-launcher
 
