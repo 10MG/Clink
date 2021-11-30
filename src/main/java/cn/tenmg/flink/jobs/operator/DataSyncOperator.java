@@ -9,12 +9,12 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
 
 import cn.tenmg.dsl.NamedScript;
 import cn.tenmg.dsl.utils.DSLUtils;
+import cn.tenmg.dsl.utils.StringUtils;
 import cn.tenmg.flink.jobs.context.FlinkJobsContext;
 import cn.tenmg.flink.jobs.exception.IllegalConfigurationException;
 import cn.tenmg.flink.jobs.kit.ParamsKit;
@@ -39,7 +39,9 @@ public class DataSyncOperator extends AbstractOperator<DataSync> {
 
 	private static final String SMART_KEY = "data.sync.smart", FROM_TABLE_PREFIX_KEY = "data.sync.from_table_prefix",
 			TOPIC_KEY = "topic", GROUP_ID_KEY = "properties.group.id",
-			GROUP_ID_PREFIX_KEY = "data.sync.group_id_prefix";
+			GROUP_ID_PREFIX_KEY = "data.sync.group_id_prefix",
+			TIMESTAMP_SOURCE_TYPE_KRY = "data.sync.timestamp.source_type",
+			TIMESTAMP_TARGET_TYPE_KRY = "data.sync.timestamp.target_type";
 
 	private static final Map<String, ColumnConvertArgs> columnConvertArgsMap = new HashMap<String, ColumnConvertArgs>();
 
@@ -268,6 +270,15 @@ public class DataSyncOperator extends AbstractOperator<DataSync> {
 				}
 			}
 		}
+		String timestampColumnName = dataSync.getTimestampColumnName();
+		if (StringUtils.isNotBlank(timestampColumnName)) {// 如有，添加时间戳字段
+			Column column = new Column();
+			column.setFromName(timestampColumnName);
+			column.setToName(timestampColumnName);// 目标字段名和来源字段名相同
+			column.setFromType(FlinkJobsContext.getProperty(TIMESTAMP_SOURCE_TYPE_KRY));
+			column.setToType(FlinkJobsContext.getProperty(TIMESTAMP_TARGET_TYPE_KRY));
+			dataSync.getColumns().add(column);
+		}
 		return primaryKey;
 	}
 
@@ -280,7 +291,7 @@ public class DataSyncOperator extends AbstractOperator<DataSync> {
 
 	private static void addColumn(List<Column> columns, String toName, String toType, Map<String, Object> params) {
 		Column column = new Column();
-		column.setFromName(toName);// 原来字段名和目标字段名相同
+		column.setFromName(toName);// 来源字段名和目标字段名相同
 		column.setToName(toName);
 		column.setToType(toType);
 		ColumnConvertArgs columnConvertArgs = columnConvertArgsMap.get(getDataType(toType).toUpperCase());
