@@ -14,7 +14,7 @@ import cn.tenmg.flink.jobs.utils.SQLUtils;
 /**
  * SQL操作执行器
  * 
- * @author 赵伟均 wjzhao@aliyun.com
+ * @author June wjzhao@aliyun.com
  *
  * @since 1.1.0
  */

@@ -10,7 +10,7 @@ import cn.tenmg.flink.jobs.exception.IllegalConfigurationException;
 /**
  * 元数据获取器工厂
  * 
- * @author 赵伟均 wjzhao@aliyun.com
+ * @author June wjzhao@aliyun.com
  * 
  * @since 1.1.2
  */

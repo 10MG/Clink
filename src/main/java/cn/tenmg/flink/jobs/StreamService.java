@@ -9,7 +9,7 @@ import cn.tenmg.flink.jobs.model.Arguments;
 /**
  * 流处理服务
  * 
- * @author 赵伟均
+ * @author June
  * 
  * @since 1.0.0
  */

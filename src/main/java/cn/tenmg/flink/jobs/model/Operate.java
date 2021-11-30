@@ -5,7 +5,7 @@ import java.io.Serializable;
 /**
  * 操作配置虚基类
  * 
- * @author 赵伟均 wjzhao@aliyun.com
+ * @author June wjzhao@aliyun.com
  * 
  * @since 1.1.0
  */

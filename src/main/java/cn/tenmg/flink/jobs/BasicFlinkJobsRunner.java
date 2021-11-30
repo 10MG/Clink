@@ -18,7 +18,7 @@ import cn.tenmg.flink.jobs.utils.OperatorUtils;
  * 
  * flink-jobs应用入口虚基类。使用该类，启动flink应用程序可获得flink-jobs封装的SQL等执行能力
  * 
- * @author 赵伟均 wjzhao@aliyun.com
+ * @author June wjzhao@aliyun.com
  * 
  * @since 1.1.0
  */

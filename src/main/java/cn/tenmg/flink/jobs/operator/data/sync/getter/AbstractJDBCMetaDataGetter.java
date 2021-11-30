@@ -15,7 +15,7 @@ import cn.tenmg.flink.jobs.utils.JDBCUtils;
 /**
  * JDBC元数据获取器抽象类
  * 
- * @author 赵伟均 wjzhao@aliyun.com
+ * @author June wjzhao@aliyun.com
  * 
  * @since 1.1.3
  */

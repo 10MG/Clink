@@ -31,7 +31,7 @@ import cn.tenmg.flink.jobs.utils.SQLUtils;
 /**
  * 数据同步操作执行器
  * 
- * @author 赵伟均 wjzhao@aliyun.com
+ * @author June wjzhao@aliyun.com
  * 
  * @since 1.1.2
  */
@@ -40,6 +40,7 @@ public class DataSyncOperator extends AbstractOperator<DataSync> {
 	private static final String SMART_KEY = "data.sync.smart", FROM_TABLE_PREFIX_KEY = "data.sync.from_table_prefix",
 			TOPIC_KEY = "topic", GROUP_ID_KEY = "properties.group.id",
 			GROUP_ID_PREFIX_KEY = "data.sync.group_id_prefix",
+			TIMESTAMP_COLUMN_NAME = "data.sync.timestamp.column_name",
 			TIMESTAMP_SOURCE_TYPE_KRY = "data.sync.timestamp.source_type",
 			TIMESTAMP_TARGET_TYPE_KRY = "data.sync.timestamp.target_type";
 
@@ -270,16 +271,26 @@ public class DataSyncOperator extends AbstractOperator<DataSync> {
 				}
 			}
 		}
+
 		String timestampColumnName = dataSync.getTimestampColumnName();
-		if (StringUtils.isNotBlank(timestampColumnName)) {// 如有，添加时间戳字段
-			Column column = new Column();
-			column.setFromName(timestampColumnName);
-			column.setToName(timestampColumnName);// 目标字段名和来源字段名相同
-			column.setFromType(FlinkJobsContext.getProperty(TIMESTAMP_SOURCE_TYPE_KRY));
-			column.setToType(FlinkJobsContext.getProperty(TIMESTAMP_TARGET_TYPE_KRY));
-			dataSync.getColumns().add(column);
+		if (StringUtils.isBlank(timestampColumnName)) {// 没有指定时间戳字段名，使用配置的全局默认值
+			timestampColumnName = FlinkJobsContext.getProperty(TIMESTAMP_COLUMN_NAME);
+			if (StringUtils.isNotBlank(timestampColumnName)) {
+				addTimestampColumn(dataSync, timestampColumnName);
+			}
+		} else {
+			addTimestampColumn(dataSync, timestampColumnName);
 		}
 		return primaryKey;
+	}
+
+	private static void addTimestampColumn(DataSync dataSync, String timestampColumnName) {
+		Column column = new Column();
+		column.setFromName(timestampColumnName);
+		column.setToName(timestampColumnName);// 目标字段名和来源字段名相同
+		column.setFromType(FlinkJobsContext.getProperty(TIMESTAMP_SOURCE_TYPE_KRY));
+		column.setToType(FlinkJobsContext.getProperty(TIMESTAMP_TARGET_TYPE_KRY));
+		dataSync.getColumns().add(column);
 	}
 
 	private static void addColumns(List<Column> columns, Map<String, String> columnsMap, Map<String, Object> params) {
@@ -430,7 +441,7 @@ public class DataSyncOperator extends AbstractOperator<DataSync> {
 	/**
 	 * 列转换配置参数
 	 * 
-	 * @author 赵伟均 wjzhao@aliyun.com
+	 * @author June wjzhao@aliyun.com
 	 * 
 	 * @since 1.1.3
 	 *

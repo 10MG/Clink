@@ -7,7 +7,7 @@ import cn.tenmg.flink.jobs.model.data.sync.Column;
 /**
  * 数据同步配置
  * 
- * @author 赵伟均 wjzhao@aliyun.com
+ * @author June wjzhao@aliyun.com
  * 
  * @since 1.1.2
  */

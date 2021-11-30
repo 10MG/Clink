@@ -7,7 +7,7 @@ import cn.tenmg.flink.jobs.model.Arguments;
 /**
  * 模块化flink-jobs应用入口虚基类。可用于基于SpringBoot的CommandLineRunner封装的模块化的flink应用
  * 
- * @author 赵伟均 wjzhao@aliyun.com
+ * @author June wjzhao@aliyun.com
  * 
  * @since 1.0.0
  */

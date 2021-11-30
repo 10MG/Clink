@@ -7,7 +7,7 @@ import java.util.Map;
 /**
  * 对象工具类。已废弃，将在下一版本移除，请使用cn.tenmg.dsl.utils.ObjectUtils替换
  * 
- * @author 赵伟均 wjzhao@aliyun.com
+ * @author June wjzhao@aliyun.com
  *
  */
 @Deprecated

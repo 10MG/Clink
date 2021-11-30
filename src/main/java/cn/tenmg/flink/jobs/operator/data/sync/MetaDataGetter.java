@@ -6,7 +6,7 @@ import java.util.Set;
 /**
  * 元数据获取器
  * 
- * @author 赵伟均 wjzhao@aliyun.com
+ * @author June wjzhao@aliyun.com
  * 
  * @since 1.1.2
  */
@@ -29,7 +29,7 @@ public interface MetaDataGetter {
 	 * 
 	 * 表元数据
 	 * 
-	 * @author 赵伟均 wjzhao@aliyun.com
+	 * @author June wjzhao@aliyun.com
 	 * 
 	 * @since 1.1.2
 	 */

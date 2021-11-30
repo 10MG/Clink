@@ -14,7 +14,7 @@ import cn.tenmg.flink.jobs.model.Operate;
  * 
  * 虚操作执行器
  * 
- * @author 赵伟均 wjzhao@aliyun.com
+ * @author June wjzhao@aliyun.com
  *
  * @param <T>
  *            操作类型
