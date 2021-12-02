@@ -41,8 +41,8 @@ public class DataSyncOperator extends AbstractOperator<DataSync> {
 			TOPIC_KEY = "topic", GROUP_ID_KEY = "properties.group.id",
 			GROUP_ID_PREFIX_KEY = "data.sync.group_id_prefix",
 			TIMESTAMP_COLUMN_NAME = "data.sync.timestamp.column_name",
-			TIMESTAMP_FROM_TYPE_KRY = "data.sync.timestamp.from_type",
-			TIMESTAMP_TO_TYPE_KRY = "data.sync.timestamp.to_type";
+			TIMESTAMP_FROM_TYPE_KEY = "data.sync.timestamp.from_type",
+			TIMESTAMP_TO_TYPE_KEY = "data.sync.timestamp.to_type";
 
 	private static final Map<String, ColumnConvertArgs> columnConvertArgsMap = new HashMap<String, ColumnConvertArgs>();
 
@@ -164,102 +164,46 @@ public class DataSyncOperator extends AbstractOperator<DataSync> {
 			}
 			Map<String, String> columnsMap = tableMetaData.getColumns();
 			if (columns.isEmpty()) {// 没有用户自定义列
-				addColumns(columns, columnsMap, params, timestampColumnName, needTimestampColumn);
+				needTimestampColumn = addSmartLoadColumns(columns, columnsMap, params, timestampColumnName,
+						needTimestampColumn);
 			} else {// 有用户自定义列
-				String toName, fromName, fromType, toType;
-				for (int i = 0, size = columns.size(); i < size; i++) {
-					Column column = columns.get(i);
-					fromName = column.getFromName();
-					toName = column.getToName();
-					if (StringUtils.isBlank(fromName)) {
-						if (StringUtils.isBlank(toName)) {
-							throw new IllegalArgumentException(
-									"One of the properties 'fromName' or 'toName' cannot be blank, column index: " + i);
-						} else {
-							column.setFromName(toName);
-						}
-					} else if (StringUtils.isBlank(toName)) {
-						column.setToName(fromName);
-					}
-
-					toType = columnsMap.get(column.getToName());
-					if (toType == null) {// 类型补全
-						if (needTimestampColumn && column.getToName().equals(timestampColumnName)) {// 时间戳字段
-							needTimestampColumn = false;
-							updateTimestampColumn(column);// 更新时间戳列
-						} else {
-							fromType = column.getFromType();
-							toType = column.getToType();
-							if (StringUtils.isBlank(fromType)) {
-								if (StringUtils.isBlank(toType)) {
-									throw new IllegalArgumentException(
-											"One of the properties 'fromType' or 'toType' cannot be blank, column index: "
-													+ i);
-								} else {
-									column.setFromType(toType);
-								}
-							} else if (StringUtils.isBlank(toType)) {
-								column.setToType(fromType);
-							}
-						}
-					} else {// 使用用户自定义列覆盖智能获取的列
-						if (needTimestampColumn && column.getToName().equals(timestampColumnName)) {// 时间戳字段
-							needTimestampColumn = false;
-							updateTimestampColumn(column);// 更新时间戳列
-						} else {
-							if (StringUtils.isBlank(column.getToType())) {
-								column.setToType(toType);
-							}
-							ColumnConvertArgs columnConvertArgs = columnConvertArgsMap
-									.get(getDataType(toType).toUpperCase());
-
-							fromType = column.getFromType();
-							if (columnConvertArgs == null) {// 无类型转换配置
-								if (StringUtils.isBlank(fromType)) {
-									column.setFromType(toType);
-								}
-							} else {// 有类型转换配置
-								if (StringUtils.isBlank(fromType)) {
-									column.setFromType(columnConvertArgs.fromType);
-									if (StringUtils.isBlank(column.getScript())) {
-										column.setScript(toScript(columnConvertArgs, column.getFromName(), params));
-									}
-								} else {
-									if (columnConvertArgs.fromType.equalsIgnoreCase(getDataType(fromType))) {
-										if (StringUtils.isBlank(column.getScript())) {
-											column.setScript(toScript(columnConvertArgs, column.getFromName(), params));
-										}
-									}
-								}
-							}
-						}
-						columnsMap.remove(column.getToName());
-					}
-				}
-				addColumns(columns, columnsMap, params, timestampColumnName, needTimestampColumn);
+				needTimestampColumn = collationPartlyCustomColumns(columns, params, columnsMap, timestampColumnName,
+						needTimestampColumn);
 			}
 		} else if (columns.isEmpty()) {// 没有用户自定义列
 			throw new IllegalArgumentException(
 					"At least one column must be configured in manual mode, or set the configuration '" + SMART_KEY
 							+ "=true' at " + FlinkJobsContext.getConfigurationFile()
 							+ " to enable automatic column acquisition in smart mode");
-		} else {
-			String fromName, toName, fromType, toType;
-			for (int i = 0, size = columns.size(); i < size; i++) {
-				Column column = columns.get(i);
-				fromName = column.getFromName();
-				toName = column.getToName();
-				if (StringUtils.isBlank(fromName)) {
-					if (StringUtils.isBlank(toName)) {
-						throw new IllegalArgumentException(
-								"One of the properties 'fromName' or 'toName' cannot be blank, column index: " + i);
-					} else {
-						column.setFromName(toName);
-					}
-				} else if (StringUtils.isBlank(toName)) {
-					column.setToName(fromName);
-				}
+		} else {// 全部是用户自定义列
+			needTimestampColumn = collationCustomColumns(columns, params, timestampColumnName, needTimestampColumn);
+		}
+		if (needTimestampColumn) {// 添加时间戳列
+			addTimestampColumn(dataSync, timestampColumnName);
+		}
+		return primaryKey;
+	}
 
+	private static boolean collationPartlyCustomColumns(List<Column> columns, Map<String, Object> params,
+			Map<String, String> columnsMap, String timestampColumnName, boolean needTimestampColumn) {
+		String toName, fromName, fromType, toType;
+		for (int i = 0, size = columns.size(); i < size; i++) {
+			Column column = columns.get(i);
+			fromName = column.getFromName();
+			toName = column.getToName();
+			if (StringUtils.isBlank(fromName)) {
+				if (StringUtils.isBlank(toName)) {
+					throw new IllegalArgumentException(
+							"One of the properties 'fromName' or 'toName' cannot be blank, column index: " + i);
+				} else {
+					column.setFromName(toName);
+				}
+			} else if (StringUtils.isBlank(toName)) {
+				column.setToName(fromName);
+			}
+
+			toType = columnsMap.get(column.getToName());
+			if (toType == null) {// 类型补全
 				if (needTimestampColumn && column.getToName().equals(timestampColumnName)) {// 时间戳字段
 					needTimestampColumn = false;
 					updateTimestampColumn(column);// 更新时间戳列
@@ -276,32 +220,99 @@ public class DataSyncOperator extends AbstractOperator<DataSync> {
 					} else if (StringUtils.isBlank(toType)) {
 						column.setToType(fromType);
 					}
+				}
+			} else {// 使用用户自定义列覆盖智能获取的列
+				if (needTimestampColumn && column.getToName().equals(timestampColumnName)) {// 时间戳字段
+					needTimestampColumn = false;
+					updateTimestampColumn(column);// 更新时间戳列
+				} else {
+					if (StringUtils.isBlank(column.getToType())) {
+						column.setToType(toType);
+					}
+					ColumnConvertArgs columnConvertArgs = columnConvertArgsMap.get(getDataType(toType).toUpperCase());
 
-					ColumnConvertArgs columnConvertArgs = columnConvertArgsMap
-							.get(getDataType(column.getToType()).toUpperCase());
-					if (columnConvertArgs != null
-							&& columnConvertArgs.fromType.equalsIgnoreCase(getDataType(column.getFromType()))) {// 有类型转换配置
-						column.setFromType(columnConvertArgs.fromType);
-						if (StringUtils.isBlank(column.getScript())) {
-							column.setScript(toScript(columnConvertArgs, column.getFromName(), params));
+					fromType = column.getFromType();
+					if (columnConvertArgs == null) {// 无类型转换配置
+						if (StringUtils.isBlank(fromType)) {
+							column.setFromType(toType);
+						}
+					} else {// 有类型转换配置
+						if (StringUtils.isBlank(fromType)) {
+							column.setFromType(columnConvertArgs.fromType);
+							if (StringUtils.isBlank(column.getScript())) {
+								column.setScript(toScript(columnConvertArgs, column.getFromName(), params));
+							}
+						} else {
+							if (columnConvertArgs.fromType.equalsIgnoreCase(getDataType(fromType))) {
+								if (StringUtils.isBlank(column.getScript())) {
+									column.setScript(toScript(columnConvertArgs, column.getFromName(), params));
+								}
+							}
 						}
 					}
 				}
-
+				columnsMap.remove(column.getToName());
 			}
 		}
-		if (needTimestampColumn) {// 添加时间戳列
-			addTimestampColumn(dataSync, timestampColumnName);
+		return addSmartLoadColumns(columns, columnsMap, params, timestampColumnName, needTimestampColumn);
+	}
+
+	private static boolean collationCustomColumns(List<Column> columns, Map<String, Object> params,
+			String timestampColumnName, boolean needTimestampColumn) {
+		String fromName, toName, fromType, toType;
+		for (int i = 0, size = columns.size(); i < size; i++) {
+			Column column = columns.get(i);
+			fromName = column.getFromName();
+			toName = column.getToName();
+			if (StringUtils.isBlank(fromName)) {
+				if (StringUtils.isBlank(toName)) {
+					throw new IllegalArgumentException(
+							"One of the properties 'fromName' or 'toName' cannot be blank, column index: " + i);
+				} else {
+					column.setFromName(toName);
+				}
+			} else if (StringUtils.isBlank(toName)) {
+				column.setToName(fromName);
+			}
+
+			if (needTimestampColumn && column.getToName().equals(timestampColumnName)) {// 时间戳字段
+				needTimestampColumn = false;
+				updateTimestampColumn(column);// 更新时间戳列
+			} else {
+				fromType = column.getFromType();
+				toType = column.getToType();
+				if (StringUtils.isBlank(fromType)) {
+					if (StringUtils.isBlank(toType)) {
+						throw new IllegalArgumentException(
+								"One of the properties 'fromType' or 'toType' cannot be blank, column index: " + i);
+					} else {
+						column.setFromType(toType);
+					}
+				} else if (StringUtils.isBlank(toType)) {
+					column.setToType(fromType);
+				}
+
+				ColumnConvertArgs columnConvertArgs = columnConvertArgsMap
+						.get(getDataType(column.getToType()).toUpperCase());
+				if (columnConvertArgs != null
+						&& columnConvertArgs.fromType.equalsIgnoreCase(getDataType(column.getFromType()))) {// 有类型转换配置
+					column.setFromType(columnConvertArgs.fromType);
+					if (StringUtils.isBlank(column.getScript())) {
+						column.setScript(toScript(columnConvertArgs, column.getFromName(), params));
+					}
+				}
+			}
+
 		}
-		return primaryKey;
+		return needTimestampColumn;
 	}
 
 	private static void updateTimestampColumn(Column timestampColumn) {
 		if (StringUtils.isBlank(timestampColumn.getFromType())) {
-			timestampColumn.setFromType(FlinkJobsContext.getProperty(TIMESTAMP_FROM_TYPE_KRY));
+			timestampColumn.setFromType(getDefaultTimestampColumnFromType());
 		}
 		if (StringUtils.isBlank(timestampColumn.getToType())) {
-			timestampColumn.setToType(FlinkJobsContext.getProperty(TIMESTAMP_TO_TYPE_KRY));
+			timestampColumn.setToType(getDefaultTimestampColumnToType());
 		}
 	}
 
@@ -309,13 +320,13 @@ public class DataSyncOperator extends AbstractOperator<DataSync> {
 		Column column = new Column();
 		column.setFromName(timestampColumnName);
 		column.setToName(timestampColumnName);// 目标字段名和来源字段名相同
-		column.setFromType(FlinkJobsContext.getProperty(TIMESTAMP_FROM_TYPE_KRY));
-		column.setToType(FlinkJobsContext.getProperty(TIMESTAMP_TO_TYPE_KRY));
+		column.setFromType(getDefaultTimestampColumnFromType());
+		column.setToType(getDefaultTimestampColumnToType());
 		dataSync.getColumns().add(column);
 	}
 
-	private static void addColumns(List<Column> columns, Map<String, String> columnsMap, Map<String, Object> params,
-			String timestampColumnName, boolean needTimestampColumn) {
+	private static boolean addSmartLoadColumns(List<Column> columns, Map<String, String> columnsMap,
+			Map<String, Object> params, String timestampColumnName, boolean needTimestampColumn) {
 		String toName, toType;
 		for (Iterator<Entry<String, String>> it = columnsMap.entrySet().iterator(); it.hasNext();) {
 			Entry<String, String> entry = it.next();
@@ -328,7 +339,7 @@ public class DataSyncOperator extends AbstractOperator<DataSync> {
 			column.setToType(toType);
 			if (needTimestampColumn && toName.equals(timestampColumnName)) {// 时间戳字段
 				needTimestampColumn = false;
-				column.setFromType(FlinkJobsContext.getProperty(TIMESTAMP_FROM_TYPE_KRY));
+				column.setFromType(getDefaultTimestampColumnFromType());
 			} else {
 				ColumnConvertArgs columnConvertArgs = columnConvertArgsMap.get(getDataType(toType).toUpperCase());
 				if (columnConvertArgs == null) {// 无类型转换配置
@@ -340,6 +351,15 @@ public class DataSyncOperator extends AbstractOperator<DataSync> {
 			}
 			columns.add(column);
 		}
+		return needTimestampColumn;
+	}
+
+	private static String getDefaultTimestampColumnFromType() {
+		return FlinkJobsContext.getProperty(TIMESTAMP_FROM_TYPE_KEY);
+	}
+
+	private static String getDefaultTimestampColumnToType() {
+		return FlinkJobsContext.getProperty(TIMESTAMP_TO_TYPE_KEY);
 	}
 
 	private static String fromCreateTableSQL(Map<String, String> dataSource, String topic, String table,
