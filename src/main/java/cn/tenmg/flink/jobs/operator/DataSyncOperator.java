@@ -126,7 +126,7 @@ public class DataSyncOperator extends AbstractOperator<DataSync> {
 	}
 
 	/**
-	 * 校对和整理列配置并返回主键字段（多个字段之间使用“,”分隔）
+	 * 校对和整理列配置并返回主键列（多个列之间使用“,”分隔）
 	 * 
 	 * @param dataSync
 	 *            数据同步配置对象
@@ -150,11 +150,7 @@ public class DataSyncOperator extends AbstractOperator<DataSync> {
 		if (smart == null) {
 			smart = Boolean.valueOf(FlinkJobsContext.getProperty(SMART_KEY));
 		}
-		String primaryKey = dataSync.getPrimaryKey(), timestampColumnName = dataSync.getTimestampColumnName();
-		if (StringUtils.isBlank(timestampColumnName)) {// 没有指定时间戳字段名，使用配置的全局默认值
-			timestampColumnName = FlinkJobsContext.getProperty(TIMESTAMP_COLUMN_NAME);
-		}
-		boolean needTimestampColumn = StringUtils.isNotBlank(timestampColumnName);
+		String primaryKey = dataSync.getPrimaryKey();
 		if (Boolean.TRUE.equals(smart)) {// 智能模式，自动查询列名、数据类型
 			MetaDataGetter metaDataGetter = MetaDataGetterFactory.getMetaDataGetter(toDataSource);
 			TableMetaData tableMetaData = metaDataGetter.getTableMetaData(toDataSource, dataSync.getTable());
@@ -162,13 +158,27 @@ public class DataSyncOperator extends AbstractOperator<DataSync> {
 			if (primaryKey == null && primaryKeys != null && !primaryKeys.isEmpty()) {
 				primaryKey = String.join(",", primaryKeys);
 			}
+
 			Map<String, String> columnsMap = tableMetaData.getColumns();
-			if (columns.isEmpty()) {// 没有用户自定义列
-				needTimestampColumn = addSmartLoadColumns(columns, columnsMap, params, timestampColumnName,
-						needTimestampColumn);
-			} else {// 有用户自定义列
-				needTimestampColumn = collationPartlyCustomColumns(columns, params, columnsMap, timestampColumnName,
-						needTimestampColumn);
+			String timestampColumnName = dataSync.getTimestampColumnName();
+			if (StringUtils.isBlank(timestampColumnName)) {// 没有指定时间戳列名，使用配置的全局默认值，并根据目标表的实际情况确定是否添加时间戳列
+				timestampColumnName = getDefaultTimestampColumnName();
+				if (columns.isEmpty()) {// 没有用户自定义列
+					addSmartLoadColumns(columns, columnsMap, params, timestampColumnName);
+				} else {// 有用户自定义列
+					collationPartlyCustomColumns(columns, params, columnsMap, timestampColumnName);
+				}
+			} else {// 指定了时间戳列名，无论如何都会有时间戳列
+				boolean hasTimestampColumnName;
+				if (columns.isEmpty()) {// 没有用户自定义列
+					hasTimestampColumnName = addSmartLoadColumns(columns, columnsMap, params, timestampColumnName);
+				} else {// 有用户自定义列
+					hasTimestampColumnName = collationPartlyCustomColumns(columns, params, columnsMap,
+							timestampColumnName);
+				}
+				if (!hasTimestampColumnName) {// 没有时间戳列，但是配置了该列名，依然增加该列。这是用户的错误配置，运行时，由于列不存在会报错
+					addTimestampColumn(dataSync, timestampColumnName);
+				}
 			}
 		} else if (columns.isEmpty()) {// 没有用户自定义列
 			throw new IllegalArgumentException(
@@ -176,16 +186,20 @@ public class DataSyncOperator extends AbstractOperator<DataSync> {
 							+ "=true' at " + FlinkJobsContext.getConfigurationFile()
 							+ " to enable automatic column acquisition in smart mode");
 		} else {// 全部是用户自定义列
-			needTimestampColumn = collationCustomColumns(columns, params, timestampColumnName, needTimestampColumn);
-		}
-		if (needTimestampColumn) {// 添加时间戳列
-			addTimestampColumn(dataSync, timestampColumnName);
+			String timestampColumnName = dataSync.getTimestampColumnName();
+			if (StringUtils.isBlank(timestampColumnName)) {// 没有指定时间戳列名，使用配置的全局默认值
+				timestampColumnName = getDefaultTimestampColumnName();
+			}
+			if (collationCustomColumns(columns, params, timestampColumnName)) {// 配置了时间戳列名，且没有配置这个列，添加时间戳列
+				addTimestampColumn(dataSync, timestampColumnName);
+			}
 		}
 		return primaryKey;
 	}
 
 	private static boolean collationPartlyCustomColumns(List<Column> columns, Map<String, Object> params,
-			Map<String, String> columnsMap, String timestampColumnName, boolean needTimestampColumn) {
+			Map<String, String> columnsMap, String timestampColumnName) {
+		boolean hasTimestampColumn = false;
 		String toName, fromName, fromType, toType;
 		for (int i = 0, size = columns.size(); i < size; i++) {
 			Column column = columns.get(i);
@@ -204,8 +218,8 @@ public class DataSyncOperator extends AbstractOperator<DataSync> {
 
 			toType = columnsMap.get(column.getToName());
 			if (toType == null) {// 类型补全
-				if (needTimestampColumn && column.getToName().equals(timestampColumnName)) {// 时间戳字段
-					needTimestampColumn = false;
+				if (column.getToName().equals(timestampColumnName)) {// 时间戳列
+					hasTimestampColumn = true;
 					updateTimestampColumn(column);// 更新时间戳列
 				} else {
 					fromType = column.getFromType();
@@ -222,8 +236,8 @@ public class DataSyncOperator extends AbstractOperator<DataSync> {
 					}
 				}
 			} else {// 使用用户自定义列覆盖智能获取的列
-				if (needTimestampColumn && column.getToName().equals(timestampColumnName)) {// 时间戳字段
-					needTimestampColumn = false;
+				if (column.getToName().equals(timestampColumnName)) {// 时间戳列
+					hasTimestampColumn = true;
 					updateTimestampColumn(column);// 更新时间戳列
 				} else {
 					if (StringUtils.isBlank(column.getToType())) {
@@ -254,11 +268,12 @@ public class DataSyncOperator extends AbstractOperator<DataSync> {
 				columnsMap.remove(column.getToName());
 			}
 		}
-		return addSmartLoadColumns(columns, columnsMap, params, timestampColumnName, needTimestampColumn);
+		return addSmartLoadColumns(columns, columnsMap, params, timestampColumnName) || hasTimestampColumn;
 	}
 
 	private static boolean collationCustomColumns(List<Column> columns, Map<String, Object> params,
-			String timestampColumnName, boolean needTimestampColumn) {
+			String timestampColumnName) {
+		boolean needTimestampColumn = StringUtils.isNotBlank(timestampColumnName);
 		String fromName, toName, fromType, toType;
 		for (int i = 0, size = columns.size(); i < size; i++) {
 			Column column = columns.get(i);
@@ -275,7 +290,7 @@ public class DataSyncOperator extends AbstractOperator<DataSync> {
 				column.setToName(fromName);
 			}
 
-			if (needTimestampColumn && column.getToName().equals(timestampColumnName)) {// 时间戳字段
+			if (needTimestampColumn && column.getToName().equals(timestampColumnName)) {// 时间戳列
 				needTimestampColumn = false;
 				updateTimestampColumn(column);// 更新时间戳列
 			} else {
@@ -319,14 +334,15 @@ public class DataSyncOperator extends AbstractOperator<DataSync> {
 	private static void addTimestampColumn(DataSync dataSync, String timestampColumnName) {
 		Column column = new Column();
 		column.setFromName(timestampColumnName);
-		column.setToName(timestampColumnName);// 目标字段名和来源字段名相同
+		column.setToName(timestampColumnName);// 目标列名和来源列名相同
 		column.setFromType(getDefaultTimestampColumnFromType());
 		column.setToType(getDefaultTimestampColumnToType());
 		dataSync.getColumns().add(column);
 	}
 
 	private static boolean addSmartLoadColumns(List<Column> columns, Map<String, String> columnsMap,
-			Map<String, Object> params, String timestampColumnName, boolean needTimestampColumn) {
+			Map<String, Object> params, String timestampColumnName) {
+		boolean hasTimestampColumn = false;
 		String toName, toType;
 		for (Iterator<Entry<String, String>> it = columnsMap.entrySet().iterator(); it.hasNext();) {
 			Entry<String, String> entry = it.next();
@@ -334,11 +350,11 @@ public class DataSyncOperator extends AbstractOperator<DataSync> {
 			toType = entry.getValue();
 
 			Column column = new Column();
-			column.setFromName(toName);// 来源字段名和目标字段名相同
+			column.setFromName(toName);// 来源列名和目标列名相同
 			column.setToName(toName);
 			column.setToType(toType);
-			if (needTimestampColumn && toName.equals(timestampColumnName)) {// 时间戳字段
-				needTimestampColumn = false;
+			if (toName.equals(timestampColumnName)) {// 时间戳列
+				hasTimestampColumn = true;
 				column.setFromType(getDefaultTimestampColumnFromType());
 			} else {
 				ColumnConvertArgs columnConvertArgs = columnConvertArgsMap.get(getDataType(toType).toUpperCase());
@@ -351,7 +367,11 @@ public class DataSyncOperator extends AbstractOperator<DataSync> {
 			}
 			columns.add(column);
 		}
-		return needTimestampColumn;
+		return hasTimestampColumn;
+	}
+
+	private static String getDefaultTimestampColumnName() {
+		return FlinkJobsContext.getProperty(TIMESTAMP_COLUMN_NAME);
 	}
 
 	private static String getDefaultTimestampColumnFromType() {
