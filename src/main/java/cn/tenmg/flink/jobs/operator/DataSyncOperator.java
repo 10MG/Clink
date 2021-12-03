@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -42,9 +41,9 @@ public class DataSyncOperator extends AbstractOperator<DataSync> {
 	private static final String SMART_KEY = "data.sync.smart", FROM_TABLE_PREFIX_KEY = "data.sync.from_table_prefix",
 			TOPIC_KEY = "topic", GROUP_ID_KEY = "properties.group.id",
 			GROUP_ID_PREFIX_KEY = "data.sync.group_id_prefix", TIMESTAMP_COLUMNS = "data.sync.timestamp.columns",
-			TIMESTAMP_FROM_TYPE_KEY = "data.sync.timestamp.from_type",
+			TIMESTAMP_COLUMNS_SPLIT = ",", TIMESTAMP_FROM_TYPE_KEY = "data.sync.timestamp.from_type",
 			TIMESTAMP_TO_TYPE_KEY = "data.sync.timestamp.to_type", TYPE_KEY_PREFIX = "data.sync.",
-			TO_TYPE_KEY_SUFFIX = ".to_type", FROM_TYPE_KEY_SUFFIX = ".from_type";;
+			TO_TYPE_KEY_SUFFIX = ".to_type", FROM_TYPE_KEY_SUFFIX = ".from_type";
 
 	private static final boolean TO_LOWERCASE = !Boolean
 			.valueOf(FlinkJobsContext.getProperty("data.sync.timestamp.case_sensitive"));// 不区分大小写，统一转为小写
@@ -160,8 +159,8 @@ public class DataSyncOperator extends AbstractOperator<DataSync> {
 		if (customTimestampBlank) {// 没有指定时间戳列名，使用配置的全局默认值，并根据目标表的实际情况确定是否添加时间戳列
 			timestamp = getDefaultTimestamp();
 		}
-		Set<String> timestampSet = StringUtils.isBlank(timestamp) ? Collections.emptySet()
-				: toSet(TO_LOWERCASE, timestamp);// 不区分大小写，统一转为小写
+		Map<String, String> timestampMap = StringUtils.isBlank(timestamp) ? Collections.emptyMap()
+				: toMap(TO_LOWERCASE, timestamp.split(TIMESTAMP_COLUMNS_SPLIT));// 不区分大小写，统一转为小写
 		if (Boolean.TRUE.equals(smart)) {// 智能模式，自动查询列名、数据类型
 			MetaDataGetter metaDataGetter = MetaDataGetterFactory.getMetaDataGetter(toDataSource);
 			TableMetaData tableMetaData = metaDataGetter.getTableMetaData(toDataSource, dataSync.getTable());
@@ -172,9 +171,9 @@ public class DataSyncOperator extends AbstractOperator<DataSync> {
 
 			Map<String, String> columnsMap = tableMetaData.getColumns();
 			if (columns.isEmpty()) {// 没有用户自定义列
-				addSmartLoadColumns(columns, columnsMap, params, timestampSet);
+				addSmartLoadColumns(columns, columnsMap, params, timestampMap);
 			} else {// 有用户自定义列
-				collationPartlyCustom(columns, params, columnsMap, timestampSet);
+				collationPartlyCustom(columns, params, columnsMap, timestampMap);
 			}
 		} else if (columns.isEmpty()) {// 没有用户自定义列
 			throw new IllegalArgumentException(
@@ -182,10 +181,10 @@ public class DataSyncOperator extends AbstractOperator<DataSync> {
 							+ "=true' at " + FlinkJobsContext.getConfigurationFile()
 							+ " to enable automatic column acquisition in smart mode");
 		} else {// 全部是用户自定义列
-			collationCustom(columns, params, timestampSet);
+			collationCustom(columns, params, timestampMap);
 		}
 		if (!customTimestampBlank) {// 配置了时间戳列名
-			for (Iterator<String> it = timestampSet.iterator(); it.hasNext();) {// 如果没有时间戳列，但是配置了该列名，依然增加该列，这是用户的错误配置。运行时，可能会由于列不存在会报错
+			for (Iterator<String> it = timestampMap.values().iterator(); it.hasNext();) {// 如果没有时间戳列，但是配置了该列名，依然增加该列，这是用户的错误配置。运行时，可能会由于列不存在会报错
 				addTimestampColumn(columns, it.next());
 			}
 		}
@@ -193,7 +192,7 @@ public class DataSyncOperator extends AbstractOperator<DataSync> {
 	}
 
 	private static void collationPartlyCustom(List<Column> columns, Map<String, Object> params,
-			Map<String, String> columnsMap, Set<String> timestampSet) {
+			Map<String, String> columnsMap, Map<String, String> timestampMap) {
 		String toName, fromName, fromType, toType, columnName;
 		for (int i = 0, size = columns.size(); i < size; i++) {
 			Column column = columns.get(i);
@@ -212,9 +211,9 @@ public class DataSyncOperator extends AbstractOperator<DataSync> {
 
 			columnName = TO_LOWERCASE ? column.getToName().toLowerCase() : column.getToName();// 不区分大小写，统一转为小写
 			toType = columnsMap.get(column.getToName());
-			if (timestampSet.contains(columnName)) {// 时间戳列
+			if (timestampMap.containsKey(columnName)) {// 时间戳列
 				updateTimestampColumn(column, columnName, toType);// 更新时间戳列
-				timestampSet.remove(columnName);
+				timestampMap.remove(columnName);
 			} else {
 				if (toType == null) {// 类型补全
 					fromType = column.getFromType();
@@ -258,10 +257,11 @@ public class DataSyncOperator extends AbstractOperator<DataSync> {
 				}
 			}
 		}
-		addSmartLoadColumns(columns, columnsMap, params, timestampSet);
+		addSmartLoadColumns(columns, columnsMap, params, timestampMap);
 	}
 
-	private static void collationCustom(List<Column> columns, Map<String, Object> params, Set<String> timestampSet) {
+	private static void collationCustom(List<Column> columns, Map<String, Object> params,
+			Map<String, String> timestampMap) {
 		String fromName, toName, fromType, toType, columnName;
 		for (int i = 0, size = columns.size(); i < size; i++) {
 			Column column = columns.get(i);
@@ -279,9 +279,9 @@ public class DataSyncOperator extends AbstractOperator<DataSync> {
 			}
 
 			columnName = TO_LOWERCASE ? column.getToName().toLowerCase() : column.getToName();// 不区分大小写，统一转为小写
-			if (timestampSet.contains(columnName)) {// 时间戳列
+			if (timestampMap.containsKey(columnName)) {// 时间戳列
 				updateTimestampColumn(column, columnName, null);// 更新时间戳列
-				timestampSet.remove(columnName);
+				timestampMap.remove(columnName);
 			} else {
 				fromType = column.getFromType();
 				toType = column.getToType();
@@ -334,7 +334,7 @@ public class DataSyncOperator extends AbstractOperator<DataSync> {
 	}
 
 	private static void addSmartLoadColumns(List<Column> columns, Map<String, String> columnsMap,
-			Map<String, Object> params, Set<String> timestampSet) {
+			Map<String, Object> params, Map<String, String> timestampMap) {
 		String toName, toType, columnName;
 		for (Iterator<Entry<String, String>> it = columnsMap.entrySet().iterator(); it.hasNext();) {
 			Entry<String, String> entry = it.next();
@@ -346,9 +346,9 @@ public class DataSyncOperator extends AbstractOperator<DataSync> {
 			column.setToName(toName);
 			column.setToType(toType);
 			columnName = TO_LOWERCASE ? toName.toLowerCase() : toName;// 不区分大小写，统一转为小写
-			if (timestampSet.contains(columnName)) {// 时间戳列
+			if (timestampMap.containsKey(columnName)) {// 时间戳列
 				column.setFromType(getDefaultTimestampFromType(columnName));
-				timestampSet.remove(columnName);
+				timestampMap.remove(columnName);
 			} else {
 				ColumnConvertArgs columnConvertArgs = columnConvertArgsMap.get(getDataType(toType).toUpperCase());
 				if (columnConvertArgs == null) {// 无类型转换配置
@@ -501,15 +501,18 @@ public class DataSyncOperator extends AbstractOperator<DataSync> {
 				.getValue();
 	}
 
-	public static final Set<String> toSet(boolean toLowercase, String... strings) {
-		Set<String> set = new HashSet<String>();
+	public static final Map<String, String> toMap(boolean toLowercase, String... strings) {
+		Map<String, String> set = new HashMap<String, String>();
+		String string;
 		if (toLowercase) {
 			for (int i = 0; i < strings.length; i++) {
-				set.add(strings[i].trim().toLowerCase());
+				string = strings[i].trim();
+				set.put(string.toLowerCase(), string);
 			}
 		} else {
 			for (int i = 0; i < strings.length; i++) {
-				set.add(strings[i].trim());
+				string = strings[i].trim();
+				set.put(string, string);
 			}
 		}
 		return set;
