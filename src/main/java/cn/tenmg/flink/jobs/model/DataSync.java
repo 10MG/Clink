@@ -32,7 +32,7 @@ public class DataSync extends Operate {
 
 	private String primaryKey;
 
-	private String timestampColumnName;
+	private String timestamp;
 
 	private Boolean smart;
 
@@ -195,18 +195,18 @@ public class DataSync extends Operate {
 	 * 
 	 * @return 时间戳字段名
 	 */
-	public String getTimestampColumnName() {
-		return timestampColumnName;
+	public String getTimestamp() {
+		return timestamp;
 	}
 
 	/**
-	 * 设置时间戳字段名。设置这个值后，会使用这个字段名创建源表和目标表，并在数据同步时写入这个字段值。
+	 * 设置时间戳字段名，多个字段名使用“,”分隔。设置这个值后，会使用这些字段名创建源表和目标表，并在数据同步时写入这些字段值。
 	 * 
-	 * @param timestampColumnName
+	 * @param timestamp
 	 *            时间戳字段名
 	 */
-	public void setTimestampColumnName(String timestampColumnName) {
-		this.timestampColumnName = timestampColumnName;
+	public void setTimestamp(String timestamp) {
+		this.timestamp = timestamp;
 	}
 
 	/**
