@@ -3,6 +3,14 @@
 ## 介绍
 flink-jobs为基于Flink的Java应用程序提供快速集成的能力，可通过继承FlinkJobsRunner快速构建基于Java的Flink流批一体应用程序。flink-jobs提供了数据源管理模块，通过flink-jobs运行Flink SQL会变得极其简单。而通过使用[flink-jobs-launcher](https://gitee.com/tenmg/flink-jobs-launcher)，实现基于Java API启动flink-jobs应用程序，更可以将flink任务实现通过XML配置文件来管理。
 
+## 发布计划
+
+计划将在1.1.4中发布以下功能：
+
+标签                                 | 功能                                        | 说明
+-------------------------------------|---------------------------------------------|---------------------------------------------------------------
+`DataSync`的`timestamp`相关配置      | 数据同步时自动添加时间戳列                    | 用于配置同步数据时写入的时间戳字段，包括事件时间、摄取时间、处理时间
+
 ## 起步
 
 以基于SpringBoot的Maven项目为例
