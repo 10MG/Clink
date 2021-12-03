@@ -41,8 +41,7 @@ public class DataSyncOperator extends AbstractOperator<DataSync> {
 
 	private static final String SMART_KEY = "data.sync.smart", FROM_TABLE_PREFIX_KEY = "data.sync.from_table_prefix",
 			TOPIC_KEY = "topic", GROUP_ID_KEY = "properties.group.id",
-			GROUP_ID_PREFIX_KEY = "data.sync.group_id_prefix",
-			TIMESTAMP_COLUMN_NAME = "data.sync.timestamp.column_name",
+			GROUP_ID_PREFIX_KEY = "data.sync.group_id_prefix", TIMESTAMP_COLUMNS = "data.sync.timestamp.columns",
 			TIMESTAMP_FROM_TYPE_KEY = "data.sync.timestamp.from_type",
 			TIMESTAMP_TO_TYPE_KEY = "data.sync.timestamp.to_type", TYPE_KEY_PREFIX = "data.sync.",
 			TO_TYPE_KEY_SUFFIX = ".to_type", FROM_TYPE_KEY_SUFFIX = ".from_type";;
@@ -364,7 +363,7 @@ public class DataSyncOperator extends AbstractOperator<DataSync> {
 	}
 
 	private static String getDefaultTimestamp() {
-		return FlinkJobsContext.getProperty(TIMESTAMP_COLUMN_NAME);
+		return FlinkJobsContext.getProperty(TIMESTAMP_COLUMNS);
 	}
 
 	private static String getDefaultTimestampFromType(String columnName) {
