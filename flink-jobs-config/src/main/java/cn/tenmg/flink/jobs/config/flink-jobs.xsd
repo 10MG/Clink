@@ -1,0 +1,415 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns="http://www.10mg.cn/schema/flink-jobs"
+	xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+	targetNamespace="http://www.10mg.cn/schema/flink-jobs"
+	elementFormDefault="qualified" attributeFormDefault="unqualified">
+	<xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+	<xsd:element name="flink-jobs">
+		<xsd:complexType>
+			<xsd:choice maxOccurs="unbounded" minOccurs="0">
+				<xsd:element ref="options" maxOccurs="1" minOccurs="0" />
+				<xsd:element ref="params" maxOccurs="1" minOccurs="0" />
+				<xsd:element ref="bsh" maxOccurs="unbounded"
+					minOccurs="0" />
+				<xsd:element ref="execute-sql" maxOccurs="unbounded"
+					minOccurs="0" />
+				<xsd:element ref="jdbc" maxOccurs="unbounded"
+					minOccurs="0" />
+				<xsd:element name="sql-query" maxOccurs="unbounded"
+					minOccurs="0" type="SqlQueryType" />
+				<xsd:element ref="data-sync" maxOccurs="unbounded"
+					minOccurs="0" />
+			</xsd:choice>
+			<xsd:attribute name="jar" type="xsd:string">
+				<xsd:annotation>
+					<xsd:documentation>运行的JAR包。可通过系统环境变量指定</xsd:documentation>
+				</xsd:annotation>
+			</xsd:attribute>
+			<xsd:attribute name="class" type="xsd:string">
+				<xsd:annotation>
+					<xsd:documentation>运行的主类</xsd:documentation>
+				</xsd:annotation>
+			</xsd:attribute>
+			<xsd:attribute name="serviceName" type="xsd:string">
+				<xsd:annotation>
+					<xsd:documentation>运行的服务名称</xsd:documentation>
+				</xsd:annotation>
+			</xsd:attribute>
+			<xsd:attribute name="runtimeMode">
+				<xsd:annotation>
+					<xsd:documentation>运行模式</xsd:documentation>
+				</xsd:annotation>
+				<xsd:simpleType>
+					<xsd:restriction base="xsd:string">
+						<xsd:enumeration value="BATCH">
+							<xsd:annotation>
+								<xsd:documentation>批处理</xsd:documentation>
+							</xsd:annotation>
+						</xsd:enumeration>
+						<xsd:enumeration value="STREAMING">
+							<xsd:annotation>
+								<xsd:documentation>流处理</xsd:documentation>
+							</xsd:annotation>
+						</xsd:enumeration>
+						<xsd:enumeration value="AUTOMATIC">
+							<xsd:annotation>
+								<xsd:documentation>自动识别</xsd:documentation>
+							</xsd:annotation>
+						</xsd:enumeration>
+					</xsd:restriction>
+				</xsd:simpleType>
+			</xsd:attribute>
+			<xsd:attribute name="allwaysNewJob" type="xsd:boolean">
+				<xsd:annotation>
+					<xsd:documentation>运行时是否总是作为新作业运行，即总是忽略“--fromSavepoint”选项
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:attribute>
+		</xsd:complexType>
+	</xsd:element>
+
+	<xsd:element name="options">
+		<xsd:annotation>
+			<xsd:documentation>运行选项配置</xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexType>
+			<xsd:choice>
+				<xsd:element name="option" maxOccurs="unbounded"
+					minOccurs="0">
+					<xsd:annotation>
+						<xsd:documentation>特定运行选项配置</xsd:documentation>
+					</xsd:annotation>
+					<xsd:complexType>
+						<xsd:simpleContent>
+							<xsd:extension base="xsd:string">
+								<xsd:attribute name="key" use="required">
+									<xsd:annotation>
+										<xsd:documentation>
+											<![CDATA[选项键，如果键值以“-”开头，则不会添加默认前缀，否则会自动添加默认前缀keyPrefix]]>
+										</xsd:documentation>
+									</xsd:annotation>
+									<xsd:simpleType>
+										<xsd:union memberTypes="GenericKeyType xsd:string"></xsd:union>
+									</xsd:simpleType>
+								</xsd:attribute>
+							</xsd:extension>
+						</xsd:simpleContent>
+					</xsd:complexType>
+				</xsd:element>
+			</xsd:choice>
+			<xsd:attribute name="keyPrefix" type="xsd:string">
+				<xsd:annotation>
+					<xsd:documentation>运行选项的默认前缀，默认为“--”</xsd:documentation>
+				</xsd:annotation>
+			</xsd:attribute>
+		</xsd:complexType>
+	</xsd:element>
+
+	<xsd:element name="params">
+		<xsd:annotation>
+			<xsd:documentation>参数集</xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexType>
+			<xsd:choice>
+				<xsd:element name="param" type="ParamType" />
+			</xsd:choice>
+		</xsd:complexType>
+	</xsd:element>
+
+	<xsd:element name="bsh">
+		<xsd:annotation>
+			<xsd:documentation>BeanShell处理</xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexType>
+			<xsd:choice>
+				<xsd:element name="var" minOccurs="0"
+					maxOccurs="unbounded" type="VarType" />
+				<xsd:element name="java" type="xsd:string" minOccurs="1"
+					maxOccurs="1">
+					<xsd:annotation>
+						<xsd:documentation><![CDATA[java代码。注意：使用泛型时，不能使用尖括号声明泛型。例如使用Map不能使用“Map<String , String> map = new HashMap<String , String>();”，但可以使用“Map map = new HashMap();”]]></xsd:documentation>
+					</xsd:annotation>
+				</xsd:element>
+			</xsd:choice>
+			<xsd:attribute name="saveAs" type="xsd:string">
+				<xsd:annotation>
+					<xsd:documentation>将返回值保存为变量的变量名</xsd:documentation>
+				</xsd:annotation>
+			</xsd:attribute>
+		</xsd:complexType>
+	</xsd:element>
+
+	<xsd:element name="execute-sql">
+		<xsd:annotation>
+			<xsd:documentation>执行SQL</xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexType>
+			<xsd:simpleContent>
+				<xsd:extension base="SqlQueryType">
+					<xsd:attribute name="dataSource">
+						<xsd:annotation>
+							<xsd:documentation>采用的数据源名称。不指定时，采用Flink SQL的默认数据源
+							</xsd:documentation>
+						</xsd:annotation>
+					</xsd:attribute>
+				</xsd:extension>
+			</xsd:simpleContent>
+		</xsd:complexType>
+	</xsd:element>
+
+	<xsd:element name="jdbc">
+		<xsd:annotation>
+			<xsd:documentation>执行JDBC</xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexType>
+			<xsd:simpleContent>
+				<xsd:extension base="xsd:string">
+					<xsd:attribute name="saveAs" type="xsd:string">
+						<xsd:annotation>
+							<xsd:documentation>将返回值保存为变量的变量名</xsd:documentation>
+						</xsd:annotation>
+					</xsd:attribute>
+					<xsd:attribute name="dataSource" type="xsd:string"
+						use="required">
+						<xsd:annotation>
+							<xsd:documentation>采用的数据源名称</xsd:documentation>
+						</xsd:annotation>
+					</xsd:attribute>
+					<xsd:attribute name="method">
+						<xsd:annotation>
+							<xsd:documentation>调用的JDBC方法。默认executeLargeUpdate
+							</xsd:documentation>
+						</xsd:annotation>
+						<xsd:simpleType>
+							<xsd:restriction base="xsd:string">
+								<xsd:enumeration value="execute" />
+								<xsd:enumeration value="executeLargeUpdate" />
+								<xsd:enumeration value="executeUpdate" />
+							</xsd:restriction>
+						</xsd:simpleType>
+					</xsd:attribute>
+				</xsd:extension>
+			</xsd:simpleContent>
+		</xsd:complexType>
+	</xsd:element>
+
+	<xsd:element name="data-sync">
+		<xsd:annotation>
+			<xsd:documentation>数据同步</xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexType>
+			<xsd:choice>
+				<xsd:element name="from-config" minOccurs="0"
+					maxOccurs="1" type="xsd:string">
+					<xsd:annotation>
+						<xsd:documentation>来源配置。例如：`properties.group.id=flink-jobs`
+						</xsd:documentation>
+					</xsd:annotation>
+				</xsd:element>
+				<xsd:element name="to-config" minOccurs="0"
+					maxOccurs="1" type="xsd:string">
+					<xsd:annotation>
+						<xsd:documentation>
+							目标配置。例如：`sink.buffer-flush.max-rows = 0`
+						</xsd:documentation>
+					</xsd:annotation>
+				</xsd:element>
+				<xsd:element name="column" minOccurs="0"
+					maxOccurs="unbounded" type="ColumnType">
+					<xsd:annotation>
+						<xsd:documentation>同步数据列</xsd:documentation>
+					</xsd:annotation>
+				</xsd:element>
+			</xsd:choice>
+			<xsd:attribute name="saveAs" type="xsd:string">
+				<xsd:annotation>
+					<xsd:documentation>将返回值保存为变量的变量名</xsd:documentation>
+				</xsd:annotation>
+			</xsd:attribute>
+			<xsd:attribute name="from" type="xsd:string"
+				use="required">
+				<xsd:annotation>
+					<xsd:documentation>来源数据源名称。目前仅支持Kafka数据源</xsd:documentation>
+				</xsd:annotation>
+			</xsd:attribute>
+			<xsd:attribute name="topic" type="xsd:string">
+				<xsd:annotation>
+					<xsd:documentation>Kafka主题。也可在from-config中配置`topic=xxx`
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:attribute>
+			<xsd:attribute name="to" type="xsd:string"
+				use="required">
+				<xsd:annotation>
+					<xsd:documentation>目标数据源名称。目前仅支持JDBC数据源</xsd:documentation>
+				</xsd:annotation>
+			</xsd:attribute>
+			<xsd:attribute name="table" type="xsd:string"
+				use="required">
+				<xsd:annotation>
+					<xsd:documentation>同步数据表名</xsd:documentation>
+				</xsd:annotation>
+			</xsd:attribute>
+			<xsd:attribute name="primaryKey" type="xsd:string">
+				<xsd:annotation>
+					<xsd:documentation>主键，多个列名以“,”分隔。当开启智能模式时，会自动获取主键信息。
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:attribute>
+			<xsd:attribute name="timestamp" type="xsd:string">
+				<xsd:annotation>
+					<xsd:documentation>时间戳字段名，多个字段名使用“,”分隔。设置这个值后，会使用这些字段名创建源表和目标表，并在数据同步时写入这些字段值。
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:attribute>
+			<xsd:attribute name="smart" type="xsd:boolean">
+				<xsd:annotation>
+					<xsd:documentation>是否开启智能模式。不设置时，根据flink-jobs应用程序的全局配置确定是否开启智能模式，flink-jobs应用程序的全局默认配置为`data.sync.smart=true`。
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:attribute>
+		</xsd:complexType>
+	</xsd:element>
+
+	<!-- 类型定义 -->
+	<xsd:simpleType name="GenericKeyType">
+		<xsd:annotation>
+			<xsd:documentation>常用运行选项键枚举</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="classpath" />
+			<xsd:enumeration value="detached" />
+			<xsd:enumeration value="allowNonRestoredState" />
+			<xsd:enumeration value="parallelism" />
+			<xsd:enumeration value="fromSavepoint" />
+			<xsd:enumeration value="shutdownOnAttachedExit" />
+			<xsd:enumeration value="target" />
+			<xsd:enumeration value="jobmanager" />
+		</xsd:restriction>
+	</xsd:simpleType>
+
+	<xsd:complexType name="ParamType">
+		<xsd:annotation>
+			<xsd:documentation>参数</xsd:documentation>
+		</xsd:annotation>
+		<xsd:simpleContent>
+			<xsd:extension base="xsd:string">
+				<xsd:attribute name="name" type="xsd:string"
+					use="required">
+					<xsd:annotation>
+						<xsd:documentation>参数名称</xsd:documentation>
+					</xsd:annotation>
+				</xsd:attribute>
+			</xsd:extension>
+		</xsd:simpleContent>
+	</xsd:complexType>
+
+	<xsd:complexType name="VarType">
+		<xsd:annotation>
+			<xsd:documentation><![CDATA[声明变量。默认上下文中取（包括参数，中间处理得出的结果等），如果上下文不存在该值，则使用value的值]]></xsd:documentation>
+		</xsd:annotation>
+		<xsd:attribute name="name" type="xsd:string"
+			use="required" />
+		<xsd:attribute name="value" type="xsd:string" />
+	</xsd:complexType>
+
+	<xsd:complexType name="SqlQueryType">
+		<xsd:annotation>
+			<xsd:documentation>SQL查询</xsd:documentation>
+		</xsd:annotation>
+		<xsd:simpleContent>
+			<xsd:extension base="xsd:string">
+				<xsd:attribute name="saveAs" type="xsd:string">
+					<xsd:annotation>
+						<xsd:documentation>将返回值保存为变量的变量名</xsd:documentation>
+					</xsd:annotation>
+				</xsd:attribute>
+				<xsd:attribute name="catalog" type="xsd:string">
+					<xsd:annotation>
+						<xsd:documentation>使用的目录。默认由Flink决定</xsd:documentation>
+					</xsd:annotation>
+				</xsd:attribute>
+			</xsd:extension>
+		</xsd:simpleContent>
+	</xsd:complexType>
+
+	<xsd:complexType name="ColumnType">
+		<xsd:simpleContent>
+			<xsd:extension base="xsd:string">
+				<xsd:attribute name="fromName" type="xsd:string"
+					use="required">
+					<xsd:annotation>
+						<xsd:documentation>来源列名</xsd:documentation>
+					</xsd:annotation>
+				</xsd:attribute>
+				<xsd:attribute name="fromType">
+					<xsd:annotation>
+						<xsd:documentation>来源列数据类型。如果缺省，则如果开启智能模式会自动获取目标数据类型，如果关闭智能模式则必填
+						</xsd:documentation>
+					</xsd:annotation>
+					<xsd:simpleType>
+						<xsd:union memberTypes="DataType xsd:string"></xsd:union>
+					</xsd:simpleType>
+				</xsd:attribute>
+				<xsd:attribute name="toName" type="xsd:string">
+					<xsd:annotation>
+						<xsd:documentation>目标列名。默认为来源列名</xsd:documentation>
+					</xsd:annotation>
+				</xsd:attribute>
+				<xsd:attribute name="toType">
+					<xsd:annotation>
+						<xsd:documentation>目标列数据类型。如果缺省，则如果开启智能模式会自动获取，如果关闭智能模式则默认为来源列数据类型
+						</xsd:documentation>
+					</xsd:annotation>
+					<xsd:simpleType>
+						<xsd:union memberTypes="DataType xsd:string"></xsd:union>
+					</xsd:simpleType>
+				</xsd:attribute>
+				<xsd:attribute name="strategy">
+					<xsd:annotation>
+						<xsd:documentation>策略。可选值：both/from/to，分别表示来源列和目标列均创建，from表示仅创建原来列，to表示仅创建目标列。
+						</xsd:documentation>
+					</xsd:annotation>
+					<xsd:simpleType>
+						<xsd:restriction base="xsd:string">
+							<xsd:enumeration value="both">
+								<xsd:annotation>
+									来源列和目标列均创建
+								</xsd:annotation>
+							</xsd:enumeration>
+							<xsd:enumeration value="from">
+								<xsd:annotation>
+									仅创建原来列
+								</xsd:annotation>
+							</xsd:enumeration>
+							<xsd:enumeration value="to">
+								<xsd:annotation>
+									仅创建目标列
+								</xsd:annotation>
+							</xsd:enumeration>
+						</xsd:restriction>
+					</xsd:simpleType>
+				</xsd:attribute>
+			</xsd:extension>
+		</xsd:simpleContent>
+	</xsd:complexType>
+	<xsd:simpleType name="DataType">
+		<xsd:annotation>
+			<xsd:documentation>常用选择数据类型</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="STRING"></xsd:enumeration>
+			<xsd:enumeration value="BOOLEAN"></xsd:enumeration>
+			<xsd:enumeration value="TINYINT"></xsd:enumeration>
+			<xsd:enumeration value="SMALLINT"></xsd:enumeration>
+			<xsd:enumeration value="INT"></xsd:enumeration>
+			<xsd:enumeration value="BIGINT"></xsd:enumeration>
+			<xsd:enumeration value="FLOAT"></xsd:enumeration>
+			<xsd:enumeration value="DOUBLE"></xsd:enumeration>
+			<xsd:enumeration value="DATE"></xsd:enumeration>
+			<xsd:enumeration value="TIME"></xsd:enumeration>
+			<xsd:enumeration value="TIMESTAMP"></xsd:enumeration>
+			<xsd:enumeration value="BYTES"></xsd:enumeration>
+		</xsd:restriction>
+	</xsd:simpleType>
+</xsd:schema>

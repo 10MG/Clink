@@ -59,7 +59,7 @@ public abstract class FlinkJobsContext {
 			CONFIG_LOCATION_KEY = "config.location", CONTEXT_LOCATION_KEY = "context.location", CONFIG_SPLITER = ".",
 			DATASOURCE_PREFIX = "datasource.",
 			DATASOURCE_REGEX = "^" + DATASOURCE_PREFIX.replaceAll("\\.", "\\\\.") + "([\\S]+\\.){0,1}[^\\.]+$",
-			EXECUTION_ENVIRONMENT = "ExecutionEnvironment", TABLE_EXEC_CONFIG_KEY_REGEX = "^table\\.exec[\\s\\S]*";
+			EXECUTION_ENVIRONMENT = "ExecutionEnvironment";
 
 	private static final int CONFIG_SPLITER_LEN = CONFIG_SPLITER.length(),
 			DATASOURCE_PREFIX_LEN = DATASOURCE_PREFIX.length();
@@ -88,8 +88,9 @@ public abstract class FlinkJobsContext {
 					configProperties.put(entry.getKey(), PlaceHolderUtils.replace(value.toString(), configProperties));
 				}
 			}
-			String key, name, param;
+			String key, name, param, keyLowercase;
 			Map<String, String> dataSource;
+			boolean ignoreCase = !Boolean.valueOf(getProperty("data.sync.timestamp.case_sensitive"));
 			for (Iterator<Entry<Object, Object>> it = configProperties.entrySet().iterator(); it.hasNext();) {
 				entry = it.next();
 				key = entry.getKey().toString();
@@ -107,11 +108,15 @@ public abstract class FlinkJobsContext {
 						}
 						dataSource.put(param, value.toString());
 					}
-				} else if (key.matches(TABLE_EXEC_CONFIG_KEY_REGEX)) {
+				} else if (key.startsWith("table.exec")) {
 					tableExecConfigs.put(key, value.toString());
+				} else if (ignoreCase && key.matches("^data\\.sync\\.[^\\.]+\\.((from|to)_type|script)$")) {
+					keyLowercase = key.toLowerCase();
+					if (!key.equals(keyLowercase) && !defaultProperties.containsKey(keyLowercase)) {
+						defaultProperties.put(keyLowercase, value);
+					}
 				}
 			}
-
 		} catch (Exception e) {
 			configProperties = new Properties();
 		}

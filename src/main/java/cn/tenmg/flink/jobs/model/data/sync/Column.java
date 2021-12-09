@@ -26,6 +26,8 @@ public class Column implements Serializable {
 
 	private String script;
 
+	private String strategy;
+
 	/**
 	 * 获取来源列名
 	 * 
@@ -119,6 +121,25 @@ public class Column implements Serializable {
 	 */
 	public void setScript(String script) {
 		this.script = script;
+	}
+
+	/**
+	 * 获取策略
+	 * 
+	 * @return 策略
+	 */
+	public String getStrategy() {
+		return strategy;
+	}
+
+	/**
+	 * 设置策略。可选值：both/from/to，分别表示来源列和目标列均创建，from表示仅创建原来列，to表示仅创建目标列。
+	 * 
+	 * @param strategy
+	 *            策略
+	 */
+	public void setStrategy(String strategy) {
+		this.strategy = strategy;
 	}
 
 }
