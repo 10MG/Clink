@@ -44,8 +44,7 @@ public class DataSyncOperator extends AbstractOperator<DataSync> {
 			TIMESTAMP_COLUMNS_SPLIT = ",", TIMESTAMP_FROM_TYPE_KEY = "data.sync.timestamp.from_type",
 			TIMESTAMP_TO_TYPE_KEY = "data.sync.timestamp.to_type", TYPE_KEY_PREFIX = "data.sync.",
 			TO_TYPE_KEY_SUFFIX = ".to_type", FROM_TYPE_KEY_SUFFIX = ".from_type", SCRIPT_KEY_SUFFIX = ".script",
-			STRATEGY_KEY_SUFFIX = ".strategy", COLUMN_NAME = "columnName",
-			COLUMN_NAME_PLACEHOLDER = DSLUtils.EMBED_BEGIN + COLUMN_NAME;
+			STRATEGY_KEY_SUFFIX = ".strategy", COLUMN_NAME = "columnName";
 
 	private static final boolean TO_LOWERCASE = !Boolean
 			.valueOf(FlinkJobsContext.getProperty("data.sync.timestamp.case_sensitive"));// 不区分大小写，统一转为小写
@@ -451,6 +450,7 @@ public class DataSyncOperator extends AbstractOperator<DataSync> {
 			columnName = TO_LOWERCASE ? toName.toLowerCase() : toName;// 不区分大小写，统一转为小写
 			if (timestampMap.containsKey(columnName)) {// 时间戳列
 				strategy = getDefaultColumnStrategy(columnName);
+				column.setStrategy(strategy);// 设置时间戳列的同步策略
 				if (!"to".equals(strategy)) {// 非仅创建目标列
 					column.setFromName(toName);// 来源列名和目标列名相同
 					column.setFromType(getDefaultTimestampFromType(columnName));
@@ -568,7 +568,7 @@ public class DataSyncOperator extends AbstractOperator<DataSync> {
 		}
 		while (i < size) {
 			column = columns.get(i++);
-			if (!"to".equals(column.getStrategy())) {
+			if (!"from".equals(column.getStrategy())) {
 				toName = column.getToName();
 				sqlBuffer.append(DSLUtils.COMMA).append(DSLUtils.BLANK_SPACE)
 						.append(toName == null ? column.getFromName() : toName).append(DSLUtils.BLANK_SPACE)
@@ -634,7 +634,7 @@ public class DataSyncOperator extends AbstractOperator<DataSync> {
 	 */
 	private static String toScript(ColumnConvertArgs columnConvertArgs, String columnName, Map<String, Object> params) {
 		NamedScript namedScript = DSLUtils.parse(columnConvertArgs.script,
-				ParamsKit.init(params).put(COLUMN_NAME_PLACEHOLDER, columnName).get());
+				ParamsKit.init(params).put(COLUMN_NAME, columnName).get());
 		return DSLUtils.toScript(namedScript.getScript(), namedScript.getParams(), FlinkSQLParamsParser.getInstance())
 				.getValue();
 	}
