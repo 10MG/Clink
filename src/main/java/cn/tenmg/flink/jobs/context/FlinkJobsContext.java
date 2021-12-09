@@ -110,7 +110,7 @@ public abstract class FlinkJobsContext {
 					}
 				} else if (key.startsWith("table.exec")) {
 					tableExecConfigs.put(key, value.toString());
-				} else if (ignoreCase && key.matches("^data\\.sync\\.[^\\.]+\\.((from|to)_type|script)$")) {
+				} else if (ignoreCase && key.matches("^data\\.sync\\.[^\\.]+\\.((from|to)_type|script|strategy)$")) {
 					keyLowercase = key.toLowerCase();
 					if (!key.equals(keyLowercase) && !defaultProperties.containsKey(keyLowercase)) {
 						defaultProperties.put(keyLowercase, value);
