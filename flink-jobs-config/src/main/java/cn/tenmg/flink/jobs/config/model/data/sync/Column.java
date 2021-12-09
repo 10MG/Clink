@@ -42,16 +42,15 @@ public class Column implements Serializable {
 	@XmlAttribute
 	private String toType;
 	/**
+	 * 策略。可选值：both/from/to，分别表示来源列和目标列均创建，from表示仅创建原来列，to表示仅创建目标列。
+	 */
+	@XmlAttribute
+	private String strategy;
+	/**
 	 * 自定义脚本。通常是需要进行函数转换时使用
 	 */
 	@XmlValue
 	private String script;
-
-	/**
-	 * 策略。可选值：both/from/to，分别表示来源列和目标列均创建，from表示仅创建原来列，to表示仅创建目标列。
-	 */
-	@XmlValue
-	private String strategy;
 
 	public String getFromName() {
 		return fromName;
@@ -85,20 +84,20 @@ public class Column implements Serializable {
 		this.toType = toType;
 	}
 
-	public String getScript() {
-		return script;
-	}
-
-	public void setScript(String script) {
-		this.script = script;
-	}
-
 	public String getStrategy() {
 		return strategy;
 	}
 
 	public void setStrategy(String strategy) {
 		this.strategy = strategy;
+	}
+
+	public String getScript() {
+		return script;
+	}
+
+	public void setScript(String script) {
+		this.script = script;
 	}
 
 }

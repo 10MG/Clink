@@ -43,8 +43,9 @@ public class DataSyncOperator extends AbstractOperator<DataSync> {
 			GROUP_ID_PREFIX_KEY = "data.sync.group_id_prefix", TIMESTAMP_COLUMNS = "data.sync.timestamp.columns",
 			TIMESTAMP_COLUMNS_SPLIT = ",", TIMESTAMP_FROM_TYPE_KEY = "data.sync.timestamp.from_type",
 			TIMESTAMP_TO_TYPE_KEY = "data.sync.timestamp.to_type", TYPE_KEY_PREFIX = "data.sync.",
-			TO_TYPE_KEY_SUFFIX = ".to_type", FROM_TYPE_KEY_SUFFIX = ".from_type", STRATEGY_KEY_SUFFIX = ".strategy",
-			COLUMN_NAME = "columnName", COLUMN_NAME_PLACEHOLDER = DSLUtils.EMBED_BEGIN + COLUMN_NAME;
+			TO_TYPE_KEY_SUFFIX = ".to_type", FROM_TYPE_KEY_SUFFIX = ".from_type", SCRIPT_KEY_SUFFIX = ".script",
+			STRATEGY_KEY_SUFFIX = ".strategy", COLUMN_NAME = "columnName",
+			COLUMN_NAME_PLACEHOLDER = DSLUtils.EMBED_BEGIN + COLUMN_NAME;
 
 	private static final boolean TO_LOWERCASE = !Boolean
 			.valueOf(FlinkJobsContext.getProperty("data.sync.timestamp.case_sensitive"));// 不区分大小写，统一转为小写
@@ -246,6 +247,9 @@ public class DataSyncOperator extends AbstractOperator<DataSync> {
 			if (StringUtils.isBlank(column.getToType())) {
 				column.setToType(toType == null ? getDefaultTimestampToType(columnName) : toType);
 			}
+			if (StringUtils.isBlank(column.getScript())) {
+				column.setScript(getDefaultTimestampScript(columnName));
+			}
 			timestampMap.remove(columnName);
 		} else {
 			if (toType == null && StringUtils.isBlank(column.getToType())) {
@@ -280,6 +284,9 @@ public class DataSyncOperator extends AbstractOperator<DataSync> {
 			}
 			if (StringUtils.isBlank(column.getToType())) {
 				column.setToType(toType == null ? getDefaultTimestampToType(columnName) : toType);
+			}
+			if (StringUtils.isBlank(column.getScript())) {
+				column.setScript(getDefaultTimestampScript(columnName));
 			}
 			timestampMap.remove(columnName);
 		} else {
@@ -370,6 +377,9 @@ public class DataSyncOperator extends AbstractOperator<DataSync> {
 			if (StringUtils.isBlank(column.getToType())) {
 				column.setToType(getDefaultTimestampToType(columnName));
 			}
+			if (StringUtils.isBlank(column.getScript())) {
+				column.setScript(getDefaultTimestampScript(columnName));
+			}
 			timestampMap.remove(columnName);
 		} else if (StringUtils.isBlank(column.getToType())) {
 			throw new IllegalArgumentException("The property 'toType' cannot be blank, column index: " + index);
@@ -397,6 +407,9 @@ public class DataSyncOperator extends AbstractOperator<DataSync> {
 			}
 			if (StringUtils.isBlank(column.getToType())) {
 				column.setToType(getDefaultTimestampToType(columnName));
+			}
+			if (StringUtils.isBlank(column.getScript())) {
+				column.setScript(getDefaultTimestampScript(columnName));
 			}
 			timestampMap.remove(columnName);
 		} else {
@@ -438,9 +451,12 @@ public class DataSyncOperator extends AbstractOperator<DataSync> {
 			columnName = TO_LOWERCASE ? toName.toLowerCase() : toName;// 不区分大小写，统一转为小写
 			if (timestampMap.containsKey(columnName)) {// 时间戳列
 				strategy = getDefaultColumnStrategy(columnName);
-				if (!"to".equals(strategy)) {// 仅创建目标列
+				if (!"to".equals(strategy)) {// 非仅创建目标列
 					column.setFromName(toName);// 来源列名和目标列名相同
 					column.setFromType(getDefaultTimestampFromType(columnName));
+				}
+				if (!"from".equals(strategy) && StringUtils.isBlank(column.getScript())) {
+					column.setScript(getDefaultTimestampScript(columnName));
 				}
 				timestampMap.remove(columnName);
 			} else {
@@ -479,6 +495,10 @@ public class DataSyncOperator extends AbstractOperator<DataSync> {
 			return FlinkJobsContext.getProperty(TIMESTAMP_TO_TYPE_KEY);
 		}
 		return toType;
+	}
+
+	private static String getDefaultTimestampScript(String columnName) {
+		return FlinkJobsContext.getProperty(TYPE_KEY_PREFIX + columnName + SCRIPT_KEY_SUFFIX);
 	}
 
 	private static String fromCreateTableSQL(Map<String, String> dataSource, String topic, String table,
