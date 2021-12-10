@@ -133,7 +133,7 @@ public class Column implements Serializable {
 	}
 
 	/**
-	 * 设置策略。可选值：both/from/to，分别表示来源列和目标列均创建，from表示仅创建原来列，to表示仅创建目标列。
+	 * 设置策略。可选值：both/from/to，both表示来源列和目标列均创建，from表示仅创建原来列，to表示仅创建目标列。
 	 * 
 	 * @param strategy
 	 *            策略

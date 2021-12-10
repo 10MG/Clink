@@ -42,7 +42,7 @@ public class Column implements Serializable {
 	@XmlAttribute
 	private String toType;
 	/**
-	 * 策略。可选值：both/from/to，分别表示来源列和目标列均创建，from表示仅创建原来列，to表示仅创建目标列。
+	 * 策略。可选值：both/from/to，both表示来源列和目标列均创建，from表示仅创建原来列，to表示仅创建目标列，默认为both。
 	 */
 	@XmlAttribute
 	private String strategy;
