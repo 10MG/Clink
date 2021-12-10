@@ -7,7 +7,7 @@ flink-jobs为基于Flink的Java应用程序提供快速集成的能力，可通�
 
 ## 起步
 
-以基于SpringBoot的Maven项目为例
+以Maven项目为例
 
 1.  pom.xml添加依赖（Flink等其他相关依赖此处省略），${flink-jobs.version}为版本号，可定义属性或直接使用版本号替换
 
@@ -23,56 +23,81 @@ flink-jobs为基于Flink的Java应用程序提供快速集成的能力，可通�
 2.  配置文件application.properties
 
 ```
-bootstrap.servers=192.168.100.181:9092,192.168.100.182:9092,192.168.100.183:9092
-topics=topic1,topic2
-auto.offset.reset=latest
-group.id=flink-jobs
+#Flink Table API配置
+#空值处理配置
+table.exec.sink.not-null-enforcer=drop
+
+#flink-jobs数据同步类型转换配置（将BIGINT表示的时间减去8小时得到北京时间，并转为TIMESTAMP）
+data.sync.columns.convert=BIGINT,TIMESTAMP:TO_TIMESTAMP(FROM_UNIXTIME(#columnName/1000 - 8*60*60, 'yyyy-MM-dd HH:mm:ss'))
+
+#FlinkSQL数据源配置
+#配置名称为kafka的数据源
+datasource.kafka.connector=kafka
+datasource.kafka.properties.bootstrap.servers=192.168.100.24:9092,192.168.100.25:9092,192.168.100.26:9092
+datasource.kafka.properties.group.id=flink-jobs
+datasource.kafka.scan.startup.mode=earliest-offset
+datasource.kafka.format=debezium-json
+datasource.kafka.debezium-json.schema-include=false
+
+#配置名称为bidb的数据源
+datasource.bidb.connector=jdbc
+datasource.bidb.driver=com.mysql.jdbc.Driver
+datasource.bidb.url=jdbc:mysql://192.168.100.66:3306/bidb?useSSL=false&serverTimezone=GMT%2B8&zeroDateTimeBehavior=convertToNull
+datasource.bidb.username=your_name
+datasource.bidb.password=your_password
+
+datasource.starrocks.jdbc-url=jdbc:mysql://192.168.10.140:9030
+datasource.starrocks.load-url=192.168.10.140:8030
+datasource.starrocks.connector=starrocks
+datasource.starrocks.username=your_name
+datasource.starrocks.password=your_password
+datasource.starrocks.database-name=your_db
+datasource.starrocks.sink.properties.column_separator=\\x01
+datasource.starrocks.sink.properties.row_delimiter=\\x02
+# the flushing time interval, range: [1000ms, 3600000ms].
+datasource.starrocks.sink.buffer-flush.interval-ms=10000
+# max retry times of the stream load request, range: [0, 10].
+datasource.starrocks.sink.max-retries=3
 ```
 
-3.  编写配置类
-```
-@Configuration
-@PropertySource(value = "application.properties")
-public class Context {
+2.  编写应用入口类
 
-	@Bean
-	public Properties kafkaProperties(@Value("${bootstrap.servers}") String servers,
-			@Value("${auto.offset.reset}") String autoOffsetReset, @Value("${group.id}") String groupId) {
-		Properties kafkaProperties = new Properties();
-		kafkaProperties.put("bootstrap.servers", servers);
-		kafkaProperties.put("auto.offset.reset", autoOffsetReset);
-		kafkaProperties.put("group.id", groupId);
-		return kafkaProperties;
+```
+public class App {
+
+	/**
+	 * 服务基础包名
+	 */
+	private static final String basePackage = "cn.tenmg.flink.jobs.quickstart.service";
+
+	public static void main(String... args) throws Exception {
+		FlinkJobsRunner runner = new FlinkJobsRunner() {
+
+			@SuppressWarnings("unchecked")
+			@Override
+			protected StreamService getStreamService(String serviceName) {// 根据类名获取流服务实例
+				StreamService streamService = null;
+				try {
+					Class<StreamService> streamServiceClass = (Class<StreamService>) Class
+							.forName(basePackage + "." + serviceName);
+					streamService = streamServiceClass.newInstance();
+				} catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
+					e.printStackTrace();
+				}
+				return streamService;
+			}
+
+		};
+		runner.run(args);
 	}
 
 }
-```
-
-4.  编写应用入口类
 
 ```
-@ComponentScan("com.sinochem.flink.jobs")
-public class App extends FlinkJobsRunner implements CommandLineRunner {
 
-	@Autowired
-	private ApplicationContext springContext;
-
-	@Override
-	protected StreamService getStreamService(String serviceName) {
-		return (StreamService) springContext.getBean(serviceName);
-	}
-
-	public static void main(String[] args) {
-		SpringApplication.run(App.class, args);
-	}
-
-}
-```
-
-5.  编写Flink流批一体服务
+3.  编写Flink流批一体服务
 
 ```
-@Service
 public class HelloWorldService implements StreamService {
 
 	/**
@@ -80,17 +105,15 @@ public class HelloWorldService implements StreamService {
 	 */
 	private static final long serialVersionUID = -6651233695630282701L;
 
-	@Autowired
-	private Properties kafkaProperties;
-
-	@Value("${topics}")
-	private String topics;
-
 	@Override
 	public void run(StreamExecutionEnvironment env, Arguments arguments) throws Exception {
+                Properties kafkaProperties = new Properties();
+		kafkaProperties.put("bootstrap.servers", FlinkJobsContext.getProperty("datasource.kafka.properties.bootstrap.servers"));// 直接使用配置文件的配置
+		kafkaProperties.put("auto.offset.reset", "latest");
+		kafkaProperties.put("group.id", "flink-jobs");
 		DataStream<String> stream;
 		if (RuntimeExecutionMode.STREAMING.equals(arguments.getRuntimeMode())) {
-			stream = env.addSource(new FlinkKafkaConsumer<String>(Arrays.asList(topics.split(",")),
+			stream = env.addSource(new FlinkKafkaConsumer<String>(Arrays.asList("topic1","topic2"),
 					new SimpleStringSchema(), kafkaProperties));
 		} else {
 			stream = env.fromElements("Hello, World!");
@@ -101,7 +124,7 @@ public class HelloWorldService implements StreamService {
 }
 ```
 
-6.  到此，一个flink-jobs应用程序已完成，他可以通过各种方式运行。
+4.  到此，一个flink-jobs应用程序已完成，他可以通过各种方式运行。
 
 - 在IDE环境中，可直接运行App类启动flink-jobs应用程序；
 
