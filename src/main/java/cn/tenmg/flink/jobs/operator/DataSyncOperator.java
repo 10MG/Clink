@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import org.apache.flink.configuration.Configuration;
 import org.apache.flink.configuration.PipelineOptions;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.table.api.TableConfig;
@@ -114,9 +115,12 @@ public class DataSyncOperator extends AbstractOperator<DataSync> {
 		}
 		TableConfig tableConfig = tableEnv.getConfig();
 		if (tableConfig != null) {
-			System.out.println(tableConfig.getConfiguration().get(PipelineOptions.NAME));
-			tableConfig.getConfiguration().set(PipelineOptions.NAME,
-					"data-sync." + String.join(".", String.join("-", from, "to", to), table));
+			Configuration configuration = tableConfig.getConfiguration();
+			String pipelineName = configuration.get(PipelineOptions.NAME);
+			if (StringUtils.isNotBlank(pipelineName)) {
+				tableConfig.getConfiguration().set(PipelineOptions.NAME,
+						"data-sync." + String.join(".", String.join("-", from, "to", to), table));
+			}
 		}
 
 		Map<String, String> fromDataSource = FlinkJobsContext.getDatasource(from),
