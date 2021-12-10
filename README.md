@@ -241,6 +241,7 @@ toConfig   | `String`       | 是 | 目标配置。例如：`sink.buffer-flush.m
 table      | `String`       | 是 | 同步数据表名。
 columns    | `List<Column>` | 否 | 同步数据列。当开启智能模式时，会自动获取列信息。
 primaryKey | `String`       | 否 | 主键，多个列名以“,”分隔。当开启智能模式时，会自动获取主键信息。
+timestamp  | `String`       | 否 | 时间戳字段名，多个字段名使用“,”分隔。设置这个值后，会使用这些字段名创建源表和目标表，并在数据同步时写入这些字段值。一般使用配置文件统一指定，而不是每个同步任务单独指定。
 smart      | `Boolean`      | 否 | 是否开启智能模式。不设置时，根据全局配置确定是否开启智能模式，全局默认配置为`data.sync.smart=true`。
 
 #### Column
@@ -251,6 +252,7 @@ fromName | `String` | 是 | 来源列名。
 fromType | `String` | 否 | 来源数据类型。如果缺省，则如果开启智能模式会自动获取目标数据类型作为来源数据类型，如果关闭智能模式则必填。
 toName   | `String` | 否 | 目标列名。默认为来源列名。
 toType   | `String` | 否 | 目标列数据类型。如果缺省，则如果开启智能模式会自动获取，如果关闭智能模式则默认为来源列数据类型。
+strategy | `String` | 否 | 同步策略。可选值：both/from/to，both表示来源列和目标列均创建，from表示仅创建原来列，to表示仅创建目标列，默认为both。
 script   | `String` | 否 | 自定义脚本。通常是需要进行函数转换时使用。
 
 #### 相关配置
