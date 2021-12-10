@@ -117,7 +117,7 @@ public class DataSyncOperator extends AbstractOperator<DataSync> {
 		if (tableConfig != null) {
 			Configuration configuration = tableConfig.getConfiguration();
 			String pipelineName = configuration.get(PipelineOptions.NAME);
-			if (StringUtils.isNotBlank(pipelineName)) {
+			if (StringUtils.isBlank(pipelineName)) {
 				tableConfig.getConfiguration().set(PipelineOptions.NAME,
 						"data-sync." + String.join(".", String.join("-", from, "to", to), table));
 			}
