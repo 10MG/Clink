@@ -314,16 +314,16 @@ data.sync.columns.convert=BIGINT,TIMESTAMP:TO_TIMESTAMP(FROM_UNIXTIME(#columnNam
 ```
 #数据同步类型转换配置
 data.sync.columns.convert=BIGINT,TIMESTAMP:TO_TIMESTAMP(FROM_UNIXTIME(#columnName/1000 - 8*60*60, 'yyyy-MM-dd HH:mm:ss'));INT,DATE:TO_TIMESTAMP(FROM_UNIXTIME(#columnName/1000 - 8*60*60, 'yyyy-MM-dd HH:mm:ss'))
-#数据同步自动添加时间戳字段
+#数据同步自动添加时间戳列
 data.sync.timestamp.columns=INGESTION_TIMESTAMP,EVENT_TIMESTAMP,ETL_TIMESTAMP
-#数据同步自动添加EVENT_TIMESTAMP时间戳字段的类型配置
+#数据同步自动添加EVENT_TIMESTAMP时间戳列的类型配置
 data.sync.EVENT_TIMESTAMP.from_type=TIMESTAMP(3) METADATA FROM 'value.source.timestamp' VIRTUAL
 data.sync.EVENT_TIMESTAMP.to_type=TIMESTAMP(3)
 data.sync.EVENT_TIMESTAMP.to_type=TIMESTAMP(3)
 #ETL_TIMESTAMP列取当前时间戳，策略设置为to，仅创建目标列而不创建来源列
 data.sync.ETL_TIMESTAMP.strategy=to
 data.sync.ETL_TIMESTAMP.script=NOW()
-#INGESTION_TIMESTAMP字段类型使用默认配置，这里无需指定
+#INGESTION_TIMESTAMP列类型使用默认配置，这里无需指定
 ```
 
 ## 配置文件
