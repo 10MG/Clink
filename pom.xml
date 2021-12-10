@@ -12,11 +12,51 @@
 	<name>flink-jobs</name>
 	<url>https://gitee.com/tenmg/flink-jobs</url>
 
+	<organization>
+		<name>10MG</name>
+		<url>http://www.10mg.cn</url>
+	</organization>
+
+	<developers>
+		<developer>
+			<name>June</name>
+			<email>wjzhao@aliyun.com</email>
+			<organization>10MG</organization>
+		</developer>
+	</developers>
+
+	<scm>
+		<connection>scm:git:https://gitee.com/tenmg/flink-jobs.git</connection>
+		<url>https://gitee.com/tenmg/flink-jobs.git</url>
+		<developerConnection>scm:git:https://gitee.com/tenmg</developerConnection>
+	</scm>
+
+	<licenses>
+		<license>
+			<name>Apache License, Version 2.0</name>
+			<url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+			<distribution>repo</distribution>
+			<comments>A business-friendly OSS license</comments>
+		</license>
+	</licenses>
+
+	<distributionManagement>
+		<repository>
+			<id>sonatype</id>
+			<url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+		</repository>
+		<snapshotRepository>
+			<id>sonatype</id>
+			<url>https://oss.sonatype.org/content/repositories/snapshots/</url>
+		</snapshotRepository>
+	</distributionManagement>
+
 	<properties>
 		<encoding>UTF-8</encoding>
 		<flink.version>1.13.3</flink.version>
 		<scala.binary.version>2.11</scala.binary.version>
 	</properties>
+
 	<dependencies>
 		<!-- https://mvnrepository.com/artifact/com.alibaba/fastjson -->
 		<dependency>
@@ -29,7 +69,7 @@
 		<dependency>
 			<groupId>cn.tenmg</groupId>
 			<artifactId>dsl</artifactId>
-			<version>1.2.2</version>
+			<version>1.2.3</version>
 		</dependency>
 
 		<!-- https://mvnrepository.com/artifact/org.apache.flink/flink-clients -->
@@ -71,39 +111,6 @@
 			<optional>true</optional>
 		</dependency>
 	</dependencies>
-	<licenses>
-		<license>
-			<name>Apache License, Version 2.0</name>
-			<url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
-			<distribution>repo</distribution>
-			<comments>A business-friendly OSS license</comments>
-		</license>
-	</licenses>
-
-	<developers>
-		<developer>
-			<name>June</name>
-			<email>wjzhao@aliyun.com</email>
-			<organization>10MG</organization>
-		</developer>
-	</developers>
-
-	<scm>
-		<connection>scm:git:https://gitee.com/tenmg/flink-jobs.git</connection>
-		<url>https://gitee.com/tenmg/flink-jobs.git</url>
-		<developerConnection>scm:git:https://gitee.com/tenmg</developerConnection>
-	</scm>
-
-	<distributionManagement>
-		<repository>
-			<id>sonatype</id>
-			<url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
-		</repository>
-		<snapshotRepository>
-			<id>sonatype</id>
-			<url>https://oss.sonatype.org/content/repositories/snapshots/</url>
-		</snapshotRepository>
-	</distributionManagement>
 
 	<build>
 		<plugins>

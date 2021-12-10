@@ -5,35 +5,16 @@
 	<description>flink-jobs配置管理类库</description>
 	<groupId>cn.tenmg</groupId>
 	<artifactId>flink-jobs-config</artifactId>
-	<version>1.1.4</version>
+	<version>1.1.4.Final</version>
 	<packaging>jar</packaging>
 
 	<name>flink-jobs-config</name>
-	<url>http://www.10mg.cn</url>
+	<url>https://gitee.com/tenmg/flink-jobs/flink-jobs-config</url>
 
-	<properties>
-		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<flink.version>1.13.3</flink.version>
-		<scala.binary.version>2.11</scala.binary.version>
-	</properties>
-
-	<dependencies>
-		<!-- https://mvnrepository.com/artifact/javax.xml.bind/jaxb-api -->
-		<dependency>
-			<groupId>javax.xml.bind</groupId>
-			<artifactId>jaxb-api</artifactId>
-			<version>2.3.1</version>
-		</dependency>
-	</dependencies>
-
-	<licenses>
-		<license>
-			<name>Apache License, Version 2.0</name>
-			<url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
-			<distribution>repo</distribution>
-			<comments>A business-friendly OSS license</comments>
-		</license>
-	</licenses>
+	<organization>
+		<name>10MG</name>
+		<url>http://www.10mg.cn</url>
+	</organization>
 
 	<developers>
 		<developer>
@@ -49,6 +30,15 @@
 		<developerConnection>scm:git:https://gitee.com/tenmg</developerConnection>
 	</scm>
 
+	<licenses>
+		<license>
+			<name>Apache License, Version 2.0</name>
+			<url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+			<distribution>repo</distribution>
+			<comments>A business-friendly OSS license</comments>
+		</license>
+	</licenses>
+
 	<distributionManagement>
 		<repository>
 			<id>sonatype</id>
@@ -59,6 +49,19 @@
 			<url>https://oss.sonatype.org/content/repositories/snapshots/</url>
 		</snapshotRepository>
 	</distributionManagement>
+
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+	</properties>
+
+	<dependencies>
+		<!-- https://mvnrepository.com/artifact/javax.xml.bind/jaxb-api -->
+		<dependency>
+			<groupId>javax.xml.bind</groupId>
+			<artifactId>jaxb-api</artifactId>
+			<version>2.3.1</version>
+		</dependency>
+	</dependencies>
 
 	<build>
 		<plugins>

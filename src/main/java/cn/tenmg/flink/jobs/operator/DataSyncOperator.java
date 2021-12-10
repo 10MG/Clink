@@ -10,7 +10,9 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import org.apache.flink.configuration.PipelineOptions;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
+import org.apache.flink.table.api.TableConfig;
 import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
 
 import cn.tenmg.dsl.NamedScript;
@@ -109,6 +111,11 @@ public class DataSyncOperator extends AbstractOperator<DataSync> {
 				fromConfig = dataSync.getFromConfig();
 		if (!defaultCatalog.equals(currentCatalog)) {
 			tableEnv.useCatalog(defaultCatalog);
+		}
+		TableConfig tableConfig = tableEnv.getConfig();
+		if (tableConfig != null) {
+			tableConfig.getConfiguration().set(PipelineOptions.NAME,
+					"data-sync." + String.join(".", String.join("-", from, "to", to), table));
 		}
 
 		Map<String, String> fromDataSource = FlinkJobsContext.getDatasource(from),
