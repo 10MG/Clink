@@ -257,101 +257,8 @@ script   | `String` | 否 | 自定义脚本。通常是需要进行函数转换�
 
 #### 相关配置
 
-[配置文件](https://gitee.com/tenmg/flink-jobs#%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6)中可以增加数据同步的相关配置，各配置说明如下：
+可以增加数据同步的相关配置，详见配置文件的[数据源同步配置](#%E6%95%B0%E6%8D%AE%E5%90%8C%E6%AD%A5%E9%85%8D%E7%BD%AE)：
 
-##### data.sync.smart
-
-是否开启数据同步的智能模式，默认为`true`。开启智能模式的潜台词是指，自动通过已实现的元数据获取器（也可自行扩展）获取同步的目标库的元数据以生成Flink SQL的源表（Source Table）、目标表（Slink Table）和相应的插入语句（`INSERT INTO … SELECT … FROM …`）。
-
-##### data.sync.from_table_prefix
-
-源表（Source Table）表名的前缀，默认为`SOURCE_`。该前缀和目标表（Slink Table）的表名拼接起来即为源表的表名。
-
-##### data.sync.group_id_prefix
-
-数据同步时消费消息队列（Kafka）的`groupid`的前缀，默认为`flink-jobs-data-sync.`。该前缀和目标表（Slink Table）的表名拼接起来构成消费消息队列（Kafka）的`groupid`，但用户在任务中指定`properties.group.id`的除外。
-
-##### data.sync.metadata.getter.*
-
-用户可以需要实现`cn.tenmg.flink.jobs.operator.data.sync.MetaDataGetter`接口并通过该配置项来扩展元数据获取器，也可以使用自实现的元数据获取器来替换原有的元数据获取器。默认配置为：
-
-```
-data.sync.metadata.getter.jdbc=cn.tenmg.flink.jobs.operator.data.sync.getter.JDBCMetaDataGetter
-data.sync.metadata.getter.starrocks=cn.tenmg.flink.jobs.operator.data.sync.getter.StarrocksMetaDataGetter
-```
-
-##### data.sync.columns.convert
-
-1.1.3版本开始支持`data.sync.columns.convert`，用于配置数据同步的SELECT子句的列转换函数，可使用`#columnName`占位符表示当前列名，flink-jobs会在运行时将转换函数作为一个SQL片段一个`INSERT INTO …… SELECT …… FROM ……`语句的的一个片段。
-
-示例1：
-
-```
-
-data.sync.columns.convert=BIGINT,TIMESTAMP:TO_TIMESTAMP(FROM_UNIXTIME(#columnName/1000 - 8*60*60, 'yyyy-MM-dd HH:mm:ss'))
-
-```
-
-上述配置旨在将`BIGINT`类型表示的时间转换为`TIMESTAMP`类型的时间，同时减去8个小时（时区转换，Debezium的时间通常是UTC时间）转换为北京时间。该配置包含几层含义：
-
-1. 如果没有指明同步的列信息，且开启智能模式（配置`data.sync.smart=true`），则从目标库中加载元数据，确定列名并自动将JDBC类型对应到Flink SQL的类型上，并作为创建目标表（`Sink`表）的依据。当某字段类型为`TIMESTAMP`时，会在同步时应用该转换函数。此时，其源表对应字段类型则为`BIGINT`，否则源表对应字段类型和目标表（`Sink`表）的一致；字段名方面，默认源表对应字段名和目标表（`Sink`表）字段名一致。最后根据列的相关信息生成并执行相关同步SQL。
-
-2. 如果部分指定了同步的列信息，且开启智能模式（配置`data.sync.smart=true`），则从目标库中加载元数据，并自动补全用户未配置的部分列信息后，再生成并执行相关同步SQL。
-
-3. 如果完全指明同步的列信息，则根据指定的信息分别生成并执行相关同步SQL。
-
-示例2：
-
-```
-data.sync.columns.convert=BIGINT,TIMESTAMP:TO_TIMESTAMP(FROM_UNIXTIME(#columnName/1000 - 8*60*60, 'yyyy-MM-dd HH:mm:ss'));INT,DATE:TO_TIMESTAMP(FROM_UNIXTIME(#columnName/1000 - 8*60*60, 'yyyy-MM-dd HH:mm:ss'))
-```
-
-##### data.sync.timestamp.case_sensitive
-
-1.1.4版本开始支持`data.sync.timestamp.case_sensitive`，用于配置数据同步的时间戳列名的大小写敏感性，他是flink-jobs在识别时间戳列时的策略配置。由于Flink SQL通常是大小写敏感的，因此该值默认为`true`，用户可以根据需要在配置文件中调整配置。大小写敏感的情况下，有关时间戳的列名必须按照实际建表的列名完全匹配，否则无法识别；大小写不敏感，则在匹配时间戳字段时对字段名忽略大小写。
-
-##### data.sync.timestamp.from_type
-
-1.1.4版本开始支持`data.sync.timestamp.from_type`，用于配置数据同步的来源时间戳列的默认类型，默认值为`TIMESTAMP(3) METADATA FROM 'value.ingestion-timestamp' VIRTUAL`，这是Flink SQL所支持的几种变更数据捕获（CDC）工具（Debezium/Canal/Maxwell）都支持的。
-
-##### data.sync.timestamp.to_type
-
-1.1.4版本开始支持`data.sync.timestamp.to_type`，用于配置数据同步的目标时间戳列的默认类型，默认值为`TIMESTAMP(3)`，与`data.sync.timestamp.from_type`的默认值具有对应关系。
-
-##### data.sync.*.from_type
-
-1.1.4版本开始支持`data.sync.*.from_type`，其中`*`需要替换为具体的列名，用于配置数据同步增加的特定时间戳列的来源类型，如果没有配置则使用`data.sync.timestamp.from_type`的值。典型的值为`TIMESTAMP(3) METADATA FROM 'value.ingestion-timestamp' VIRTUAL`或`TIMESTAMP(3) METADATA FROM 'value.source.timestamp' VIRTUAL`（目前仅Debezium支持），可根据具体情况确定。
-
-##### data.sync.*.to_type
-
-1.1.4版本开始支持`data.sync.*.to_type`，其中`*`需要替换为具体的列名，用于配置数据同步增加的特定时间戳列的目标类型，如果没有配置则使用`data.sync.timestamp.to_type`的值。典型的值为`TIMESTAMP(3)`，具体精度可根据数据源的精度确定。
-
-##### data.sync.*.strategy
-
-1.1.4版本开始支持`data.sync.*.strategy`，其中`*`需要替换为具体的列名，用于配置数据同步特定时间戳列的同步策略，可选值：`both/from/to`，both表示来源列和目标列均创建，from表示仅创建原来列，to表示仅创建目标列, 默认为both。
-
-##### data.sync.*.script
-
-1.1.4版本开始支持`data.sync.*.script`，其中`*`需要替换为具体的列名，用于配置数据同步特定时间戳列的自定义脚本（`SELECT`子句的片段），通常是一个函数或等效表达，例如`NOW()`或`CURRENT_TIMESTAMP`。结合`data.sync.*.strategy=to`使用，可实现写入处理时间的效果。
-
-##### 配置示例
-
-以下是一个使用Debezium实现数据同步的典型数据同步配置示例，不仅完成了时间格式和时区的转换，还完成了时间戳的自动写入（智能模式下，时间戳是否写入取决于目标表中对应列是否存在）：
-
-```
-#数据同步类型转换配置
-data.sync.columns.convert=BIGINT,TIMESTAMP:TO_TIMESTAMP(FROM_UNIXTIME(#columnName/1000 - 8*60*60, 'yyyy-MM-dd HH:mm:ss'));INT,DATE:TO_TIMESTAMP(FROM_UNIXTIME(#columnName/1000 - 8*60*60, 'yyyy-MM-dd HH:mm:ss'))
-#数据同步自动添加时间戳列
-data.sync.timestamp.columns=INGESTION_TIMESTAMP,EVENT_TIMESTAMP,ETL_TIMESTAMP
-#数据同步自动添加EVENT_TIMESTAMP时间戳列的类型配置
-data.sync.EVENT_TIMESTAMP.from_type=TIMESTAMP(3) METADATA FROM 'value.source.timestamp' VIRTUAL
-data.sync.EVENT_TIMESTAMP.to_type=TIMESTAMP(3)
-data.sync.EVENT_TIMESTAMP.to_type=TIMESTAMP(3)
-#ETL_TIMESTAMP列取当前时间戳，策略设置为to，仅创建目标列而不创建来源列
-data.sync.ETL_TIMESTAMP.strategy=to
-data.sync.ETL_TIMESTAMP.script=NOW()
-#INGESTION_TIMESTAMP列类型使用默认配置，这里无需指定
-```
 
 ## 配置文件
 
@@ -433,6 +340,102 @@ datasource.starrocks.database-name=your_db
 `table.exec.sink.not-null-enforcer=drop`
 
 注意：如果是在flink-jobs的配置文件中配置这些参数，当执行自定义Java服务时，只有通过`FlinkJobsContext.getOrCreateStreamTableEnvironment()`或`FlinkJobsContext.getOrCreateStreamTableEnvironment(env)`方法获取的`StreamTableEnvironment`执行Table API & SQL，这些配置才会生效。
+
+### 数据同步配置
+
+#### data.sync.smart
+
+是否开启数据同步的智能模式，默认为`true`。开启智能模式的潜台词是指，自动通过已实现的元数据获取器（也可自行扩展）获取同步的目标库的元数据以生成Flink SQL的源表（Source Table）、目标表（Slink Table）和相应的插入语句（`INSERT INTO … SELECT … FROM …`）。
+
+#### data.sync.from_table_prefix
+
+源表（Source Table）表名的前缀，默认为`SOURCE_`。该前缀和目标表（Slink Table）的表名拼接起来即为源表的表名。
+
+#### data.sync.group_id_prefix
+
+数据同步时消费消息队列（Kafka）的`groupid`的前缀，默认为`flink-jobs-data-sync.`。该前缀和目标表（Slink Table）的表名拼接起来构成消费消息队列（Kafka）的`groupid`，但用户在任务中指定`properties.group.id`的除外。
+
+#### data.sync.metadata.getter.*
+
+用户可以需要实现`cn.tenmg.flink.jobs.operator.data.sync.MetaDataGetter`接口并通过该配置项来扩展元数据获取器，也可以使用自实现的元数据获取器来替换原有的元数据获取器。默认配置为：
+
+```
+data.sync.metadata.getter.jdbc=cn.tenmg.flink.jobs.operator.data.sync.getter.JDBCMetaDataGetter
+data.sync.metadata.getter.starrocks=cn.tenmg.flink.jobs.operator.data.sync.getter.StarrocksMetaDataGetter
+```
+
+#### data.sync.columns.convert
+
+1.1.3版本开始支持`data.sync.columns.convert`，用于配置数据同步的SELECT子句的列转换函数，可使用`#columnName`占位符表示当前列名，flink-jobs会在运行时将转换函数作为一个SQL片段一个`INSERT INTO …… SELECT …… FROM ……`语句的的一个片段。
+
+示例1：
+
+```
+
+data.sync.columns.convert=BIGINT,TIMESTAMP:TO_TIMESTAMP(FROM_UNIXTIME(#columnName/1000 - 8*60*60, 'yyyy-MM-dd HH:mm:ss'))
+
+```
+
+上述配置旨在将`BIGINT`类型表示的时间转换为`TIMESTAMP`类型的时间，同时减去8个小时（时区转换，Debezium的时间通常是UTC时间）转换为北京时间。该配置包含几层含义：
+
+1. 如果没有指明同步的列信息，且开启智能模式（配置`data.sync.smart=true`），则从目标库中加载元数据，确定列名并自动将JDBC类型对应到Flink SQL的类型上，并作为创建目标表（`Sink`表）的依据。当某字段类型为`TIMESTAMP`时，会在同步时应用该转换函数。此时，其源表对应字段类型则为`BIGINT`，否则源表对应字段类型和目标表（`Sink`表）的一致；字段名方面，默认源表对应字段名和目标表（`Sink`表）字段名一致。最后根据列的相关信息生成并执行相关同步SQL。
+
+2. 如果部分指定了同步的列信息，且开启智能模式（配置`data.sync.smart=true`），则从目标库中加载元数据，并自动补全用户未配置的部分列信息后，再生成并执行相关同步SQL。
+
+3. 如果完全指明同步的列信息，则根据指定的信息分别生成并执行相关同步SQL。
+
+示例2：
+
+```
+data.sync.columns.convert=BIGINT,TIMESTAMP:TO_TIMESTAMP(FROM_UNIXTIME(#columnName/1000 - 8*60*60, 'yyyy-MM-dd HH:mm:ss'));INT,DATE:TO_TIMESTAMP(FROM_UNIXTIME(#columnName/1000 - 8*60*60, 'yyyy-MM-dd HH:mm:ss'))
+```
+
+#### data.sync.timestamp.case_sensitive
+
+1.1.4版本开始支持`data.sync.timestamp.case_sensitive`，用于配置数据同步的时间戳列名的大小写敏感性，他是flink-jobs在识别时间戳列时的策略配置。由于Flink SQL通常是大小写敏感的，因此该值默认为`true`，用户可以根据需要在配置文件中调整配置。大小写敏感的情况下，有关时间戳的列名必须按照实际建表的列名完全匹配，否则无法识别；大小写不敏感，则在匹配时间戳字段时对字段名忽略大小写。
+
+#### data.sync.timestamp.from_type
+
+1.1.4版本开始支持`data.sync.timestamp.from_type`，用于配置数据同步的来源时间戳列的默认类型，默认值为`TIMESTAMP(3) METADATA FROM 'value.ingestion-timestamp' VIRTUAL`，这是Flink SQL所支持的几种变更数据捕获（CDC）工具（Debezium/Canal/Maxwell）都支持的。
+
+#### data.sync.timestamp.to_type
+
+1.1.4版本开始支持`data.sync.timestamp.to_type`，用于配置数据同步的目标时间戳列的默认类型，默认值为`TIMESTAMP(3)`，与`data.sync.timestamp.from_type`的默认值具有对应关系。
+
+#### data.sync.*.from_type
+
+1.1.4版本开始支持`data.sync.*.from_type`，其中`*`需要替换为具体的列名，用于配置数据同步增加的特定时间戳列的来源类型，如果没有配置则使用`data.sync.timestamp.from_type`的值。典型的值为`TIMESTAMP(3) METADATA FROM 'value.ingestion-timestamp' VIRTUAL`或`TIMESTAMP(3) METADATA FROM 'value.source.timestamp' VIRTUAL`（目前仅Debezium支持），可根据具体情况确定。
+
+#### data.sync.*.to_type
+
+1.1.4版本开始支持`data.sync.*.to_type`，其中`*`需要替换为具体的列名，用于配置数据同步增加的特定时间戳列的目标类型，如果没有配置则使用`data.sync.timestamp.to_type`的值。典型的值为`TIMESTAMP(3)`，具体精度可根据数据源的精度确定。
+
+#### data.sync.*.strategy
+
+1.1.4版本开始支持`data.sync.*.strategy`，其中`*`需要替换为具体的列名，用于配置数据同步特定时间戳列的同步策略，可选值：`both/from/to`，both表示来源列和目标列均创建，from表示仅创建原来列，to表示仅创建目标列, 默认为both。
+
+#### data.sync.*.script
+
+1.1.4版本开始支持`data.sync.*.script`，其中`*`需要替换为具体的列名，用于配置数据同步特定时间戳列的自定义脚本（`SELECT`子句的片段），通常是一个函数或等效表达，例如`NOW()`或`CURRENT_TIMESTAMP`。结合`data.sync.*.strategy=to`使用，可实现写入处理时间的效果。
+
+#### 配置示例
+
+以下是一个使用Debezium实现数据同步的典型数据同步配置示例，不仅完成了时间格式和时区的转换，还完成了时间戳的自动写入（智能模式下，时间戳是否写入取决于目标表中对应列是否存在）：
+
+```
+#数据同步类型转换配置
+data.sync.columns.convert=BIGINT,TIMESTAMP:TO_TIMESTAMP(FROM_UNIXTIME(#columnName/1000 - 8*60*60, 'yyyy-MM-dd HH:mm:ss'));INT,DATE:TO_TIMESTAMP(FROM_UNIXTIME(#columnName/1000 - 8*60*60, 'yyyy-MM-dd HH:mm:ss'))
+#数据同步自动添加时间戳列
+data.sync.timestamp.columns=INGESTION_TIMESTAMP,EVENT_TIMESTAMP,ETL_TIMESTAMP
+#数据同步自动添加EVENT_TIMESTAMP时间戳列的类型配置
+data.sync.EVENT_TIMESTAMP.from_type=TIMESTAMP(3) METADATA FROM 'value.source.timestamp' VIRTUAL
+data.sync.EVENT_TIMESTAMP.to_type=TIMESTAMP(3)
+data.sync.EVENT_TIMESTAMP.to_type=TIMESTAMP(3)
+#ETL_TIMESTAMP列取当前时间戳，策略设置为to，仅创建目标列而不创建来源列
+data.sync.ETL_TIMESTAMP.strategy=to
+data.sync.ETL_TIMESTAMP.script=NOW()
+#INGESTION_TIMESTAMP列类型使用默认配置，这里无需指定
+```
 
 ## 系统集成
 
