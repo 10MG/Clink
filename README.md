@@ -241,7 +241,7 @@ toConfig   | `String`       | 是 | 目标配置。例如：`sink.buffer-flush.m
 table      | `String`       | 是 | 同步数据表名。
 columns    | `List<Column>` | 否 | 同步数据列。当开启智能模式时，会自动获取列信息。
 primaryKey | `String`       | 否 | 主键，多个列名以“,”分隔。当开启智能模式时，会自动获取主键信息。
-timestamp  | `String`       | 否 | 时间戳字段名，多个字段名使用“,”分隔。设置这个值后，会使用这些字段名创建源表和目标表，并在数据同步时写入这些字段值。一般使用配置文件统一指定，而不是每个同步任务单独指定。
+timestamp  | `String`       | 否 | 时间戳列名，多个列名使用“,”分隔。设置这个值后，创建源表和目标表时会添加这些列，并在数据同步时写入这些列。一般使用配置文件统一指定，而不是每个同步任务单独指定。
 smart      | `Boolean`      | 否 | 是否开启智能模式。不设置时，根据全局配置确定是否开启智能模式，全局默认配置为`data.sync.smart=true`。
 
 #### Column
@@ -378,7 +378,7 @@ data.sync.columns.convert=BIGINT,TIMESTAMP:TO_TIMESTAMP(FROM_UNIXTIME(#columnNam
 
 上述配置旨在将`BIGINT`类型表示的时间转换为`TIMESTAMP`类型的时间，同时减去8个小时（时区转换，Debezium的时间通常是UTC时间）转换为北京时间。该配置包含几层含义：
 
-1. 如果没有指明同步的列信息，且开启智能模式（配置`data.sync.smart=true`），则从目标库中加载元数据，确定列名并自动将JDBC类型对应到Flink SQL的类型上，并作为创建目标表（`Sink`表）的依据。当某字段类型为`TIMESTAMP`时，会在同步时应用该转换函数。此时，其源表对应字段类型则为`BIGINT`，否则源表对应字段类型和目标表（`Sink`表）的一致；字段名方面，默认源表对应字段名和目标表（`Sink`表）字段名一致。最后根据列的相关信息生成并执行相关同步SQL。
+1. 如果没有指明同步的列信息，且开启智能模式（配置`data.sync.smart=true`），则从目标库中加载元数据，确定列名并自动将JDBC类型对应到Flink SQL的类型上，并作为创建目标表（`Sink`表）的依据。当某列的类型为`TIMESTAMP`时，会在同步时应用该转换函数。此时，其源表对应列的类型则为`BIGINT`，否则源表对应列的类型和目标表（`Sink`表）的一致；列名方面，默认源表对应列名和目标表（`Sink`表）列名一致。最后根据列的相关信息生成并执行相关同步SQL。
 
 2. 如果部分指定了同步的列信息，且开启智能模式（配置`data.sync.smart=true`），则从目标库中加载元数据，并自动补全用户未配置的部分列信息后，再生成并执行相关同步SQL。
 
@@ -392,7 +392,7 @@ data.sync.columns.convert=BIGINT,TIMESTAMP:TO_TIMESTAMP(FROM_UNIXTIME(#columnNam
 
 #### data.sync.timestamp.case_sensitive
 
-1.1.4版本开始支持`data.sync.timestamp.case_sensitive`，用于配置数据同步的时间戳列名的大小写敏感性，他是flink-jobs在识别时间戳列时的策略配置。由于Flink SQL通常是大小写敏感的，因此该值默认为`true`，用户可以根据需要在配置文件中调整配置。大小写敏感的情况下，有关时间戳的列名必须按照实际建表的列名完全匹配，否则无法识别；大小写不敏感，则在匹配时间戳字段时对字段名忽略大小写。
+1.1.4版本开始支持`data.sync.timestamp.case_sensitive`，用于配置数据同步的时间戳列名的大小写敏感性，他是flink-jobs在识别时间戳列时的策略配置。由于Flink SQL通常是大小写敏感的，因此该值默认为`true`，用户可以根据需要在配置文件中调整配置。大小写敏感的情况下，有关时间戳的列名必须按照实际建表的列名完全匹配，否则无法识别；大小写不敏感，则在匹配时间戳列时对列名忽略大小写。
 
 #### data.sync.timestamp.from_type
 
@@ -677,8 +677,8 @@ data.sync.ETL_TIMESTAMP.script=NOW()
 	xsi:schemaLocation="http://www.10mg.cn/schema/flink-jobs http://www.10mg.cn/schema/flink-jobs-1.1.2.xsd">
 	<data-sync table="od_order_info" to="data_skyline"
 		from="kafka" topic="testdb.testdb.od_order_info">
-		<!-- 在数据源和目标库表结构相同（字段名及类型均相同）的情况下，智能模式可自动从目标库获取表元数据信息，只要少量配就能完成数据同步。 -->
-		<!-- 在数据源和目标库表结构不同（字段名或类型不同）的情况，需要自定义列的差异信息，例如自定来源类型和转换函数： -->
+		<!-- 在数据源和目标库表结构相同（列名及类型均相同）的情况下，智能模式可自动从目标库获取表元数据信息，只要少量配就能完成数据同步。 -->
+		<!-- 在数据源和目标库表结构不同（列名或类型不同）的情况，需要自定义列的差异信息，例如自定来源类型和转换函数： -->
 		<column fromName="UPDATE_TIME" fromType="BIGINT">TO_TIMESTAMP(FROM_UNIXTIME(UPDATE_TIME/1000, 'yyyy-MM-dd HH:mm:ss'))</column>
 		<!-- 另外，如果关闭智能模式，需要列出所有列的信息详细信息。 -->
 	</data-sync>
