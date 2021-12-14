@@ -6,6 +6,7 @@
         <img src="https://gitee.com/tenmg/flink-jobs/badge/star.svg?theme=white" />
     </a>
     <a target="_blank" href="LICENSE"><img src="https://img.shields.io/:license-Apache%202.0-blue.svg"></a>
+    <a target="_blank" href="https://jq.qq.com/?_wv=1027&k=wOOIp0CR"><img src="https://img.shields.io/badge/QQ群-531812227-blue"></a>
 </p>
 
 # flink-jobs
