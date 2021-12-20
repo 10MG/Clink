@@ -27,6 +27,7 @@ import cn.tenmg.flink.jobs.model.data.sync.Column;
 import cn.tenmg.flink.jobs.operator.data.sync.MetaDataGetter;
 import cn.tenmg.flink.jobs.operator.data.sync.MetaDataGetter.TableMetaData;
 import cn.tenmg.flink.jobs.operator.data.sync.MetaDataGetterFactory;
+import cn.tenmg.flink.jobs.operator.support.SqlReservedKeywordSupport;
 import cn.tenmg.flink.jobs.parser.FlinkSQLParamsParser;
 import cn.tenmg.flink.jobs.utils.ConfigurationUtils;
 import cn.tenmg.flink.jobs.utils.MapUtils;
@@ -39,7 +40,7 @@ import cn.tenmg.flink.jobs.utils.SQLUtils;
  * 
  * @since 1.1.2
  */
-public class DataSyncOperator extends AbstractOperator<DataSync> {
+public class DataSyncOperator extends SqlReservedKeywordSupport<DataSync> {
 
 	private static final String SMART_KEY = "data.sync.smart", FROM_TABLE_PREFIX_KEY = "data.sync.from_table_prefix",
 			TOPIC_KEY = "topic", GROUP_ID_KEY = "properties.group.id",
@@ -225,6 +226,7 @@ public class DataSyncOperator extends AbstractOperator<DataSync> {
 			} else {
 				collationPartlyCustomBothStratagy(column, i, params, columnsMap, timestampMap);
 			}
+			wrapColumnName(column);// SQL保留关键字包装
 		}
 		addSmartLoadColumns(columns, columnsMap, params, timestampMap);
 	}
@@ -357,6 +359,7 @@ public class DataSyncOperator extends AbstractOperator<DataSync> {
 			} else {
 				collationCustomBothStrategy(column, i, params, timestampMap);
 			}
+			wrapColumnName(column);// SQL保留关键字包装
 		}
 	}
 
@@ -481,6 +484,7 @@ public class DataSyncOperator extends AbstractOperator<DataSync> {
 					column.setScript(toScript(columnConvertArgs, column.getFromName(), params));
 				}
 			}
+			wrapColumnName(column);// SQL保留关键字包装
 			columns.add(column);
 		}
 	}
@@ -670,6 +674,17 @@ public class DataSyncOperator extends AbstractOperator<DataSync> {
 
 	private static String getDataType(String type) {
 		return type.split("\\s", 2)[0];
+	}
+
+	/**
+	 * SQL保留关键字包装
+	 * 
+	 * @param column
+	 *            列
+	 */
+	private static void wrapColumnName(Column column) {
+		column.setFromName(wrapIfReservedKeywords(column.getFromName()));
+		column.setToName(wrapIfReservedKeywords(column.getToName()));
 	}
 
 	/**
