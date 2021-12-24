@@ -55,8 +55,8 @@ public abstract class AbstractJDBCMetaDataGetter implements MetaDataGetter {
 			.put(java.sql.Types.NCLOB, "java.sql.Types.NCLOB").put(java.sql.Types.STRUCT, "java.sql.Types.STRUCT")
 			.get();
 
-	private static Set<String> PRECISIONABLE = asSafeSet(FlinkJobsContext.getProperty("flink.sql.Type.PRECISIONABLE")),
-			SIZEVARIABLE = asSafeSet(FlinkJobsContext.getProperty("flink.sql.Type.SIZEVARIABLE"));
+	private static Set<String> WITH_PRECISION = asSafeSet(FlinkJobsContext.getProperty("flink.sql.Type.WITH_PRECISION")),
+			WITH_SIZE = asSafeSet(FlinkJobsContext.getProperty("flink.sql.Type.WITH_SIZE"));
 
 	/**
 	 * 根据数据源配置获取数据库连接
@@ -133,9 +133,9 @@ public abstract class AbstractJDBCMetaDataGetter implements MetaDataGetter {
 							ParamsKit.init().put("columnSize", columnSize).put("decimalDigits", decimalDigits).get())
 					.getScript();
 		} else {
-			if (PRECISIONABLE.contains(possibleType)) {// 类型含精度
+			if (WITH_PRECISION.contains(possibleType)) {// 类型含精度
 				return possibleType + LEFT_BRACKET + columnSize + "," + decimalDigits + RIGTH_BRACKET;
-			} else if (SIZEVARIABLE.contains(possibleType)) {// 类型含长度
+			} else if (WITH_SIZE.contains(possibleType)) {// 类型含长度
 				String sizeOffset = FlinkJobsContext
 						.getProperty(SIZE_OFFSET_PREFFIX + possibleType + SIZE_OFFSET_SUFFIX);
 				if (StringUtils.isBlank(sizeOffset)) {
