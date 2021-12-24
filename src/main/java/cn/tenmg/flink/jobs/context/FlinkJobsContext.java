@@ -118,6 +118,7 @@ public abstract class FlinkJobsContext {
 				}
 			}
 		} catch (Exception e) {
+			e.printStackTrace();
 			configProperties = new Properties();
 		}
 	}

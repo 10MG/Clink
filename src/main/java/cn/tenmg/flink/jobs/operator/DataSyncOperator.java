@@ -656,20 +656,20 @@ public class DataSyncOperator extends SqlReservedKeywordSupport<DataSync> {
 	}
 
 	public static final Map<String, String> toMap(boolean toLowercase, String... strings) {
-		Map<String, String> set = new HashMap<String, String>();
+		Map<String, String> map = new HashMap<String, String>();
 		String string;
 		if (toLowercase) {
 			for (int i = 0; i < strings.length; i++) {
 				string = strings[i].trim();
-				set.put(string.toLowerCase(), string);
+				map.put(string.toLowerCase(), string);
 			}
 		} else {
 			for (int i = 0; i < strings.length; i++) {
 				string = strings[i].trim();
-				set.put(string, string);
+				map.put(string, string);
 			}
 		}
-		return set;
+		return map;
 	}
 
 	private static String getDataType(String type) {
