@@ -49,6 +49,8 @@ public abstract class FlinkJobsContext {
 		}
 	}
 
+	public static final String CONFIG_SPLITER = ".";
+
 	private static final ThreadLocal<Map<Object, Object>> resources = new InheritableThreadLocalMap<Map<Object, Object>>();
 
 	private static final Map<String, Map<String, String>> dataSources = new HashMap<String, Map<String, String>>();
@@ -56,8 +58,8 @@ public abstract class FlinkJobsContext {
 	private static final Map<String, String> tableExecConfigs = new HashMap<String, String>();
 
 	private static final String DEFAULT_STRATEGIES_PATH = "flink-jobs-context-loader.properties",
-			CONFIG_LOCATION_KEY = "config.location", CONTEXT_LOCATION_KEY = "context.location", CONFIG_SPLITER = ".",
-			DATASOURCE_PREFIX = "datasource.",
+			CONFIG_LOCATION_KEY = "config.location", CONTEXT_LOCATION_KEY = "context.location",
+			DATASOURCE_PREFIX = "datasource" + CONFIG_SPLITER,
 			DATASOURCE_REGEX = "^" + DATASOURCE_PREFIX.replaceAll("\\.", "\\\\.") + "([\\S]+\\.){0,1}[^\\.]+$",
 			EXECUTION_ENVIRONMENT = "ExecutionEnvironment";
 

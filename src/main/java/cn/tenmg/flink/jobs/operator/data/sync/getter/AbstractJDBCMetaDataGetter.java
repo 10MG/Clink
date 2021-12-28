@@ -27,8 +27,9 @@ public abstract class AbstractJDBCMetaDataGetter implements MetaDataGetter {
 
 	private static final String COLUMN_NAME = "COLUMN_NAME", DATA_TYPE = "DATA_TYPE", COLUMN_SIZE = "COLUMN_SIZE",
 			DECIMAL_DIGITS = "DECIMAL_DIGITS", IS_NULLABLE = "IS_NULLABLE", NO = "NO", LEFT_BRACKET = "(",
-			RIGTH_BRACKET = ")", DEFAULT_TYPE = FlinkJobsContext.getProperty("flink.sql.Type.DEFAULT"),
-			SIZE_OFFSET_PREFFIX = "flink.sql.Type.", SIZE_OFFSET_SUFFIX = ".SIZE_OFFSET";
+			RIGTH_BRACKET = ")", TYPE_PREFFIX = "flink.sql.type" + FlinkJobsContext.CONFIG_SPLITER,
+			DEFAULT_TYPE = FlinkJobsContext.getProperty(TYPE_PREFFIX + "DEFAULT"),
+			SIZE_OFFSET_SUFFIX = FlinkJobsContext.CONFIG_SPLITER + "SIZE_OFFSET";
 
 	private static final Map<Integer, String> SQL_TYPES = HashMapKit
 			.init(java.sql.Types.VARCHAR, "java.sql.Types.VARCHAR")
@@ -55,8 +56,9 @@ public abstract class AbstractJDBCMetaDataGetter implements MetaDataGetter {
 			.put(java.sql.Types.NCLOB, "java.sql.Types.NCLOB").put(java.sql.Types.STRUCT, "java.sql.Types.STRUCT")
 			.get();
 
-	private static Set<String> WITH_PRECISION = asSafeSet(FlinkJobsContext.getProperty("flink.sql.Type.WITH_PRECISION")),
-			WITH_SIZE = asSafeSet(FlinkJobsContext.getProperty("flink.sql.Type.WITH_SIZE"));
+	private static Set<String> WITH_PRECISION = asSafeSet(
+			FlinkJobsContext.getProperty("flink.sql.type.WITH_PRECISION")),
+			WITH_SIZE = asSafeSet(FlinkJobsContext.getProperty("flink.sql.type.WITH_SIZE"));
 
 	/**
 	 * 根据数据源配置获取数据库连接
@@ -87,7 +89,7 @@ public abstract class AbstractJDBCMetaDataGetter implements MetaDataGetter {
 			Map<String, String> columns = new LinkedHashMap<String, String>();
 			while (columnsSet.next()) {
 				columnName = columnsSet.getString(COLUMN_NAME);
-				type = getType(columnsSet.getInt(DATA_TYPE), columnsSet.getInt(COLUMN_SIZE),
+				type = getType(dataSource, columnsSet.getInt(DATA_TYPE), columnsSet.getInt(COLUMN_SIZE),
 						columnsSet.getInt(DECIMAL_DIGITS));
 				if (NO.equals(columnsSet.getString(IS_NULLABLE))) {
 					type += " NOT NULL";
@@ -102,11 +104,21 @@ public abstract class AbstractJDBCMetaDataGetter implements MetaDataGetter {
 		}
 	}
 
-	private static String getType(int dataType, int columnSize, int decimalDigits) {
+	private static String getType(Map<String, String> dataSource, int dataType, int columnSize, int decimalDigits) {
 		String sqlType = SQL_TYPES.get(dataType);
 		String type = DEFAULT_TYPE;
 		if (sqlType != null) {
-			String possibleType = FlinkJobsContext.getProperty(sqlType);
+			String connector = dataSource.get("connector");
+			String possibleType = connector == null ? null : getSpecificProductType(connector.trim(), sqlType);// 获取特定连接器的类型映射配置，如starrocks
+			if (StringUtils.isBlank(possibleType)) {// 否则，从url中获取产品名，获取特定JDBC产品的类型映射配置，如mysql
+				String url = dataSource.get("url");
+				if (StringUtils.isNotBlank(url)) {
+					possibleType = getSpecificProductType(JDBCUtils.getProduct(url), sqlType);
+				}
+			}
+			if (StringUtils.isBlank(possibleType)) {// 否则，获取全局配置的类型映射配置
+				possibleType = FlinkJobsContext.getProperty(sqlType);
+			}
 			if (StringUtils.isBlank(possibleType)) {
 				possibleType = FlinkJobsContext
 						.getProperty(sqlType + LEFT_BRACKET + columnSize + "," + decimalDigits + RIGTH_BRACKET);
@@ -125,6 +137,10 @@ public abstract class AbstractJDBCMetaDataGetter implements MetaDataGetter {
 		return wrapType(type, columnSize, decimalDigits);
 	}
 
+	private static String getSpecificProductType(String product, String sqlType) {
+		return FlinkJobsContext.getProperty(TYPE_PREFFIX + product + FlinkJobsContext.CONFIG_SPLITER + sqlType);
+	}
+
 	private static String wrapType(String possibleType, int columnSize, int decimalDigits) {
 		possibleType = possibleType.trim();
 		if (possibleType.endsWith(RIGTH_BRACKET)) {
@@ -136,8 +152,7 @@ public abstract class AbstractJDBCMetaDataGetter implements MetaDataGetter {
 			if (WITH_PRECISION.contains(possibleType)) {// 类型含精度
 				return possibleType + LEFT_BRACKET + columnSize + "," + decimalDigits + RIGTH_BRACKET;
 			} else if (WITH_SIZE.contains(possibleType)) {// 类型含长度
-				String sizeOffset = FlinkJobsContext
-						.getProperty(SIZE_OFFSET_PREFFIX + possibleType + SIZE_OFFSET_SUFFIX);
+				String sizeOffset = FlinkJobsContext.getProperty(TYPE_PREFFIX + possibleType + SIZE_OFFSET_SUFFIX);
 				if (StringUtils.isBlank(sizeOffset)) {
 					return possibleType + LEFT_BRACKET + columnSize + RIGTH_BRACKET;
 				} else {

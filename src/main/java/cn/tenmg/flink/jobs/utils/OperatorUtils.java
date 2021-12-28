@@ -17,7 +17,7 @@ import cn.tenmg.flink.jobs.context.FlinkJobsContext;
  */
 public abstract class OperatorUtils {
 
-	private static final String KEY_PREFIX = "operator.";
+	private static final String KEY_PREFIX = "operator" + FlinkJobsContext.CONFIG_SPLITER;
 
 	private static volatile Map<String, Operator> operators = new HashMap<String, Operator>();
 

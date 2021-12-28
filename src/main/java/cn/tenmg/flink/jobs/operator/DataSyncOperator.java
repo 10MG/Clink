@@ -46,9 +46,12 @@ public class DataSyncOperator extends SqlReservedKeywordSupport<DataSync> {
 			TOPIC_KEY = "topic", GROUP_ID_KEY = "properties.group.id",
 			GROUP_ID_PREFIX_KEY = "data.sync.group_id_prefix", TIMESTAMP_COLUMNS = "data.sync.timestamp.columns",
 			TIMESTAMP_COLUMNS_SPLIT = ",", TIMESTAMP_FROM_TYPE_KEY = "data.sync.timestamp.from_type",
-			TIMESTAMP_TO_TYPE_KEY = "data.sync.timestamp.to_type", TYPE_KEY_PREFIX = "data.sync.",
-			TO_TYPE_KEY_SUFFIX = ".to_type", FROM_TYPE_KEY_SUFFIX = ".from_type", SCRIPT_KEY_SUFFIX = ".script",
-			STRATEGY_KEY_SUFFIX = ".strategy", COLUMN_NAME = "columnName";
+			TIMESTAMP_TO_TYPE_KEY = "data.sync.timestamp.to_type",
+			TYPE_KEY_PREFIX = "data.sync" + FlinkJobsContext.CONFIG_SPLITER,
+			TO_TYPE_KEY_SUFFIX = FlinkJobsContext.CONFIG_SPLITER + "to_type",
+			FROM_TYPE_KEY_SUFFIX = FlinkJobsContext.CONFIG_SPLITER + "from_type",
+			SCRIPT_KEY_SUFFIX = FlinkJobsContext.CONFIG_SPLITER + "script",
+			STRATEGY_KEY_SUFFIX = FlinkJobsContext.CONFIG_SPLITER + "strategy", COLUMN_NAME = "columnName";
 
 	private static final boolean TO_LOWERCASE = !Boolean
 			.valueOf(FlinkJobsContext.getProperty("data.sync.timestamp.case_sensitive"));// 不区分大小写，统一转为小写
@@ -119,8 +122,8 @@ public class DataSyncOperator extends SqlReservedKeywordSupport<DataSync> {
 			Configuration configuration = tableConfig.getConfiguration();
 			String pipelineName = configuration.get(PipelineOptions.NAME);
 			if (StringUtils.isBlank(pipelineName)) {
-				tableConfig.getConfiguration().set(PipelineOptions.NAME,
-						"data-sync." + String.join(".", String.join("-", from, "to", to), table));
+				tableConfig.getConfiguration().set(PipelineOptions.NAME, "data-sync" + FlinkJobsContext.CONFIG_SPLITER
+						+ String.join(FlinkJobsContext.CONFIG_SPLITER, String.join("-", from, "to", to), table));
 			}
 		}
 

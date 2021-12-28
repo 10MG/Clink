@@ -16,7 +16,8 @@ import cn.tenmg.flink.jobs.exception.IllegalConfigurationException;
  */
 public abstract class MetaDataGetterFactory {
 
-	private static final String COLUMNS_GETTER_KEY_PREFIX = "data.sync.metadata.getter.";
+	private static final String COLUMNS_GETTER_KEY_PREFIX = "data.sync.metadata.getter"
+			+ FlinkJobsContext.CONFIG_SPLITER;
 
 	private static volatile Map<String, MetaDataGetter> COLUMNS_GETTERS = new HashMap<String, MetaDataGetter>();
 
