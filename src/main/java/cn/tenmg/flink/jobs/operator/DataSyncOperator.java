@@ -138,7 +138,7 @@ public class DataSyncOperator extends SqlReservedKeywordSupport<DataSync> {
 		System.out.println("Create sink table by Flink SQL: " + sql);
 		tableEnv.executeSql(sql);
 
-		sql = insertSQL(table, fromTable, columns);
+		sql = insertSQL(table, fromTable, columns, params);
 		System.out.println("Execute Flink SQL: " + sql);
 		return tableEnv.executeSql(sql);
 	}
@@ -331,12 +331,12 @@ public class DataSyncOperator extends SqlReservedKeywordSupport<DataSync> {
 					if (StringUtils.isBlank(fromType)) {
 						column.setFromType(columnConvertArgs.fromType);
 						if (StringUtils.isBlank(column.getScript())) {
-							column.setScript(toScript(columnConvertArgs, column.getFromName(), params));
+							column.setScript(columnConvertArgs.script);
 						}
 					} else {
 						if (columnConvertArgs.fromType.equalsIgnoreCase(getDataType(fromType))) {
 							if (StringUtils.isBlank(column.getScript())) {
-								column.setScript(toScript(columnConvertArgs, column.getFromName(), params));
+								column.setScript(columnConvertArgs.script);
 							}
 						}
 					}
@@ -445,7 +445,7 @@ public class DataSyncOperator extends SqlReservedKeywordSupport<DataSync> {
 					&& columnConvertArgs.fromType.equalsIgnoreCase(getDataType(column.getFromType()))) {// 有类型转换配置
 				column.setFromType(columnConvertArgs.fromType);
 				if (StringUtils.isBlank(column.getScript())) {
-					column.setScript(toScript(columnConvertArgs, column.getFromName(), params));
+					column.setScript(columnConvertArgs.script);
 				}
 			}
 		}
@@ -481,7 +481,7 @@ public class DataSyncOperator extends SqlReservedKeywordSupport<DataSync> {
 					column.setFromType(toType);
 				} else {// 有类型转换配置
 					column.setFromType(columnConvertArgs.fromType);
-					column.setScript(toScript(columnConvertArgs, column.getFromName(), params));
+					column.setScript(columnConvertArgs.script);
 				}
 			}
 			wrapColumnName(column);// SQL保留关键字包装
@@ -610,7 +610,7 @@ public class DataSyncOperator extends SqlReservedKeywordSupport<DataSync> {
 		return sqlBuffer.toString();
 	}
 
-	private static String insertSQL(String table, String fromTable, List<Column> columns) {
+	private static String insertSQL(String table, String fromTable, List<Column> columns, Map<String, Object> params) {
 		StringBuffer sqlBuffer = new StringBuffer();
 		sqlBuffer.append("INSERT INTO ").append(table).append(DSLUtils.BLANK_SPACE).append("(");
 
@@ -627,12 +627,14 @@ public class DataSyncOperator extends SqlReservedKeywordSupport<DataSync> {
 		sqlBuffer.append(") SELECT ");
 		column = columns.get(0);
 		String script = column.getScript();
-		sqlBuffer.append(StringUtils.isBlank(script) ? column.getFromName() : script);
+		sqlBuffer.append(
+				StringUtils.isBlank(script) ? column.getFromName() : toScript(script, column.getFromName(), params));
 		for (int i = 1, size = columns.size(); i < size; i++) {
 			column = columns.get(i);
 			script = column.getScript();
 			sqlBuffer.append(DSLUtils.COMMA).append(DSLUtils.BLANK_SPACE)
-					.append(StringUtils.isBlank(script) ? column.getFromName() : script);
+					.append(StringUtils.isBlank(script) ? column.getFromName()
+							: toScript(script, column.getFromName(), params));
 		}
 
 		sqlBuffer.append(" FROM ").append(fromTable);
@@ -640,17 +642,9 @@ public class DataSyncOperator extends SqlReservedKeywordSupport<DataSync> {
 
 	}
 
-	/**
-	 * 将同步的列转换为SELECT语句的其中一个片段
-	 * 
-	 * @param columnConvertArgs
-	 * @param columnName
-	 * @param params
-	 * @return
-	 */
-	private static String toScript(ColumnConvertArgs columnConvertArgs, String columnName, Map<String, Object> params) {
-		NamedScript namedScript = DSLUtils.parse(columnConvertArgs.script,
-				ParamsKit.init(params).put(COLUMN_NAME, columnName).get());
+	// 将同步的列转换为SELECT语句的其中一个片段
+	private static String toScript(String dsl, String columnName, Map<String, Object> params) {
+		NamedScript namedScript = DSLUtils.parse(dsl, ParamsKit.init(params).put(COLUMN_NAME, columnName).get());
 		return DSLUtils.toScript(namedScript.getScript(), namedScript.getParams(), FlinkSQLParamsParser.getInstance())
 				.getValue();
 	}
