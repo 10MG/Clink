@@ -122,7 +122,7 @@ public class DataSyncOperator extends SqlReservedKeywordSupport<DataSync> {
 			Configuration configuration = tableConfig.getConfiguration();
 			String pipelineName = configuration.get(PipelineOptions.NAME);
 			if (StringUtils.isBlank(pipelineName)) {
-				tableConfig.getConfiguration().set(PipelineOptions.NAME, "data-sync" + FlinkJobsContext.CONFIG_SPLITER
+				configuration.set(PipelineOptions.NAME, "data-sync" + FlinkJobsContext.CONFIG_SPLITER
 						+ String.join(FlinkJobsContext.CONFIG_SPLITER, String.join("-", from, "to", to), table));
 			}
 		}
