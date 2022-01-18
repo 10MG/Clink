@@ -46,7 +46,7 @@ public class ExecuteSqlOperator extends AbstractSqlOperator<ExecuteSql> {
 	private static final Pattern WITH_CLAUSE_PATTERN = Pattern
 			.compile("[W|w][I|i][T|t][H|h][\\s]*\\([\\s\\S]*\\)[\\s]*$"),
 			CREATE_CLAUSE_PATTERN = Pattern
-					.compile("[C|c][R|r][E|e][A|a][T|t][E|e][\\s]+[T|t][A|a][B|b][L|l][E|e][\\s]+[\\S]+");
+					.compile("[C|c][R|r][E|e][A|a][T|t][E|e][\\s]+[T|t][A|a][B|b][L|l][E|e][\\s]+[^\\s\\(]+");
 
 	@Override
 	Object execute(StreamTableEnvironment tableEnv, ExecuteSql sql, Map<String, Object> params) throws Exception {
