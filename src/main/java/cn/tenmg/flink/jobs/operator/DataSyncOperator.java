@@ -15,6 +15,8 @@ import org.apache.flink.configuration.PipelineOptions;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.table.api.TableConfig;
 import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import cn.tenmg.dsl.NamedScript;
 import cn.tenmg.dsl.utils.DSLUtils;
@@ -41,6 +43,8 @@ import cn.tenmg.flink.jobs.utils.SQLUtils;
  * @since 1.1.2
  */
 public class DataSyncOperator extends SqlReservedKeywordSupport<DataSync> {
+
+	private static Logger log = LoggerFactory.getLogger(DataSyncOperator.class);
 
 	private static final String SMART_KEY = "data.sync.smart", FROM_TABLE_PREFIX_KEY = "data.sync.from_table_prefix",
 			TOPIC_KEY = "topic", GROUP_ID_KEY = "properties.group.id",
@@ -134,15 +138,15 @@ public class DataSyncOperator extends SqlReservedKeywordSupport<DataSync> {
 
 		String sql = fromCreateTableSQL(fromDataSource, dataSync.getTopic(), table, fromTable, columns, primaryKey,
 				fromConfig);
-		System.out.println("Create source table by Flink SQL: " + sql);
+		log.info("Create source table by Flink SQL: " + sql);
 		tableEnv.executeSql(sql);
 
 		sql = toCreateTableSQL(toDataSource, table, columns, primaryKey, dataSync.getToConfig());
-		System.out.println("Create sink table by Flink SQL: " + sql);
+		log.info("Create sink table by Flink SQL: " + sql);
 		tableEnv.executeSql(sql);
 
 		sql = insertSQL(table, fromTable, columns, params);
-		System.out.println("Execute Flink SQL: " + sql);
+		log.info("Execute Flink SQL: " + sql);
 		return tableEnv.executeSql(sql);
 	}
 

@@ -7,6 +7,12 @@
 	<xsd:element name="flink-jobs">
 		<xsd:complexType>
 			<xsd:choice maxOccurs="unbounded" minOccurs="0">
+				<xsd:element name="configuration" type="xsd:string"
+					maxOccurs="1" minOccurs="0">
+					<xsd:annotation>
+						<xsd:documentation>Flink配置</xsd:documentation>
+					</xsd:annotation>
+				</xsd:element>
 				<xsd:element ref="options" maxOccurs="1" minOccurs="0" />
 				<xsd:element ref="params" maxOccurs="1" minOccurs="0" />
 				<xsd:element ref="bsh" maxOccurs="unbounded"
@@ -61,7 +67,7 @@
 			</xsd:attribute>
 			<xsd:attribute name="allwaysNewJob" type="xsd:boolean">
 				<xsd:annotation>
-					<xsd:documentation>运行时是否总是作为新作业运行，即总是忽略“--fromSavepoint”选项
+					<xsd:documentation>运行时是否总是作为新作业运行，即总是忽略“fromSavepoint”选项
 					</xsd:documentation>
 				</xsd:annotation>
 			</xsd:attribute>
@@ -85,7 +91,7 @@
 								<xsd:attribute name="key" use="required">
 									<xsd:annotation>
 										<xsd:documentation>
-											<![CDATA[选项键，如果键值以“-”开头，则不会添加默认前缀，否则会自动添加默认前缀keyPrefix]]>
+											<![CDATA[选项键]]>
 										</xsd:documentation>
 									</xsd:annotation>
 									<xsd:simpleType>
@@ -97,11 +103,6 @@
 					</xsd:complexType>
 				</xsd:element>
 			</xsd:choice>
-			<xsd:attribute name="keyPrefix" type="xsd:string">
-				<xsd:annotation>
-					<xsd:documentation>运行选项的默认前缀，默认为“--”</xsd:documentation>
-				</xsd:annotation>
-			</xsd:attribute>
 		</xsd:complexType>
 	</xsd:element>
 

@@ -1,6 +1,10 @@
 package cn.tenmg.flink.jobs.config.model;
 
-import java.util.Map;
+import java.util.List;
+
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
 
 /**
  * 运行选项配置
@@ -9,47 +13,28 @@ import java.util.Map;
  * 
  * @since 1.1.4
  */
+@XmlAccessorType(XmlAccessType.FIELD)
 public class Options {
 
-	private String keyPrefix = "--";
-
-	private Map<String, String> option;
-
-	/**
-	 * 获取运行选项默认前缀
-	 * 
-	 * @return 运行选项默认前缀
-	 */
-	public String getKeyPrefix() {
-		return keyPrefix;
-	}
+	@XmlElement(namespace = FlinkJobs.NAMESPACE)
+	private List<Option> option;
 
 	/**
-	 * 设置运行选项的默认前缀。如不设置默认为“--”
+	 * 获取运行选项列表
 	 * 
-	 * @param keyPrefix
-	 *            运行选项默认前缀
+	 * @return 返回运行选项列表
 	 */
-	public void setKeyPrefix(String keyPrefix) {
-		this.keyPrefix = keyPrefix;
-	}
-
-	/**
-	 * 获取运行选项查找表
-	 * 
-	 * @return 返回运行选项查找表
-	 */
-	public Map<String, String> getOption() {
+	public List<Option> getOption() {
 		return option;
 	}
 
 	/**
-	 * 设置运行选项查找表
+	 * 设置运行选项列表
 	 * 
 	 * @param option
-	 *            运行选项查找表
+	 *            运行选项列表
 	 */
-	public void setOption(Map<String, String> option) {
+	public void setOption(List<Option> option) {
 		this.option = option;
 	}
 

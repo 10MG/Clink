@@ -5,7 +5,7 @@
 	<description>flink-jobs配置管理类库</description>
 	<groupId>cn.tenmg</groupId>
 	<artifactId>flink-jobs-config</artifactId>
-	<version>1.1.6</version>
+	<version>1.2.0</version>
 	<packaging>jar</packaging>
 
 	<name>flink-jobs-config</name>

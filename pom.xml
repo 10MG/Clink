@@ -6,7 +6,7 @@
 	<description>Flink流批一体数据处理快速集成开发框架</description>
 	<groupId>cn.tenmg</groupId>
 	<artifactId>flink-jobs</artifactId>
-	<version>1.1.6</version>
+	<version>1.2.0</version>
 	<packaging>jar</packaging>
 
 	<name>flink-jobs</name>
@@ -53,8 +53,9 @@
 
 	<properties>
 		<encoding>UTF-8</encoding>
-		<flink.version>1.13.3</flink.version>
+		<flink.version>1.14.2</flink.version>
 		<scala.binary.version>2.11</scala.binary.version>
+		<log4j.version>2.17.1</log4j.version>
 	</properties>
 
 	<dependencies>
@@ -64,12 +65,17 @@
 			<artifactId>fastjson</artifactId>
 			<version>1.2.78</version>
 		</dependency>
-
 		<!-- https://mvnrepository.com/artifact/cn.tenmg/dsl -->
 		<dependency>
 			<groupId>cn.tenmg</groupId>
 			<artifactId>dsl</artifactId>
-			<version>1.2.3</version>
+			<version>1.2.4</version>
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/org.slf4j/slf4j-api -->
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-api</artifactId>
+			<version>1.7.32</version>
 		</dependency>
 
 		<!-- https://mvnrepository.com/artifact/org.apache.flink/flink-clients -->
@@ -79,15 +85,6 @@
 			<version>${flink.version}</version>
 			<scope>provided</scope>
 		</dependency>
-
-		<!-- https://mvnrepository.com/artifact/org.apache.flink/flink-connector-hive -->
-		<dependency>
-			<groupId>org.apache.flink</groupId>
-			<artifactId>flink-connector-hive_2.11</artifactId>
-			<version>${flink.version}</version>
-			<scope>provided</scope>
-		</dependency>
-
 		<!-- https://mvnrepository.com/artifact/org.apache.flink/flink-table-api-java-bridge -->
 		<dependency>
 			<groupId>org.apache.flink</groupId>
@@ -109,6 +106,65 @@
 			<artifactId>flink-connector-kafka_${scala.binary.version}</artifactId>
 			<version>${flink.version}</version>
 			<optional>true</optional>
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/org.apache.flink/flink-json -->
+		<dependency>
+			<groupId>org.apache.flink</groupId>
+			<artifactId>flink-json</artifactId>
+			<version>${flink.version}</version>
+			<optional>true</optional>
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/org.apache.flink/flink-table-common -->
+		<dependency>
+			<groupId>org.apache.flink</groupId>
+			<artifactId>flink-table-common</artifactId>
+			<version>${flink.version}</version>
+			<optional>true</optional>
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/org.apache.flink/flink-table-planner -->
+		<dependency>
+			<groupId>org.apache.flink</groupId>
+			<artifactId>flink-table-planner_${scala.binary.version}</artifactId>
+			<version>${flink.version}</version>
+			<optional>true</optional>
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/org.apache.flink/flink-table-planner-blink -->
+		<!-- <dependency>
+			<groupId>org.apache.flink</groupId>
+			<artifactId>flink-table-planner-blink_${scala.binary.version}</artifactId>
+			<version>${flink.version}</version>
+			<optional>true</optional>
+		</dependency> -->
+
+		<!-- https://mvnrepository.com/artifact/mysql/mysql-connector-java -->
+		<dependency>
+			<groupId>mysql</groupId>
+			<artifactId>mysql-connector-java</artifactId>
+			<version>8.0.26</version>
+			<scope>test</scope>
+		</dependency>
+
+		<!-- https://mvnrepository.com/artifact/org.apache.flink/flink-connector-jdbc -->
+		<dependency>
+			<groupId>org.apache.flink</groupId>
+			<artifactId>flink-connector-jdbc_${scala.binary.version}</artifactId>
+			<version>${flink.version}</version>
+			<scope>test</scope>
+		</dependency>
+
+		<!-- https://mvnrepository.com/artifact/org.apache.logging.log4j/log4j-api -->
+		<dependency>
+			<groupId>org.apache.logging.log4j</groupId>
+			<artifactId>log4j-core</artifactId>
+			<version>${log4j.version}</version>
+			<scope>test</scope>
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/org.apache.logging.log4j/log4j-slf4j-impl -->
+		<dependency>
+			<groupId>org.apache.logging.log4j</groupId>
+			<artifactId>log4j-slf4j-impl</artifactId>
+			<version>${log4j.version}</version>
+			<scope>test</scope>
 		</dependency>
 	</dependencies>
 

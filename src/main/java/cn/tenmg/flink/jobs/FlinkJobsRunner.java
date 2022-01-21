@@ -5,7 +5,7 @@ import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import cn.tenmg.flink.jobs.model.Arguments;
 
 /**
- * 模块化flink-jobs应用入口虚基类。可用于基于SpringBoot的CommandLineRunner封装的模块化的flink应用
+ * 模块化flink-jobs应用入口虚基类。可用于封装的模块化的flink应用
  * 
  * @author June wjzhao@aliyun.com
  * 

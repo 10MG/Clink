@@ -3,7 +3,6 @@ package cn.tenmg.flink.jobs.config.model;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -47,7 +46,7 @@ public class FlinkJobs implements Serializable {
 
 	@XmlElement(namespace = NAMESPACE)
 	@XmlJavaTypeAdapter(OptionsAdapter.class)
-	private Options options;
+	private HashMap<String, String> options;
 
 	@XmlAttribute
 	private String serviceName;
@@ -57,6 +56,9 @@ public class FlinkJobs implements Serializable {
 
 	@XmlAttribute
 	private boolean allwaysNewJob;
+
+	@XmlElement(namespace = NAMESPACE)
+	private String configuration;
 
 	@XmlElement(namespace = NAMESPACE)
 	@XmlJavaTypeAdapter(ParamsAdapter.class)
@@ -112,7 +114,7 @@ public class FlinkJobs implements Serializable {
 	 * 
 	 * @return 运行选项
 	 */
-	public Options getOptions() {
+	public HashMap<String, String> getOptions() {
 		return options;
 	}
 
@@ -122,7 +124,7 @@ public class FlinkJobs implements Serializable {
 	 * @param options
 	 *            运行选项
 	 */
-	public void setOptions(Options options) {
+	public void setOptions(HashMap<String, String> options) {
 		this.options = options;
 	}
 
@@ -184,6 +186,25 @@ public class FlinkJobs implements Serializable {
 	}
 
 	/**
+	 * 获取配置信息
+	 * 
+	 * @return 配置信息
+	 */
+	public String getConfiguration() {
+		return configuration;
+	}
+
+	/**
+	 * 设置配置信息
+	 * 
+	 * @param configuration
+	 *            配置信息
+	 */
+	public void setConfiguration(String configuration) {
+		this.configuration = configuration;
+	}
+
+	/**
 	 * 获取参数查找表
 	 * 
 	 * @return 参数查找表
@@ -233,10 +254,13 @@ public class FlinkJobs implements Serializable {
 		@Override
 		public Params marshal(HashMap<String, Object> hashMap) throws Exception {
 			Params params = new Params();
+			List<Param> param = new ArrayList<Param>();
+			params.setParam(param);
 			for (Map.Entry<String, Object> mapEntry : hashMap.entrySet()) {
-				Param param = new Param();
-				param.setName(mapEntry.getKey());
-				param.setValue(mapEntry.getValue().toString());
+				Param p = new Param();
+				p.setName(mapEntry.getKey());
+				p.setValue(mapEntry.getValue().toString());
+				param.add(p);
 			}
 			return params;
 		}
@@ -253,77 +277,35 @@ public class FlinkJobs implements Serializable {
 	}
 
 	/**
-	 * 原始参数集配置
-	 * 
-	 * @author June wjzhao@aliyun.com
-	 * 
-	 * @since 1.1.4
-	 */
-	@XmlAccessorType(XmlAccessType.FIELD)
-	public static class OptionsOriginal {
-
-		@XmlAttribute
-		private String keyPrefix = "--";
-
-		@XmlElement(namespace = FlinkJobs.NAMESPACE)
-		private List<Option> option;
-
-		public String getKeyPrefix() {
-			return keyPrefix;
-		}
-
-		public void setKeyPrefix(String keyPrefix) {
-			this.keyPrefix = keyPrefix;
-		}
-
-		public List<Option> getOption() {
-			return option;
-		}
-
-		public void setOption(List<Option> option) {
-			this.option = option;
-		}
-
-	}
-
-	/**
 	 * 参数集解析适配器
 	 * 
 	 * @author June wjzhao@aliyun.com
 	 *
 	 * @since 1.1.4
 	 */
-	public static class OptionsAdapter extends XmlAdapter<OptionsOriginal, Options> {
+	public static class OptionsAdapter extends XmlAdapter<Options, HashMap<String, String>> {
 
 		@Override
-		public OptionsOriginal marshal(Options options) throws Exception {
-			OptionsOriginal optionsOriginal = new OptionsOriginal();
-			optionsOriginal.setKeyPrefix(options.getKeyPrefix());
-			Map<String, String> option = options.getOption();
-			if (option != null) {
-				List<Option> optionList = new ArrayList<Option>();
-				for (Map.Entry<String, String> mapEntry : option.entrySet()) {
-					optionList.add(new Option(mapEntry.getKey(), mapEntry.getValue()));
-				}
-				optionsOriginal.setOption(optionList);
+		public Options marshal(HashMap<String, String> hashMap) throws Exception {
+			Options options = new Options();
+			List<Option> option = new ArrayList<Option>();
+			options.setOption(option);
+			for (Map.Entry<String, String> mapEntry : hashMap.entrySet()) {
+				Option o = new Option();
+				o.setKey(mapEntry.getKey());
+				o.setValue(mapEntry.getValue().toString());
+				option.add(o);
 			}
-			return optionsOriginal;
+			return options;
 		}
 
 		@Override
-		public Options unmarshal(OptionsOriginal optionsOriginal) throws Exception {
-			Options options = new Options();
-			options.setKeyPrefix(optionsOriginal.getKeyPrefix());
-			List<Option> optionList = optionsOriginal.getOption();
-			if (optionList != null) {
-				Map<String, String> map = new LinkedHashMap<String, String>();
-				for (int i = 0, size = optionList.size(); i < size; i++) {
-					Option option = optionList.get(i);
-					map.put(option.getKey(), option.getValue());
-				}
-				options.setOption(map);
+		public HashMap<String, String> unmarshal(Options options) throws Exception {
+			HashMap<String, String> hashMap = new HashMap<String, String>();
+			for (Option option : options.getOption()) {
+				hashMap.put(option.getKey(), option.getValue());
 			}
-			return options;
+			return hashMap;
 		}
 
 	}

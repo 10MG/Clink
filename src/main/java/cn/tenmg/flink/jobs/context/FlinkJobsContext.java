@@ -1,5 +1,7 @@
 package cn.tenmg.flink.jobs.context;
 
+import java.io.IOException;
+import java.io.StringReader;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -8,9 +10,12 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 
-import org.apache.flink.configuration.Configuration;
+import org.apache.flink.configuration.ConfigurationUtils;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
+import org.apache.flink.table.api.TableConfig;
 import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import cn.tenmg.dsl.utils.PropertiesLoaderUtils;
 import cn.tenmg.flink.jobs.exception.DataSourceNotFoundException;
@@ -25,6 +30,8 @@ import cn.tenmg.flink.jobs.utils.PlaceHolderUtils;
  */
 @SuppressWarnings({ "unchecked" })
 public abstract class FlinkJobsContext {
+
+	private static Logger log = LoggerFactory.getLogger(FlinkJobsContext.class);
 
 	private static final class InheritableThreadLocalMap<T extends Map<Object, Object>>
 			extends InheritableThreadLocal<Map<Object, Object>> {
@@ -61,7 +68,7 @@ public abstract class FlinkJobsContext {
 			CONFIG_LOCATION_KEY = "config.location", CONTEXT_LOCATION_KEY = "context.location",
 			DATASOURCE_PREFIX = "datasource" + CONFIG_SPLITER,
 			DATASOURCE_REGEX = "^" + DATASOURCE_PREFIX.replaceAll("\\.", "\\\\.") + "([\\S]+\\.){0,1}[^\\.]+$",
-			EXECUTION_ENVIRONMENT = "ExecutionEnvironment";
+			EXECUTION_ENVIRONMENT = "ExecutionEnvironment", CURRENT_CONFIGURATION = "CurrentConfiguration";
 
 	private static final int CONFIG_SPLITER_LEN = CONFIG_SPLITER.length(),
 			DATASOURCE_PREFIX_LEN = DATASOURCE_PREFIX.length();
@@ -72,15 +79,18 @@ public abstract class FlinkJobsContext {
 		try {
 			defaultProperties = PropertiesLoaderUtils.loadFromClassPath(DEFAULT_STRATEGIES_PATH);
 		} catch (Exception e) {
+			log.warn(DEFAULT_STRATEGIES_PATH + " not found in the classpath.", e);
 			defaultProperties = new Properties();
 		}
+		String contextFile = defaultProperties.getProperty(CONTEXT_LOCATION_KEY, "flink-jobs-context.properties");
 		try {
-			defaultProperties.putAll(PropertiesLoaderUtils.loadFromClassPath(
-					defaultProperties.getProperty(CONTEXT_LOCATION_KEY, "flink-jobs-context.properties")));
+			defaultProperties.putAll(PropertiesLoaderUtils.loadFromClassPath(contextFile));
 		} catch (Exception e) {
+			log.warn(contextFile + " not found in the classpath.", e);
 		}
+		String configurationFile = getConfigurationFile();
 		try {
-			configProperties = PropertiesLoaderUtils.loadFromClassPath(getConfigurationFile());
+			configProperties = PropertiesLoaderUtils.loadFromClassPath(configurationFile);
 			Entry<Object, Object> entry;
 			Object value;
 			for (Iterator<Entry<Object, Object>> it = configProperties.entrySet().iterator(); it.hasNext();) {
@@ -120,9 +130,19 @@ public abstract class FlinkJobsContext {
 				}
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
+			log.info("Configuration file " + configurationFile
+					+ " not found in classpath, the default configuration will be used.");
 			configProperties = new Properties();
 		}
+	}
+
+	/**
+	 * 获取当前作业的配置信息
+	 * 
+	 * @return 当前作业的配置信息
+	 */
+	public static String getCurrentConfiguration() {
+		return (String) get(CURRENT_CONFIGURATION);
 	}
 
 	/**
@@ -136,6 +156,25 @@ public abstract class FlinkJobsContext {
 			env = StreamExecutionEnvironment.getExecutionEnvironment();
 			put(EXECUTION_ENVIRONMENT, env);
 		}
+		return env;
+	}
+
+	/**
+	 * 
+	 * 使用特定配置信息获取流运行环境
+	 * 
+	 * @param configuration
+	 *            配置信息
+	 * @return 流运行环境
+	 */
+	public static StreamExecutionEnvironment getExecutionEnvironment(String configuration) {
+		if (configuration == null) {
+			return getExecutionEnvironment();
+		}
+		StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment(
+				ConfigurationUtils.createConfiguration(loadConfiguration(new Properties(), configuration)));
+		put(CURRENT_CONFIGURATION, configuration);
+		put(EXECUTION_ENVIRONMENT, env);
 		return env;
 	}
 
@@ -161,13 +200,11 @@ public abstract class FlinkJobsContext {
 		StreamTableEnvironment tableEnv = (StreamTableEnvironment) get(env);
 		if (tableEnv == null) {
 			tableEnv = StreamTableEnvironment.create(env);
-			// 添加配置
-			Map<String, String> tableExecConfigs = FlinkJobsContext.getTableExecConfigs();
-			Configuration configuration = tableEnv.getConfig().getConfiguration();
-			for (Iterator<Entry<String, String>> it = tableExecConfigs.entrySet().iterator(); it.hasNext();) {
-				Entry<String, String> entry = it.next();
-				configuration.setString(entry.getKey(), entry.getValue());
-			}
+			TableConfig tableConfig = tableEnv.getConfig();
+			Properties properties = new Properties();
+			properties.putAll(FlinkJobsContext.getTableExecConfigs());
+			loadConfiguration(properties, getCurrentConfiguration());
+			tableConfig.addConfiguration(ConfigurationUtils.createConfiguration(properties));// 添加配置
 			FlinkJobsContext.put(env, tableEnv);
 			FlinkJobsContext.put(tableEnv, tableEnv.getCurrentCatalog());
 		}
@@ -353,6 +390,18 @@ public abstract class FlinkJobsContext {
 		if (resources.get() == null) {
 			resources.set(new HashMap<Object, Object>());
 		}
+	}
+
+	// 加载配置
+	private static Properties loadConfiguration(Properties properties, String configuration) {
+		if (configuration != null) {
+			try {
+				properties.load(new StringReader(configuration));
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		return properties;
 	}
 
 }

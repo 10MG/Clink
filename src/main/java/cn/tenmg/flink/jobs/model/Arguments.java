@@ -24,6 +24,8 @@ public class Arguments implements Serializable {
 
 	private RuntimeExecutionMode runtimeMode;
 
+	private String configuration;
+
 	private Map<String, Object> params;
 
 	private List<String> operates;
@@ -64,6 +66,25 @@ public class Arguments implements Serializable {
 	 */
 	public void setRuntimeMode(RuntimeExecutionMode runtimeMode) {
 		this.runtimeMode = runtimeMode;
+	}
+
+	/**
+	 * 获取配置信息
+	 * 
+	 * @return 配置信息
+	 */
+	public String getConfiguration() {
+		return configuration;
+	}
+
+	/**
+	 * 设置配置信息
+	 * 
+	 * @param configuration
+	 *            配置信息
+	 */
+	public void setConfiguration(String configuration) {
+		this.configuration = configuration;
 	}
 
 	/**

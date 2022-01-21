@@ -58,7 +58,8 @@ public abstract class BasicFlinkJobsRunner {
 			} else {
 				arguments = JSON.parseObject(json, Arguments.class);
 			}
-			final StreamExecutionEnvironment env = FlinkJobsContext.getExecutionEnvironment();
+			final StreamExecutionEnvironment env = FlinkJobsContext
+					.getExecutionEnvironment(arguments.getConfiguration());
 			RuntimeExecutionMode mode = arguments.getRuntimeMode();
 			// 设置运行模式
 			if (RuntimeExecutionMode.BATCH.equals(mode)) {
