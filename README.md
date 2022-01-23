@@ -1,4 +1,7 @@
-<p align="center">
+
+# flink-jobs
+
+<p align="left">
     <a href="https://mvnrepository.com/artifact/cn.tenmg/flink-jobs">
         <img alt="maven" src="https://img.shields.io/maven-central/v/cn.tenmg/flink-jobs.svg?style=flat-square">
     </a>
@@ -8,8 +11,6 @@
     <a target="_blank" href="LICENSE"><img src="https://img.shields.io/:license-Apache%202.0-blue.svg"></a>
     <a target="_blank" href="https://jq.qq.com/?_wv=1027&k=wOOIp0CR"><img src="https://img.shields.io/badge/QQ群-531812227-blue"></a>
 </p>
-
-# flink-jobs
 
 ## 介绍
 
@@ -430,6 +431,10 @@ data.sync.columns.convert=BIGINT,TIMESTAMP:TO_TIMESTAMP(FROM_UNIXTIME(#columnNam
 
 1.1.4版本开始支持`data.sync.*.script`，其中`*`需要替换为具体的列名，用于配置数据同步特定时间戳列的自定义脚本（`SELECT`子句的片段），通常是一个函数或等效表达，例如`NOW()`或`CURRENT_TIMESTAMP`。结合`data.sync.*.strategy=to`使用，可实现写入处理时间的效果。
 
+#### 类型映射
+
+可以增加数据同步的类型映射配置，详见[类型映射配置](#%E7%B1%BB%E5%9E%8B%E6%98%A0%E5%B0%84%E9%85%8D%E7%BD%AE)。
+
 #### 配置示例
 
 以下是一个使用Debezium实现数据同步的典型数据同步配置示例，不仅完成了时间格式和时区的转换，还完成了时间戳的自动写入（智能模式下，时间戳是否写入取决于目标表中对应列是否存在）：
@@ -447,6 +452,136 @@ data.sync.EVENT_TIMESTAMP.to_type=TIMESTAMP(3)
 data.sync.ETL_TIMESTAMP.strategy=to
 data.sync.ETL_TIMESTAMP.script=NOW()
 #INGESTION_TIMESTAMP列类型使用默认配置，这里无需指定
+```
+
+### 类型映射配置
+
+类型映射配置用于配置JDBC数据类型到Flink SQL数据类型的映射关系，尽管flink-jobs的默认配置可以使得Flink SQL对所有Flink SQL支持的JDBC的数据库能够正常运行。但是，我们依然留了用户自定义配置的余地，甚至可以针对不同类型的目标数据库配置不同的映射关系。
+
+#### flink.sql.type.default
+
+默认类型，默认值为`STRING`。当找不到特定目标数据库的类型映射关系时，使用该值作为Flink SQL建表语句的数据类型。
+
+#### flink.sql.type.with_precision
+
+含精度的Flink SQL数据类型，使用大写表示，多个类型使用“,”分隔，默认值为`DECIMAL,NUMERIC`。
+
+#### flink.sql.type.with_size
+
+含长度的Flink SQL数据类型，使用大写表示，多个类型使用“,”分隔，默认值为`TIME,TIMESTAMP`。
+
+#### flink.sql.type.*.size_offset
+
+某一含长度的Flink SQL数据类型的长度偏移量，用于将JDBC获取到的`COLUMN_SIZE`转换为Flink SQL数据类型的长度。计算方法为`COLUMN_SIZE-size_offset`。其中*表示某一类型的Flink SQL数据类型，使用大写表示。默认值为：
+
+```
+# Size offset for Convert JDBC type to Flink SQL type TIME
+flink.sql.type.TIME.size_offset=9
+# Size offset for Convert JDBC type to Flink SQL type TIMESTAMP
+flink.sql.type.TIMESTAMP.size_offset=20
+```
+
+#### flink.sql.type.*.*
+
+某一类型的JDBC目标数据库的JDBC数据类型到Flink SQL数据类型的映射关系配置。其中第一个*表示某一JDBC目标数据库的类型，第二个*表示某一JDBC数据类型，配置的值是对应的Flink SQL数据类型。默认值为：
+
+```
+# Starrocks JDBC type java.sql.Types.OTHER to Flink SQL type DECIMAL
+flink.sql.type.starrocks.java.sql.Types.OTHER=DECIMAL
+```
+
+#### java.sql.Types.*
+
+某一JDBC数据类型到Flink SQL数据类型的映射关系配置。默认值为：
+
+```
+# Specific JDBC type to Flink SQL type configuration
+java.sql.Types.VARCHAR=STRING
+java.sql.Types.CHAR=STRING
+java.sql.Types.NVARCHAR=STRING
+java.sql.Types.NCHAR=STRING
+java.sql.Types.LONGNVARCHAR=STRING
+java.sql.Types.LONGVARCHAR=STRING
+java.sql.Types.BIGINT=BIGINT
+java.sql.Types.BOOLEAN=BOOLEAN
+java.sql.Types.BIT(1)=BOOLEAN
+java.sql.Types.BIT=TINYINT
+java.sql.Types.DECIMAL=DECIMAL
+java.sql.Types.DOUBLE=DOUBLE
+java.sql.Types.FLOAT=FLOAT
+java.sql.Types.REAL=FLOAT
+java.sql.Types.INTEGER=INT
+java.sql.Types.NUMERIC=NUMERIC
+java.sql.Types.SMALLINT=SMALLINT
+java.sql.Types.TINYINT=TINYINT
+java.sql.Types.DATE=DATE
+java.sql.Types.TIME=TIME
+java.sql.Types.TIME_WITH_TIMEZONE=TIME
+java.sql.Types.TIMESTAMP=TIMESTAMP
+java.sql.Types.TIMESTAMP_WITH_TIMEZONE=TIMESTAMP
+java.sql.Types.BINARY=BYTES
+java.sql.Types.LONGVARBINARY=BYTES
+java.sql.Types.VARBINARY=BYTES
+java.sql.Types.REF=REF
+java.sql.Types.DATALINK=DATALINK
+java.sql.Types.ARRAY=ARRAY
+java.sql.Types.BLOB=BLOB
+java.sql.Types.CLOB=CLOB
+java.sql.Types.NCLOB=CLOB
+java.sql.Types.STRUCT=STRUCT
+```
+
+完整的类型映射配置默认值为：
+
+```
+# JDBC types to Flink SQL types configuration
+# Default Flink SQL type when unexpected
+flink.sql.type.default=STRING
+# Flink SQL types with precision
+flink.sql.type.with_precision=DECIMAL,NUMERIC
+# Flink SQL types with size
+flink.sql.type.with_size=TIME,TIMESTAMP
+# Size offset for Convert JDBC type to Flink SQL type TIME
+flink.sql.type.TIME.size_offset=9
+# Size offset for Convert JDBC type to Flink SQL type TIMESTAMP
+flink.sql.type.TIMESTAMP.size_offset=20
+# Starrocks JDBC type java.sql.Types.OTHER to Flink SQL type DECIMAL
+flink.sql.type.starrocks.java.sql.Types.OTHER=DECIMAL
+
+# Specific JDBC type to Flink SQL type configuration
+java.sql.Types.VARCHAR=STRING
+java.sql.Types.CHAR=STRING
+java.sql.Types.NVARCHAR=STRING
+java.sql.Types.NCHAR=STRING
+java.sql.Types.LONGNVARCHAR=STRING
+java.sql.Types.LONGVARCHAR=STRING
+java.sql.Types.BIGINT=BIGINT
+java.sql.Types.BOOLEAN=BOOLEAN
+java.sql.Types.BIT(1)=BOOLEAN
+java.sql.Types.BIT=TINYINT
+java.sql.Types.DECIMAL=DECIMAL
+java.sql.Types.DOUBLE=DOUBLE
+java.sql.Types.FLOAT=FLOAT
+java.sql.Types.REAL=FLOAT
+java.sql.Types.INTEGER=INT
+java.sql.Types.NUMERIC=NUMERIC
+java.sql.Types.SMALLINT=SMALLINT
+java.sql.Types.TINYINT=TINYINT
+java.sql.Types.DATE=DATE
+java.sql.Types.TIME=TIME
+java.sql.Types.TIME_WITH_TIMEZONE=TIME
+java.sql.Types.TIMESTAMP=TIMESTAMP
+java.sql.Types.TIMESTAMP_WITH_TIMEZONE=TIMESTAMP
+java.sql.Types.BINARY=BYTES
+java.sql.Types.LONGVARBINARY=BYTES
+java.sql.Types.VARBINARY=BYTES
+java.sql.Types.REF=REF
+java.sql.Types.DATALINK=DATALINK
+java.sql.Types.ARRAY=ARRAY
+java.sql.Types.BLOB=BLOB
+java.sql.Types.CLOB=CLOB
+java.sql.Types.NCLOB=CLOB
+java.sql.Types.STRUCT=STRUCT
 ```
 
 ## 系统集成
