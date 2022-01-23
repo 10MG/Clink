@@ -15,6 +15,8 @@ import org.apache.flink.configuration.PipelineOptions;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.table.api.TableConfig;
 import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import cn.tenmg.dsl.NamedScript;
 import cn.tenmg.dsl.utils.DSLUtils;
@@ -42,13 +44,18 @@ import cn.tenmg.flink.jobs.utils.SQLUtils;
  */
 public class DataSyncOperator extends SqlReservedKeywordSupport<DataSync> {
 
+	private static Logger log = LoggerFactory.getLogger(DataSyncOperator.class);
+
 	private static final String SMART_KEY = "data.sync.smart", FROM_TABLE_PREFIX_KEY = "data.sync.from_table_prefix",
 			TOPIC_KEY = "topic", GROUP_ID_KEY = "properties.group.id",
 			GROUP_ID_PREFIX_KEY = "data.sync.group_id_prefix", TIMESTAMP_COLUMNS = "data.sync.timestamp.columns",
 			TIMESTAMP_COLUMNS_SPLIT = ",", TIMESTAMP_FROM_TYPE_KEY = "data.sync.timestamp.from_type",
-			TIMESTAMP_TO_TYPE_KEY = "data.sync.timestamp.to_type", TYPE_KEY_PREFIX = "data.sync.",
-			TO_TYPE_KEY_SUFFIX = ".to_type", FROM_TYPE_KEY_SUFFIX = ".from_type", SCRIPT_KEY_SUFFIX = ".script",
-			STRATEGY_KEY_SUFFIX = ".strategy", COLUMN_NAME = "columnName";
+			TIMESTAMP_TO_TYPE_KEY = "data.sync.timestamp.to_type",
+			TYPE_KEY_PREFIX = "data.sync" + FlinkJobsContext.CONFIG_SPLITER,
+			TO_TYPE_KEY_SUFFIX = FlinkJobsContext.CONFIG_SPLITER + "to_type",
+			FROM_TYPE_KEY_SUFFIX = FlinkJobsContext.CONFIG_SPLITER + "from_type",
+			SCRIPT_KEY_SUFFIX = FlinkJobsContext.CONFIG_SPLITER + "script",
+			STRATEGY_KEY_SUFFIX = FlinkJobsContext.CONFIG_SPLITER + "strategy", COLUMN_NAME = "columnName";
 
 	private static final boolean TO_LOWERCASE = !Boolean
 			.valueOf(FlinkJobsContext.getProperty("data.sync.timestamp.case_sensitive"));// 不区分大小写，统一转为小写
@@ -119,8 +126,8 @@ public class DataSyncOperator extends SqlReservedKeywordSupport<DataSync> {
 			Configuration configuration = tableConfig.getConfiguration();
 			String pipelineName = configuration.get(PipelineOptions.NAME);
 			if (StringUtils.isBlank(pipelineName)) {
-				tableConfig.getConfiguration().set(PipelineOptions.NAME,
-						"data-sync." + String.join(".", String.join("-", from, "to", to), table));
+				configuration.set(PipelineOptions.NAME, "data-sync" + FlinkJobsContext.CONFIG_SPLITER
+						+ String.join(FlinkJobsContext.CONFIG_SPLITER, String.join("-", from, "to", to), table));
 			}
 		}
 
@@ -131,15 +138,15 @@ public class DataSyncOperator extends SqlReservedKeywordSupport<DataSync> {
 
 		String sql = fromCreateTableSQL(fromDataSource, dataSync.getTopic(), table, fromTable, columns, primaryKey,
 				fromConfig);
-		System.out.println("Create source table by Flink SQL: " + sql);
+		log.info("Create source table by Flink SQL: " + sql);
 		tableEnv.executeSql(sql);
 
 		sql = toCreateTableSQL(toDataSource, table, columns, primaryKey, dataSync.getToConfig());
-		System.out.println("Create sink table by Flink SQL: " + sql);
+		log.info("Create sink table by Flink SQL: " + sql);
 		tableEnv.executeSql(sql);
 
-		sql = insertSQL(table, fromTable, columns);
-		System.out.println("Execute Flink SQL: " + sql);
+		sql = insertSQL(table, fromTable, columns, params);
+		log.info("Execute Flink SQL: " + sql);
 		return tableEnv.executeSql(sql);
 	}
 
@@ -331,12 +338,12 @@ public class DataSyncOperator extends SqlReservedKeywordSupport<DataSync> {
 					if (StringUtils.isBlank(fromType)) {
 						column.setFromType(columnConvertArgs.fromType);
 						if (StringUtils.isBlank(column.getScript())) {
-							column.setScript(toScript(columnConvertArgs, column.getFromName(), params));
+							column.setScript(columnConvertArgs.script);
 						}
 					} else {
 						if (columnConvertArgs.fromType.equalsIgnoreCase(getDataType(fromType))) {
 							if (StringUtils.isBlank(column.getScript())) {
-								column.setScript(toScript(columnConvertArgs, column.getFromName(), params));
+								column.setScript(columnConvertArgs.script);
 							}
 						}
 					}
@@ -445,7 +452,7 @@ public class DataSyncOperator extends SqlReservedKeywordSupport<DataSync> {
 					&& columnConvertArgs.fromType.equalsIgnoreCase(getDataType(column.getFromType()))) {// 有类型转换配置
 				column.setFromType(columnConvertArgs.fromType);
 				if (StringUtils.isBlank(column.getScript())) {
-					column.setScript(toScript(columnConvertArgs, column.getFromName(), params));
+					column.setScript(columnConvertArgs.script);
 				}
 			}
 		}
@@ -481,7 +488,7 @@ public class DataSyncOperator extends SqlReservedKeywordSupport<DataSync> {
 					column.setFromType(toType);
 				} else {// 有类型转换配置
 					column.setFromType(columnConvertArgs.fromType);
-					column.setScript(toScript(columnConvertArgs, column.getFromName(), params));
+					column.setScript(columnConvertArgs.script);
 				}
 			}
 			wrapColumnName(column);// SQL保留关键字包装
@@ -610,7 +617,7 @@ public class DataSyncOperator extends SqlReservedKeywordSupport<DataSync> {
 		return sqlBuffer.toString();
 	}
 
-	private static String insertSQL(String table, String fromTable, List<Column> columns) {
+	private static String insertSQL(String table, String fromTable, List<Column> columns, Map<String, Object> params) {
 		StringBuffer sqlBuffer = new StringBuffer();
 		sqlBuffer.append("INSERT INTO ").append(table).append(DSLUtils.BLANK_SPACE).append("(");
 
@@ -627,12 +634,14 @@ public class DataSyncOperator extends SqlReservedKeywordSupport<DataSync> {
 		sqlBuffer.append(") SELECT ");
 		column = columns.get(0);
 		String script = column.getScript();
-		sqlBuffer.append(StringUtils.isBlank(script) ? column.getFromName() : script);
+		sqlBuffer.append(
+				StringUtils.isBlank(script) ? column.getFromName() : toScript(script, column.getFromName(), params));
 		for (int i = 1, size = columns.size(); i < size; i++) {
 			column = columns.get(i);
 			script = column.getScript();
 			sqlBuffer.append(DSLUtils.COMMA).append(DSLUtils.BLANK_SPACE)
-					.append(StringUtils.isBlank(script) ? column.getFromName() : script);
+					.append(StringUtils.isBlank(script) ? column.getFromName()
+							: toScript(script, column.getFromName(), params));
 		}
 
 		sqlBuffer.append(" FROM ").append(fromTable);
@@ -640,36 +649,28 @@ public class DataSyncOperator extends SqlReservedKeywordSupport<DataSync> {
 
 	}
 
-	/**
-	 * 将同步的列转换为SELECT语句的其中一个片段
-	 * 
-	 * @param columnConvertArgs
-	 * @param columnName
-	 * @param params
-	 * @return
-	 */
-	private static String toScript(ColumnConvertArgs columnConvertArgs, String columnName, Map<String, Object> params) {
-		NamedScript namedScript = DSLUtils.parse(columnConvertArgs.script,
-				ParamsKit.init(params).put(COLUMN_NAME, columnName).get());
+	// 将同步的列转换为SELECT语句的其中一个片段
+	private static String toScript(String dsl, String columnName, Map<String, Object> params) {
+		NamedScript namedScript = DSLUtils.parse(dsl, ParamsKit.init(params).put(COLUMN_NAME, columnName).get());
 		return DSLUtils.toScript(namedScript.getScript(), namedScript.getParams(), FlinkSQLParamsParser.getInstance())
 				.getValue();
 	}
 
 	public static final Map<String, String> toMap(boolean toLowercase, String... strings) {
-		Map<String, String> set = new HashMap<String, String>();
+		Map<String, String> map = new HashMap<String, String>();
 		String string;
 		if (toLowercase) {
 			for (int i = 0; i < strings.length; i++) {
 				string = strings[i].trim();
-				set.put(string.toLowerCase(), string);
+				map.put(string.toLowerCase(), string);
 			}
 		} else {
 			for (int i = 0; i < strings.length; i++) {
 				string = strings[i].trim();
-				set.put(string, string);
+				map.put(string, string);
 			}
 		}
-		return set;
+		return map;
 	}
 
 	private static String getDataType(String type) {

@@ -3,12 +3,16 @@ package cn.tenmg.flink.jobs.operator.data.sync.getter;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
+import cn.tenmg.dsl.utils.DSLUtils;
+import cn.tenmg.dsl.utils.StringUtils;
+import cn.tenmg.flink.jobs.context.FlinkJobsContext;
+import cn.tenmg.flink.jobs.kit.HashMapKit;
+import cn.tenmg.flink.jobs.kit.ParamsKit;
 import cn.tenmg.flink.jobs.operator.data.sync.MetaDataGetter;
 import cn.tenmg.flink.jobs.utils.JDBCUtils;
 
@@ -22,7 +26,39 @@ import cn.tenmg.flink.jobs.utils.JDBCUtils;
 public abstract class AbstractJDBCMetaDataGetter implements MetaDataGetter {
 
 	private static final String COLUMN_NAME = "COLUMN_NAME", DATA_TYPE = "DATA_TYPE", COLUMN_SIZE = "COLUMN_SIZE",
-			DECIMAL_DIGITS = "DECIMAL_DIGITS", IS_NULLABLE = "IS_NULLABLE", NO = "NO";
+			DECIMAL_DIGITS = "DECIMAL_DIGITS", IS_NULLABLE = "IS_NULLABLE", NO = "NO", LEFT_BRACKET = "(",
+			RIGTH_BRACKET = ")", TYPE_PREFFIX = "flink.sql.type" + FlinkJobsContext.CONFIG_SPLITER,
+			DEFAULT_TYPE = FlinkJobsContext.getProperty(TYPE_PREFFIX + "DEFAULT"),
+			SIZE_OFFSET_SUFFIX = FlinkJobsContext.CONFIG_SPLITER + "SIZE_OFFSET";
+
+	private static final Map<Integer, String> SQL_TYPES = HashMapKit
+			.init(java.sql.Types.VARCHAR, "java.sql.Types.VARCHAR")
+			.put(java.sql.Types.VARCHAR, "java.sql.Types.VARCHAR").put(java.sql.Types.CHAR, "java.sql.Types.CHAR")
+			.put(java.sql.Types.NVARCHAR, "java.sql.Types.NVARCHAR").put(java.sql.Types.NCHAR, "java.sql.Types.NCHAR")
+			.put(java.sql.Types.LONGNVARCHAR, "java.sql.Types.LONGNVARCHAR")
+			.put(java.sql.Types.LONGVARCHAR, "java.sql.Types.LONGVARCHAR")
+			.put(java.sql.Types.BIGINT, "java.sql.Types.BIGINT").put(java.sql.Types.BOOLEAN, "java.sql.Types.BOOLEAN")
+			.put(java.sql.Types.BIT, "java.sql.Types.BIT").put(java.sql.Types.DECIMAL, "java.sql.Types.DECIMAL")
+			.put(java.sql.Types.OTHER, "java.sql.Types.OTHER").put(java.sql.Types.DOUBLE, "java.sql.Types.DOUBLE")
+			.put(java.sql.Types.FLOAT, "java.sql.Types.FLOAT").put(java.sql.Types.REAL, "java.sql.Types.REAL")
+			.put(java.sql.Types.INTEGER, "java.sql.Types.INTEGER").put(java.sql.Types.NUMERIC, "java.sql.Types.NUMERIC")
+			.put(java.sql.Types.SMALLINT, "java.sql.Types.SMALLINT")
+			.put(java.sql.Types.TINYINT, "java.sql.Types.TINYINT").put(java.sql.Types.DATE, "java.sql.Types.DATE")
+			.put(java.sql.Types.TIME, "java.sql.Types.TIME")
+			.put(java.sql.Types.TIME_WITH_TIMEZONE, "java.sql.Types.TIME_WITH_TIMEZONE")
+			.put(java.sql.Types.TIMESTAMP, "java.sql.Types.TIMESTAMP")
+			.put(java.sql.Types.TIMESTAMP_WITH_TIMEZONE, "java.sql.Types.TIMESTAMP_WITH_TIMEZONE")
+			.put(java.sql.Types.BINARY, "java.sql.Types.BINARY")
+			.put(java.sql.Types.LONGVARBINARY, "java.sql.Types.LONGVARBINARY")
+			.put(java.sql.Types.VARBINARY, "java.sql.Types.VARBINARY").put(java.sql.Types.REF, "java.sql.Types.REF")
+			.put(java.sql.Types.DATALINK, "java.sql.Types.DATALINK").put(java.sql.Types.ARRAY, "java.sql.Types.ARRAY")
+			.put(java.sql.Types.BLOB, "java.sql.Types.BLOB").put(java.sql.Types.CLOB, "java.sql.Types.CLOB")
+			.put(java.sql.Types.NCLOB, "java.sql.Types.NCLOB").put(java.sql.Types.STRUCT, "java.sql.Types.STRUCT")
+			.get();
+
+	private static Set<String> WITH_PRECISION = asSafeSet(
+			FlinkJobsContext.getProperty("flink.sql.type.WITH_PRECISION")),
+			WITH_SIZE = asSafeSet(FlinkJobsContext.getProperty("flink.sql.type.WITH_SIZE"));
 
 	/**
 	 * 根据数据源配置获取数据库连接
@@ -49,13 +85,12 @@ public abstract class AbstractJDBCMetaDataGetter implements MetaDataGetter {
 			}
 
 			ResultSet columnsSet = metaData.getColumns(catalog, schema, tableName, null);
-			int dataType;
 			String columnName, type;
 			Map<String, String> columns = new LinkedHashMap<String, String>();
 			while (columnsSet.next()) {
 				columnName = columnsSet.getString(COLUMN_NAME);
-				dataType = columnsSet.getInt(DATA_TYPE);
-				type = getType(dataType, columnsSet);
+				type = getType(dataSource, columnsSet.getInt(DATA_TYPE), columnsSet.getInt(COLUMN_SIZE),
+						columnsSet.getInt(DECIMAL_DIGITS));
 				if (NO.equals(columnsSet.getString(IS_NULLABLE))) {
 					type += " NOT NULL";
 				}
@@ -69,79 +104,77 @@ public abstract class AbstractJDBCMetaDataGetter implements MetaDataGetter {
 		}
 	}
 
-	private static String getType(int dataType, ResultSet columnsSet) throws SQLException {
-		int columnSize;
-		switch (dataType) {
-		case java.sql.Types.VARCHAR:
-		case java.sql.Types.CHAR:
-		case java.sql.Types.NVARCHAR:
-		case java.sql.Types.NCHAR:
-		case java.sql.Types.LONGNVARCHAR:
-		case java.sql.Types.LONGVARCHAR:
-			return "STRING";
-		case java.sql.Types.BIGINT:
-			return "BIGINT";
-		case java.sql.Types.BOOLEAN:
-			return "BOOLEAN";
-		case java.sql.Types.BIT:
-			if (columnsSet.getInt(COLUMN_SIZE) == 1) {
-				return "BOOLEAN";
-			} else {
-				return "TINYINT";
+	private static String getType(Map<String, String> dataSource, int dataType, int columnSize, int decimalDigits) {
+		String sqlType = SQL_TYPES.get(dataType);
+		String type = DEFAULT_TYPE;
+		if (sqlType != null) {
+			String connector = dataSource.get("connector");
+			String possibleType = connector == null ? null : getSpecificProductType(connector.trim(), sqlType);// 获取特定连接器的类型映射配置，如starrocks
+			if (StringUtils.isBlank(possibleType)) {// 否则，从url中获取产品名，获取特定JDBC产品的类型映射配置，如mysql
+				String url = dataSource.get("url");
+				if (StringUtils.isNotBlank(url)) {
+					possibleType = getSpecificProductType(JDBCUtils.getProduct(url), sqlType);
+				}
 			}
-		case java.sql.Types.DECIMAL:
-			return "DECIMAL(" + columnsSet.getInt(COLUMN_SIZE) + "," + columnsSet.getInt(DECIMAL_DIGITS) + ")";
-		case java.sql.Types.DOUBLE:
-			return "DOUBLE";
-		case java.sql.Types.FLOAT:
-		case java.sql.Types.REAL:
-			return "FLOAT";
-		case java.sql.Types.INTEGER:
-			return "INT";
-		case java.sql.Types.NUMERIC:
-			return "NUMERIC(" + columnsSet.getInt(COLUMN_SIZE) + "," + columnsSet.getInt(DECIMAL_DIGITS) + ")";
-		case java.sql.Types.SMALLINT:
-			return "SMALLINT";
-		case java.sql.Types.TINYINT:
-			return "TINYINT";
-		case java.sql.Types.DATE:
-			return "DATE";
-		case java.sql.Types.TIME:
-		case java.sql.Types.TIME_WITH_TIMEZONE:
-			columnSize = columnsSet.getInt(COLUMN_SIZE);
-			if (columnSize > 8) {
-				return "TIME(" + (columnSize - 9) + ")";
-			} else {
-				return "TIME";
+			if (StringUtils.isBlank(possibleType)) {// 否则，获取全局配置的类型映射配置
+				possibleType = FlinkJobsContext.getProperty(sqlType);
 			}
-		case java.sql.Types.TIMESTAMP:
-		case java.sql.Types.TIMESTAMP_WITH_TIMEZONE:
-			columnSize = columnsSet.getInt(COLUMN_SIZE);
-			if (columnSize > 19) {
-				return "TIMESTAMP(" + (columnSize - 20) + ")";
+			if (StringUtils.isBlank(possibleType)) {
+				possibleType = FlinkJobsContext
+						.getProperty(sqlType + LEFT_BRACKET + columnSize + "," + decimalDigits + RIGTH_BRACKET);
+				if (StringUtils.isBlank(possibleType)) {
+					possibleType = FlinkJobsContext.getProperty(sqlType + LEFT_BRACKET + columnSize + RIGTH_BRACKET);
+					if (StringUtils.isNotBlank(possibleType)) {
+						type = possibleType;
+					}
+				} else {
+					type = possibleType;
+				}
 			} else {
-				return "TIMESTAMP";
+				type = possibleType;
 			}
-		case java.sql.Types.BINARY:
-		case java.sql.Types.LONGVARBINARY:
-		case java.sql.Types.VARBINARY:
-			return "BYTES";
-		case java.sql.Types.REF:
-			return "REF";
-		case java.sql.Types.DATALINK:
-			return "DATALINK";
-		case java.sql.Types.ARRAY:
-			return "ARRAY";
-		case java.sql.Types.BLOB:
-			return "BLOB";
-		case java.sql.Types.CLOB:
-		case java.sql.Types.NCLOB:
-			return "CLOB";
-		case java.sql.Types.STRUCT:
-			return "STRUCT";
-		default:
-			return "STRING";
 		}
+		return wrapType(type, columnSize, decimalDigits);
+	}
+
+	private static String getSpecificProductType(String product, String sqlType) {
+		return FlinkJobsContext.getProperty(TYPE_PREFFIX + product + FlinkJobsContext.CONFIG_SPLITER + sqlType);
+	}
+
+	private static String wrapType(String possibleType, int columnSize, int decimalDigits) {
+		possibleType = possibleType.trim();
+		if (possibleType.endsWith(RIGTH_BRACKET)) {
+			return DSLUtils
+					.parse(possibleType,
+							ParamsKit.init().put("columnSize", columnSize).put("decimalDigits", decimalDigits).get())
+					.getScript();
+		} else {
+			if (WITH_PRECISION.contains(possibleType)) {// 类型含精度
+				return possibleType + LEFT_BRACKET + columnSize + "," + decimalDigits + RIGTH_BRACKET;
+			} else if (WITH_SIZE.contains(possibleType)) {// 类型含长度
+				String sizeOffset = FlinkJobsContext.getProperty(TYPE_PREFFIX + possibleType + SIZE_OFFSET_SUFFIX);
+				if (StringUtils.isBlank(sizeOffset)) {
+					return possibleType + LEFT_BRACKET + columnSize + RIGTH_BRACKET;
+				} else {
+					int offset = Integer.parseInt(sizeOffset);
+					if (columnSize >= offset) {
+						return possibleType + LEFT_BRACKET + (columnSize - offset) + RIGTH_BRACKET;
+					}
+				}
+			}
+		}
+		return possibleType;
+	}
+
+	private static final Set<String> asSafeSet(String string) {
+		Set<String> set = new HashSet<String>();
+		if (string != null) {
+			String[] strings = string.split(",");
+			for (int i = 0; i < strings.length; i++) {
+				set.add(strings[i].trim());
+			}
+		}
+		return set;
 	}
 
 }

@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import cn.tenmg.dsl.NamedScript;
 import cn.tenmg.dsl.Script;
@@ -26,6 +28,8 @@ import cn.tenmg.flink.jobs.utils.JSONUtils;
  */
 public class JdbcOperator extends AbstractOperator<Jdbc> {
 
+	private static Logger log = LoggerFactory.getLogger(JdbcOperator.class);
+
 	@Override
 	public Object execute(StreamExecutionEnvironment env, Jdbc jdbc, Map<String, Object> params) throws Exception {
 		NamedScript namedScript = DSLUtils.parse(jdbc.getScript(), params);
@@ -44,7 +48,7 @@ public class JdbcOperator extends AbstractOperator<Jdbc> {
 				List<Object> paramters = sql.getParams();
 				JDBCUtils.setParams(ps, paramters);
 
-				System.out.println(String.format("Execute JDBC SQL: %s; parameters: %s", statement,
+				log.info(String.format("Execute JDBC SQL: %s; parameters: %s", statement,
 						JSONUtils.toJSONString(params)));
 				String method = jdbc.getMethod();
 				if ("executeLargeUpdate".equals(method)) {
