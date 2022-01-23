@@ -28,8 +28,8 @@ public abstract class AbstractJDBCMetaDataGetter implements MetaDataGetter {
 	private static final String COLUMN_NAME = "COLUMN_NAME", DATA_TYPE = "DATA_TYPE", COLUMN_SIZE = "COLUMN_SIZE",
 			DECIMAL_DIGITS = "DECIMAL_DIGITS", IS_NULLABLE = "IS_NULLABLE", NO = "NO", LEFT_BRACKET = "(",
 			RIGTH_BRACKET = ")", TYPE_PREFFIX = "flink.sql.type" + FlinkJobsContext.CONFIG_SPLITER,
-			DEFAULT_TYPE = FlinkJobsContext.getProperty(TYPE_PREFFIX + "DEFAULT"),
-			SIZE_OFFSET_SUFFIX = FlinkJobsContext.CONFIG_SPLITER + "SIZE_OFFSET";
+			DEFAULT_TYPE = FlinkJobsContext.getProperty(TYPE_PREFFIX + "default"),
+			SIZE_OFFSET_SUFFIX = FlinkJobsContext.CONFIG_SPLITER + "size_offset";
 
 	private static final Map<Integer, String> SQL_TYPES = HashMapKit
 			.init(java.sql.Types.VARCHAR, "java.sql.Types.VARCHAR")
@@ -57,8 +57,8 @@ public abstract class AbstractJDBCMetaDataGetter implements MetaDataGetter {
 			.get();
 
 	private static Set<String> WITH_PRECISION = asSafeSet(
-			FlinkJobsContext.getProperty("flink.sql.type.WITH_PRECISION")),
-			WITH_SIZE = asSafeSet(FlinkJobsContext.getProperty("flink.sql.type.WITH_SIZE"));
+			FlinkJobsContext.getProperty("flink.sql.type.with_precision")),
+			WITH_SIZE = asSafeSet(FlinkJobsContext.getProperty("flink.sql.type.with_size"));
 
 	/**
 	 * 根据数据源配置获取数据库连接
