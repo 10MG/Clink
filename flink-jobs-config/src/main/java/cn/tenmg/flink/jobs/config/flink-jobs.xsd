@@ -10,7 +10,7 @@
 				<xsd:element name="configuration" type="xsd:string"
 					maxOccurs="1" minOccurs="0">
 					<xsd:annotation>
-						<xsd:documentation>Flink配置</xsd:documentation>
+						<xsd:documentation>Flink作业配置</xsd:documentation>
 					</xsd:annotation>
 				</xsd:element>
 				<xsd:element ref="options" maxOccurs="1" minOccurs="0" />
