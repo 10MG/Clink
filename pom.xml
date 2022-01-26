@@ -53,7 +53,7 @@
 
 	<properties>
 		<encoding>UTF-8</encoding>
-		<flink.version>1.14.2</flink.version>
+		<flink.version>1.14.3</flink.version>
 		<scala.binary.version>2.11</scala.binary.version>
 		<log4j.version>2.17.1</log4j.version>
 	</properties>
@@ -128,22 +128,14 @@
 			<version>${flink.version}</version>
 			<optional>true</optional>
 		</dependency>
-		<!-- https://mvnrepository.com/artifact/org.apache.flink/flink-table-planner-blink -->
-		<!-- <dependency>
-			<groupId>org.apache.flink</groupId>
-			<artifactId>flink-table-planner-blink_${scala.binary.version}</artifactId>
-			<version>${flink.version}</version>
-			<optional>true</optional>
-		</dependency> -->
 
 		<!-- https://mvnrepository.com/artifact/mysql/mysql-connector-java -->
 		<dependency>
 			<groupId>mysql</groupId>
 			<artifactId>mysql-connector-java</artifactId>
-			<version>8.0.26</version>
+			<version>8.0.27</version>
 			<scope>test</scope>
 		</dependency>
-
 		<!-- https://mvnrepository.com/artifact/org.apache.flink/flink-connector-jdbc -->
 		<dependency>
 			<groupId>org.apache.flink</groupId>
@@ -151,7 +143,6 @@
 			<version>${flink.version}</version>
 			<scope>test</scope>
 		</dependency>
-
 		<!-- https://mvnrepository.com/artifact/org.apache.logging.log4j/log4j-api -->
 		<dependency>
 			<groupId>org.apache.logging.log4j</groupId>
