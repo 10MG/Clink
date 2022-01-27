@@ -14,7 +14,7 @@
 
 ## 介绍
 
-flink-jobs为基于Flink的Java应用程序提供快速集成的能力，可通过继承FlinkJobsRunner快速构建基于Java的Flink流批一体应用程序，实现异构数据库实时同步和ETL清洗。flink-jobs提供了数据源管理模块，通过flink-jobs运行Flink SQL会变得极其简单。而通过使用[flink-jobs-launcher](https://gitee.com/tenmg/flink-jobs-launcher)，实现基于Java API启动flink-jobs应用程序，更可以将flink任务实现通过XML配置文件来管理。一个典型的flink-jobs部署架构如下：
+flink-jobs为基于Flink的Java应用程序提供快速集成的能力，可通过继承FlinkJobsRunner快速构建基于Java的Flink流批一体应用程序，实现异构数据库实时同步和ETL。flink-jobs提供了数据源管理模块，通过flink-jobs运行Flink SQL会变得极其简单。而通过使用[flink-jobs-launcher](https://gitee.com/tenmg/flink-jobs-launcher)，实现基于Java API启动flink-jobs应用程序，更可以将flink任务实现通过XML配置文件来管理。一个典型的flink-jobs部署架构如下：
 
 ![典型的flink-jobs部署架构](%E5%85%B8%E5%9E%8B%E6%9E%B6%E6%9E%84.png)
 
