@@ -37,7 +37,7 @@ flink-jobs对Flink特定版本依赖较弱，已知在1.13+环境下运行良好
 </dependency>
 ```
 
-2.  配置文件application.properties
+2.  配置文件flink-jobs.properties
 
 ```
 #Flink Table API配置
