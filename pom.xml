@@ -69,7 +69,7 @@
 		<dependency>
 			<groupId>cn.tenmg</groupId>
 			<artifactId>dsl</artifactId>
-			<version>1.2.6</version>
+			<version>1.2.7</version>
 		</dependency>
 		<!-- https://mvnrepository.com/artifact/org.slf4j/slf4j-api -->
 		<dependency>
