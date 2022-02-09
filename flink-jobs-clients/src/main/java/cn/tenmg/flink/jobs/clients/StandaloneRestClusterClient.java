@@ -36,7 +36,6 @@ import cn.tenmg.flink.jobs.config.model.FlinkJobs;
  * 独立群集REST客户端flink-jobs客户端。用于远程提交、监控和停止flink任务
  * 
  * @author June wjzhao@aliyun.com
- * @param <T>
  * 
  * @since 1.2.0
  */
@@ -118,24 +117,45 @@ public class StandaloneRestClusterClient extends AbstractFlinkJobsClient {
 					}
 				}
 			}
+			return null;
 		} catch (Exception e) {
+			throw e;
+		} finally {
 			if (client != null) {
 				client.close();
 			}
-			throw e;
 		}
-		return null;
 	}
 
 	@Override
 	public JobStatus getJobStatus(JobID jobId) throws Exception {
-		return getRestClusterClient().getJobStatus(jobId).get();
+		RestClusterClient<StandaloneClusterId> client = null;
+		try {
+			client = getRestClusterClient();
+			return client.getJobStatus(jobId).get();
+		} catch (Exception e) {
+			throw e;
+		} finally {
+			if (client != null) {
+				client.close();
+			}
+		}
 	}
 
 	@Override
 	public String stop(JobID jobId) throws Exception {
-		return getRestClusterClient()
-				.stopWithSavepoint(jobId, false, FlinkJobsClientsContext.getProperty("state.savepoints.dir")).get();
+		RestClusterClient<StandaloneClusterId> client = null;
+		try {
+			client = getRestClusterClient();
+			return client.stopWithSavepoint(jobId, false, FlinkJobsClientsContext.getProperty("state.savepoints.dir"))
+					.get();
+		} catch (Exception e) {
+			throw e;
+		} finally {
+			if (client != null) {
+				client.close();
+			}
+		}
 	}
 
 	/**
