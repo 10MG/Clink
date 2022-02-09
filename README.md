@@ -18,7 +18,7 @@ flink-jobs为基于Flink的Java应用程序提供快速集成的能力，可通�
 
 ![典型的flink-jobs部署架构](%E5%85%B8%E5%9E%8B%E6%9E%B6%E6%9E%84.png)
 
-当然，如果你选择使用Flink CDC，那么以上的Debezium和Kafka可以去掉。
+当然，如果你选择使用[Flink CDC](https://github.com/ververica/flink-cdc-connectors)，那么以上的Debezium和Kafka可以去掉。
 
 ## Flink版本
 
