@@ -81,6 +81,7 @@ System.out.println("Flink job of jobId: " + jobId.toHexString() + " stopped, sav
 ### 高级功能
 
 ```
+//RestClusterClient<StandaloneClusterId> restClusterClient = client.getRestClusterClient(customConf);// 使用自定义配置获取RestClusterClient
 RestClusterClient<StandaloneClusterId> restClusterClient = client.getRestClusterClient();
 JobDetailsInfo jobDetailsInfo = restClusterClient.getJobDetails(jobId).get();
 JobResult jobResult = restClusterClient.requestJobResult(jobId).get();
