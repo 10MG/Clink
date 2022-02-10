@@ -74,8 +74,7 @@ System.out.println("Job status: " + jobStatus);
 ```
 //RestClusterClient<StandaloneClusterId> restClusterClient = client.getRestClusterClient(customConf);// 使用自定义配置获取RestClusterClient
 RestClusterClient<StandaloneClusterId> restClusterClient = client.getRestClusterClient();
-JobDetailsInfo jobDetailsInfo = restClusterClient.getJobDetails(jobId).get();
-JobResult jobResult = restClusterClient.requestJobResult(jobId).get();
+// Use restClusterClient to do something
 ```
 
 ### 停止作业
