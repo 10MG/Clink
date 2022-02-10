@@ -17,7 +17,7 @@ import cn.tenmg.flink.jobs.config.model.FlinkJobs;
  * 
  * @since 1.2.0
  */
-public abstract class AbstractFlinkJobsClient implements FlinkJobsClient {
+public abstract class AbstractFlinkJobsClient<T> implements FlinkJobsClient<T> {
 
 	private static final String FLINK_JOBS_DEFAULT_JAR_KEY = "flink.jobs.default.jar",
 			FLINK_JOBS_DEFAULT_CLASS_KEY = "flink.jobs.default.class", JAR = ".jar";

@@ -1,9 +1,12 @@
 package cn.tenmg.flink.jobs.clients;
 
+import java.util.Collection;
+
 import org.apache.flink.api.common.JobID;
 import org.apache.flink.api.common.JobStatus;
 import org.apache.flink.client.deployment.StandaloneClusterId;
 import org.apache.flink.client.program.rest.RestClusterClient;
+import org.apache.flink.runtime.client.JobStatusMessage;
 import org.apache.flink.runtime.jobmaster.JobResult;
 import org.apache.flink.runtime.rest.messages.job.JobDetailsInfo;
 
@@ -42,6 +45,8 @@ public class StandaloneRestClusterClientTest {
 		System.out.println("Job details info: " + JSON.toJSONString(jobDetailsInfo));
 		JobResult jobResult = restClusterClient.requestJobResult(jobId).get();
 		System.out.println("Job result: " + JSON.toJSONString(jobResult));
+		Collection<JobStatusMessage> jobs = restClusterClient.listJobs().get();
+		System.out.println("Job result: " + JSON.toJSONString(jobs));
 
 		System.out.println(
 				"Flink job of jobId: " + jobId.toHexString() + " stopped, savepoint path: " + client.stop(jobId));// 停止flink-jobs作业

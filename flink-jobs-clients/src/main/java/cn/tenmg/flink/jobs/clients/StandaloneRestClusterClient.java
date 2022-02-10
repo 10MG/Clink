@@ -6,6 +6,7 @@ import java.io.StringReader;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -24,8 +25,12 @@ import org.apache.flink.client.program.rest.RestClusterClient;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.configuration.ConfigurationUtils;
 import org.apache.flink.configuration.JobManagerOptions;
+import org.apache.flink.runtime.client.JobStatusMessage;
 import org.apache.flink.runtime.jobgraph.JobGraph;
 import org.apache.flink.runtime.jobgraph.SavepointRestoreSettings;
+import org.apache.flink.runtime.jobmaster.JobResult;
+import org.apache.flink.runtime.messages.Acknowledge;
+import org.apache.flink.runtime.rest.messages.job.JobDetailsInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,7 +44,7 @@ import cn.tenmg.flink.jobs.config.model.FlinkJobs;
  * 
  * @since 1.2.0
  */
-public class StandaloneRestClusterClient extends AbstractFlinkJobsClient {
+public class StandaloneRestClusterClient extends AbstractFlinkJobsClient<StandaloneClusterId> {
 
 	private static final Logger log = LoggerFactory.getLogger(StandaloneRestClusterClient.class);
 
@@ -78,15 +83,25 @@ public class StandaloneRestClusterClient extends AbstractFlinkJobsClient {
 			Map<String, String> options = flinkJobs.getOptions();
 			String classpaths = FlinkJobsClientsContext.getProperty("classpaths"),
 					parallelism = FlinkJobsClientsContext.getProperty("parallelism.default", "1");
+			SavepointRestoreSettings savepointRestoreSettings = SavepointRestoreSettings.none();
 			if (options != null && !options.isEmpty()) {
 				if (options.containsKey("classpaths")) {
 					classpaths = options.get("classpaths");
 				}
-				if (options.containsKey("classpaths")) {
+				if (options.containsKey("parallelism")) {
 					parallelism = options.get("parallelism");
 				}
+				if (options.containsKey("fromSavepoint")) {
+					String savepointPath = options.get("fromSavepoint");
+					if (options.containsKey("allowNonRestoredState")) {
+						savepointRestoreSettings = SavepointRestoreSettings.forPath(savepointPath,
+								"true".equals(options.get("allowNonRestoredState")));
+					} else {
+						savepointRestoreSettings = SavepointRestoreSettings.forPath(savepointPath);
+					}
+				}
 			}
-			SavepointRestoreSettings savepointRestoreSettings = SavepointRestoreSettings.none();
+
 			Configuration configuration = getConfiguration();
 			Builder builder = PackagedProgram.newBuilder().setConfiguration(configuration)
 					.setEntryPointClassName(getEntryPointClassName(flinkJobs)).setJarFile(new File(getJar(flinkJobs)))
@@ -128,11 +143,70 @@ public class StandaloneRestClusterClient extends AbstractFlinkJobsClient {
 	}
 
 	@Override
+	public Acknowledge cancel(JobID jobId) throws Exception {
+		RestClusterClient<StandaloneClusterId> client = null;
+		try {
+			client = getRestClusterClient();
+			return client.cancel(jobId).get();
+		} catch (Exception e) {
+			throw e;
+		} finally {
+			if (client != null) {
+				client.close();
+			}
+		}
+	}
+
+	@Override
+	public Collection<JobStatusMessage> listJobs() throws Exception {
+		RestClusterClient<StandaloneClusterId> client = null;
+		try {
+			client = getRestClusterClient();
+			return client.listJobs().get();
+		} catch (Exception e) {
+			throw e;
+		} finally {
+			if (client != null) {
+				client.close();
+			}
+		}
+	}
+
+	public JobDetailsInfo getJobDetails(JobID jobId) throws Exception {
+		RestClusterClient<StandaloneClusterId> client = null;
+		try {
+			client = getRestClusterClient();
+			return client.getJobDetails(jobId).get();
+		} catch (Exception e) {
+			throw e;
+		} finally {
+			if (client != null) {
+				client.close();
+			}
+		}
+	}
+
+	@Override
 	public JobStatus getJobStatus(JobID jobId) throws Exception {
 		RestClusterClient<StandaloneClusterId> client = null;
 		try {
 			client = getRestClusterClient();
 			return client.getJobStatus(jobId).get();
+		} catch (Exception e) {
+			throw e;
+		} finally {
+			if (client != null) {
+				client.close();
+			}
+		}
+	}
+
+	@Override
+	public JobResult requestJobResult(JobID jobId) throws Exception {
+		RestClusterClient<StandaloneClusterId> client = null;
+		try {
+			client = getRestClusterClient();
+			return client.requestJobResult(jobId).get();
 		} catch (Exception e) {
 			throw e;
 		} finally {
@@ -158,26 +232,12 @@ public class StandaloneRestClusterClient extends AbstractFlinkJobsClient {
 		}
 	}
 
-	/**
-	 * 使用默认配置获取flink集群REST客户端
-	 * 
-	 * @return 返回flink集群REST客户端
-	 * @throws Exception
-	 *             发生异常
-	 */
+	@Override
 	public RestClusterClient<StandaloneClusterId> getRestClusterClient() throws Exception {
 		return newRestClusterClient(getConfiguration());
 	}
 
-	/**
-	 * 使用自定义配置获取flink集群REST客户端
-	 * 
-	 * @param customConf
-	 *            自定义配置
-	 * @return 返回flink集群REST客户端
-	 * @throws Exception
-	 *             发生异常
-	 */
+	@Override
 	public RestClusterClient<StandaloneClusterId> getRestClusterClient(Properties customConf) throws Exception {
 		return getRestClusterClient(getConfiguration(), customConf);
 	}

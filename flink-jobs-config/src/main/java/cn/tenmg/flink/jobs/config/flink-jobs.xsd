@@ -279,13 +279,9 @@
 		</xsd:annotation>
 		<xsd:restriction base="xsd:string">
 			<xsd:enumeration value="classpath" />
-			<xsd:enumeration value="detached" />
 			<xsd:enumeration value="allowNonRestoredState" />
 			<xsd:enumeration value="parallelism" />
 			<xsd:enumeration value="fromSavepoint" />
-			<xsd:enumeration value="shutdownOnAttachedExit" />
-			<xsd:enumeration value="target" />
-			<xsd:enumeration value="jobmanager" />
 		</xsd:restriction>
 	</xsd:simpleType>
 

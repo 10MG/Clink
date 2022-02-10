@@ -1,7 +1,14 @@
 package cn.tenmg.flink.jobs;
 
+import java.util.Collection;
+import java.util.Properties;
+
 import org.apache.flink.api.common.JobID;
 import org.apache.flink.api.common.JobStatus;
+import org.apache.flink.client.program.ClusterClient;
+import org.apache.flink.runtime.client.JobStatusMessage;
+import org.apache.flink.runtime.jobmaster.JobResult;
+import org.apache.flink.runtime.messages.Acknowledge;
 
 import cn.tenmg.flink.jobs.config.model.FlinkJobs;
 
@@ -12,7 +19,7 @@ import cn.tenmg.flink.jobs.config.model.FlinkJobs;
  * 
  * @since 1.2.0
  */
-public interface FlinkJobsClient {
+public interface FlinkJobsClient<T> {
 
 	/**
 	 * 提交flink-jobs应用程序
@@ -26,6 +33,26 @@ public interface FlinkJobsClient {
 	JobID submit(FlinkJobs flinkJobs) throws Exception;
 
 	/**
+	 * 取消flink作业
+	 * 
+	 * @param jobId
+	 *            flink作业标识
+	 * @return 通用确认信息
+	 * @throws Exception
+	 *             发生异常
+	 */
+	Acknowledge cancel(JobID jobId) throws Exception;
+
+	/**
+	 * 列出集群上当前正在运行和已完成的flink作业
+	 * 
+	 * @return 正在运行和已完成的flink作业集
+	 * @throws Exception
+	 *             发生异常
+	 */
+	Collection<JobStatusMessage> listJobs() throws Exception;
+
+	/**
 	 * 获取flink作业状态
 	 * 
 	 * @param jobId
@@ -37,6 +64,17 @@ public interface FlinkJobsClient {
 	JobStatus getJobStatus(JobID jobId) throws Exception;
 
 	/**
+	 * 请求flink作业运行结果
+	 * 
+	 * @param jobId
+	 *            flink作业标识
+	 * @return flink作业运行结果
+	 * @throws Exception
+	 *             发生异常
+	 */
+	JobResult requestJobResult(JobID jobId) throws Exception;
+
+	/**
 	 * 停止flink-jobs应用程序
 	 * 
 	 * @param jobId
@@ -46,5 +84,25 @@ public interface FlinkJobsClient {
 	 *             发生异常
 	 */
 	String stop(JobID jobId) throws Exception;
+
+	/**
+	 * 使用默认配置获取flink集群REST客户端
+	 * 
+	 * @return 返回flink集群REST客户端
+	 * @throws Exception
+	 *             发生异常
+	 */
+	ClusterClient<T> getRestClusterClient() throws Exception;
+
+	/**
+	 * 使用自定义配置获取flink集群REST客户端
+	 * 
+	 * @param customConf
+	 *            自定义配置
+	 * @return 返回flink集群REST客户端
+	 * @throws Exception
+	 *             发生异常
+	 */
+	ClusterClient<T> getRestClusterClient(Properties customConf) throws Exception;
 
 }
