@@ -69,15 +69,6 @@ JobStatus jobStatus = client.getJobStatus(jobId);// 获取作业状态
 System.out.println("Job status: " + jobStatus);
 ```
 
-
-### 停止作业
-
-
-```
-System.out.println("Flink job of jobId: " + jobId.toHexString() + " stopped, savepoint path: " + client.stop(jobId));// 停止flink-jobs作业
-	
-```
-
 ### 高级功能
 
 ```
@@ -85,6 +76,14 @@ System.out.println("Flink job of jobId: " + jobId.toHexString() + " stopped, sav
 RestClusterClient<StandaloneClusterId> restClusterClient = client.getRestClusterClient();
 JobDetailsInfo jobDetailsInfo = restClusterClient.getJobDetails(jobId).get();
 JobResult jobResult = restClusterClient.requestJobResult(jobId).get();
+```
+
+### 停止作业
+
+
+```
+System.out.println("Flink job of jobId: " + jobId.toHexString() + " stopped, savepoint path: " + client.stop(jobId));// 停止flink-jobs作业
+	
 ```
 
 ## 任务配置
