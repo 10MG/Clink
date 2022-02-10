@@ -14,7 +14,7 @@
 
 ## 介绍
 
-flink-jobs为基于Flink的Java应用程序提供快速集成的能力，可通过继承FlinkJobsRunner快速构建基于Java的Flink流批一体应用程序，实现异构数据库实时同步和ETL。flink-jobs提供了数据源管理模块，通过flink-jobs运行Flink SQL会变得极其简单。而通过使用[flink-jobs-launcher](https://gitee.com/tenmg/flink-jobs-launcher)，实现基于Java API启动flink-jobs应用程序，更可以将flink任务实现通过XML配置文件来管理。一个典型的flink-jobs部署架构如下：
+flink-jobs为基于Flink的Java应用程序提供快速集成的能力，可通过继承FlinkJobsRunner快速构建基于Java的Flink流批一体应用程序，实现异构数据库实时同步和ETL。flink-jobs提供了数据源管理模块，通过flink-jobs运行Flink SQL会变得极其简单。使用flink-jobs-clients可以实现基于Java API启动flink-jobs应用程序，还可以将flink任务实现通过XML配置文件来管理。一个典型的flink-jobs部署架构如下：
 
 ![典型的flink-jobs部署架构](%E5%85%B8%E5%9E%8B%E6%9E%B6%E6%9E%84.png)
 
@@ -149,7 +149,7 @@ public class HelloWorldService implements StreamService {
 
 - 也可打包后，通过命令行提交给flink集群执行（通常在pom.xml配置org.apache.maven.plugins.shade.resource.ManifestResourceTransformer的mainClass为App这个类，请注意是完整类名）：`flink run /yourpath/yourfile.jar "{\"serviceName\":\"yourServiceName\"}"`，更多运行参数详见[运行参数](https://gitee.com/tenmg/flink-jobs#%E8%BF%90%E8%A1%8C%E5%8F%82%E6%95%B0arguments)。
 
-- 此外，通过使用[flink-jobs-launcher](https://gitee.com/tenmg/flink-jobs-launcher)可以通过Java API的方式启动flink-jobs应用程序，这样启动操作就可以轻松集成到其他系统中（例如Java Web程序）。
+- 此外，使用flink-jobs-clients可以通过Java API的方式启动flink-jobs应用程序，这样启动操作就可以轻松集成到其他系统中（例如Java Web程序）。
 
 ## 快速入门
 
@@ -592,7 +592,7 @@ java.sql.Types.STRUCT=STRUCT
 
 ## 系统集成
 
-[flink-jobs-launcher](https://gitee.com/tenmg/flink-jobs-launcher)实现了使用XML配置文件来管理flink-jobs任务，这样开发Flink SQL任务会显得非常简单；同时，用户自定义的flink-jobs服务也可以被更轻松得集成到其他系统中。XML文件具有良好的可读性，并且在IDE环境下能够对配置进行自动提示。具体使用方法详见[flink-jobs-launcher开发文档](https://gitee.com/tenmg/flink-jobs-launcher)，以下介绍几种通过XML管理的flink-jobs任务：
+flink-jobs-clients实现了使用XML配置文件来管理flink-jobs任务，这样开发Flink SQL任务会显得非常简单；同时，用户自定义的flink-jobs服务也可以被更轻松得集成到其他系统中。XML文件具有良好的可读性，并且在IDE环境下能够对配置进行自动提示。具体使用方法详见[flink-jobs-clients开发文档](./flink-jobs-clients)，以下介绍几种通过XML管理的flink-jobs任务：
 
 ### 运行自定义服务
 
