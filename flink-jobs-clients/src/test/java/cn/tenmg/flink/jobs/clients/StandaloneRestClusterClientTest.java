@@ -2,6 +2,12 @@ package cn.tenmg.flink.jobs.clients;
 
 import org.apache.flink.api.common.JobID;
 import org.apache.flink.api.common.JobStatus;
+import org.apache.flink.client.deployment.StandaloneClusterId;
+import org.apache.flink.client.program.rest.RestClusterClient;
+import org.apache.flink.runtime.jobmaster.JobResult;
+import org.apache.flink.runtime.rest.messages.job.JobDetailsInfo;
+
+import com.alibaba.fastjson.JSON;
 
 import cn.tenmg.flink.jobs.clients.utils.ClassUtils;
 import cn.tenmg.flink.jobs.config.loader.XMLConfigLoader;
@@ -28,6 +34,14 @@ public class StandaloneRestClusterClientTest {
 		// JobID jobId = JobID.fromHexString(hexString);
 		JobStatus jobStatus = client.getJobStatus(jobId);// 获取作业状态
 		System.out.println("Job status: " + jobStatus);
+		
+		// 高级功能
+		//RestClusterClient<StandaloneClusterId> restClusterClient = client.getRestClusterClient(customConf);
+		RestClusterClient<StandaloneClusterId> restClusterClient = client.getRestClusterClient();
+		JobDetailsInfo jobDetailsInfo = restClusterClient.getJobDetails(jobId).get();
+		System.out.println("Job details info: " + JSON.toJSONString(jobDetailsInfo));
+		JobResult jobResult = restClusterClient.requestJobResult(jobId).get();
+		System.out.println("Job result: " + JSON.toJSONString(jobResult));
 
 		System.out.println(
 				"Flink job of jobId: " + jobId.toHexString() + " stopped, savepoint path: " + client.stop(jobId));// 停止flink-jobs作业
