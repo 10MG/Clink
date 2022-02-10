@@ -56,6 +56,7 @@ FlinkJobs flinkJobs = XMLConfigLoader.getInstance()
 		"	jar=\"/opt/flink-jobs/flink-jobs-quickstart-1.1.4.jar\" serviceName=\"HelloWorldService\">\r\n" + 
        		"</flink-jobs>");
 StandaloneRestClusterClient client = new StandaloneRestClusterClient();
+JobID jobId = client.submit(flinkJobs);
 System.out.println("Flink job launched: " + jobId.toHexString());// 启动flink-jobs作业
 ```
 
