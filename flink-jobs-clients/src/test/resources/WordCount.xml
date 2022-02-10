@@ -2,47 +2,5 @@
 <flink-jobs xmlns="http://www.10mg.cn/schema/flink-jobs"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://www.10mg.cn/schema/flink-jobs http://www.10mg.cn/schema/flink-jobs.xsd"
-	jar="D:\Workspace\git\ubmp-flink-jobs\target\ubmp-flink-jobs-1.0.0.jar">
-	<execute-sql dataSource="kafka">
-		CREATE TABLE OD_ORDER_INFO (
-			ORDER_ID STRING NOT NULL,
-			ORDER_NO STRING,
-			ORGAN_ID STRING,
-			PROCTIME  AS PROCTIME(),
-			PRIMARY KEY (ORDER_ID) NOT ENFORCED
-		)
-		WITH ('topic' = 'test.test.od_order_info', 'properties.group.id' = 'flink-jobs-fact_order_info')
-	</execute-sql>
-	
-	<execute-sql dataSource="test">
-		CREATE TABLE SYS_ORGAN_INFO (
-			ORGAN_ID STRING NOT NULL,
-			ORGAN_NAME STRING NOT NULL,
-			PRIMARY KEY (ORGAN_ID) NOT ENFORCED
-		)
-	</execute-sql>
-	
-	<execute-sql dataSource="test">
-		CREATE TABLE FACT_ORDER_INFO (
-			ORDER_ID STRING NOT NULL,
-			ORGAN_ID STRING,
-			ORGAN_NAME STRING,
-			PRIMARY KEY (ORDER_ID) NOT ENFORCED
-		)
-	</execute-sql>
-	
-	<execute-sql>
-		INSERT INTO FACT_ORDER_INFO(
-			ORDER_ID,
-			ORGAN_ID,
-			ORGAN_NAME
-		)
-		SELECT
-			O.ORDER_ID,
-			O.ORGAN_ID,
-			G.ORGAN_NAME
-		FROM OD_ORDER_INFO O
-		LEFT JOIN SYS_ORGAN_INFO FOR SYSTEM_TIME AS OF O.PROCTIME AS G
-		  ON O.ORGAN_ID = G.ORGAN_ID
-	</execute-sql>
+	jar="D:\Programs\flink-1.14.3\examples\streaming\TopSpeedWindowing.jar">
 </flink-jobs>
