@@ -113,9 +113,9 @@ runtimeMode | `String`             | 否 | 运行模式。可选值："BATCH"/"S
 
 ##### `<option>`
 
-特定运行选项配置。XSD文件提供了常用的选项key值枚举，能够在IDE环境下自动提示。但并不代表仅支持这些选项，其他任何flink支持的选项也是可以的，详见[Flink官方文档](https://flink.apache.org/)，或者通过运行`flink -h`获取帮助。
+特定运行选项配置。XSD文件提供了选项key值的枚举，能够在IDE环境下自动提示。
 
-![输入图片说明](https://images.gitee.com/uploads/images/2021/0804/151436_10dacc85_7920102.png "常用选项自动提示.png")
+![自动补全样例](AutomaticCompletionExample.png)
 
 属性  | 类型     | 必需 | 说明
 ------|----------|----|--------
