@@ -18,7 +18,7 @@ flink-jobs为基于Flink的Java应用程序提供快速集成的能力，可通�
 
 ![典型的flink-jobs部署架构](%E5%85%B8%E5%9E%8B%E6%9E%B6%E6%9E%84.png)
 
-当然，如果您选择使用[Flink CDC](https://github.com/ververica/flink-cdc-connectors)，那么以上的Debezium和Kafka可以去掉。
+当然，如果您选择使用[Flink CDC](https://github.com/ververica/flink-cdc-connectors)，那么以上的Debezium和Kafka就不需要了。总体而言，flink-jobs是一个集成开发框架，它能够帮助用户更好地使用Flink及Flink的周边生态（包括但不限于Flink CDC、FlinkX），尤其是Flink SQL和[Flink CDC](https://github.com/ververica/flink-cdc-connectors)。
 
 ## Flink版本
 
