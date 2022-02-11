@@ -233,13 +233,23 @@ public class StandaloneRestClusterClient extends AbstractFlinkJobsClient<Standal
 	}
 
 	@Override
-	public RestClusterClient<StandaloneClusterId> getRestClusterClient() throws Exception {
+	public RestClusterClient<StandaloneClusterId> getClusterClient() throws Exception {
 		return newRestClusterClient(getConfiguration());
 	}
 
 	@Override
-	public RestClusterClient<StandaloneClusterId> getRestClusterClient(Properties customConf) throws Exception {
+	public RestClusterClient<StandaloneClusterId> getClusterClient(Properties customConf) throws Exception {
 		return getRestClusterClient(getConfiguration(), customConf);
+	}
+
+	@Override
+	public RestClusterClient<StandaloneClusterId> getRestClusterClient() throws Exception {
+		return getClusterClient();
+	}
+
+	@Override
+	public RestClusterClient<StandaloneClusterId> getRestClusterClient(Properties customConf) throws Exception {
+		return getClusterClient(customConf);
 	}
 
 	private static synchronized Configuration getConfiguration() {
