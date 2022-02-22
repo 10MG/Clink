@@ -33,7 +33,7 @@ public abstract class ConfigurationUtils {
 			config = config.trim();
 			int len = config.length(), i = 0, backslashes = 0;
 			char a = DSLUtils.BLANK_SPACE, b = DSLUtils.BLANK_SPACE;
-			boolean isString = false, isKey = true;// 是否在字符串区域
+			boolean /* 是否在字符串区域 */ isString = false, isKey = true;
 			StringBuilder key = new StringBuilder(), value = new StringBuilder();
 			while (i < len) {
 				char c = config.charAt(i);
@@ -71,6 +71,18 @@ public abstract class ConfigurationUtils {
 							put(map, key, value);
 							key.setLength(0);
 							value.setLength(0);
+							a = b;
+							b = c;
+							i++;
+							for (; i < len; i++) {
+								c = config.charAt(i);
+								if (c > DSLUtils.BLANK_SPACE) {
+									break;
+								}
+								a = b;
+								b = c;
+							}
+							continue;
 						} else {
 							value.append(c);
 						}
@@ -110,7 +122,7 @@ public abstract class ConfigurationUtils {
 	}
 
 	private static void put(Map<String, String> map, StringBuilder key, StringBuilder value) {
-		String k = key.toString().trim(), v = value.toString();
+		String k = key.toString().trim(), v = value.toString().trim();
 		int last = k.length() - 1;
 		if (k.charAt(0) == DSLUtils.SINGLE_QUOTATION_MARK && k.charAt(last) == DSLUtils.SINGLE_QUOTATION_MARK) {
 			k = k.substring(1, last);
