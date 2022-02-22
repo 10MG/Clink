@@ -138,15 +138,24 @@ public class DataSyncOperator extends SqlReservedKeywordSupport<DataSync> {
 
 		String sql = fromCreateTableSQL(fromDataSource, dataSync.getTopic(), table, fromTable, columns, primaryKey,
 				fromConfig);
-		log.info("Create source table by Flink SQL: " + sql);
-		tableEnv.executeSql(sql);
+		if (log.isInfoEnabled()) {
+			log.info("Create source table by Flink SQL: " + SQLUtils.hiddePassword(sql));
+			tableEnv.executeSql(sql);
 
-		sql = toCreateTableSQL(toDataSource, table, columns, primaryKey, dataSync.getToConfig());
-		log.info("Create sink table by Flink SQL: " + sql);
-		tableEnv.executeSql(sql);
+			sql = toCreateTableSQL(toDataSource, table, columns, primaryKey, dataSync.getToConfig());
+			log.info("Create sink table by Flink SQL: " + SQLUtils.hiddePassword(sql));
+			tableEnv.executeSql(sql);
 
-		sql = insertSQL(table, fromTable, columns, params);
-		log.info("Execute Flink SQL: " + sql);
+			sql = insertSQL(table, fromTable, columns, params);
+			log.info("Execute Flink SQL: " + SQLUtils.hiddePassword(sql));
+		} else {
+			tableEnv.executeSql(sql);
+
+			sql = toCreateTableSQL(toDataSource, table, columns, primaryKey, dataSync.getToConfig());
+			tableEnv.executeSql(sql);
+
+			sql = insertSQL(table, fromTable, columns, params);
+		}
 		return tableEnv.executeSql(sql);
 	}
 
@@ -551,7 +560,9 @@ public class DataSyncOperator extends SqlReservedKeywordSupport<DataSync> {
 		sqlBuffer.append(") ").append("WITH (");
 		Map<String, String> actualDataSource = MapUtils.newHashMap(dataSource);
 		if (StringUtils.isBlank(fromConfig)) {
-			actualDataSource.put(GROUP_ID_KEY, FlinkJobsContext.getProperty(GROUP_ID_PREFIX_KEY) + table);// 设置properties.group.id
+			if (ConfigurationUtils.isKafka(actualDataSource)) {
+				actualDataSource.put(GROUP_ID_KEY, FlinkJobsContext.getProperty(GROUP_ID_PREFIX_KEY) + table);// 设置properties.group.id
+			}
 			if (topic != null) {
 				actualDataSource.put(TOPIC_KEY, topic);
 			}
@@ -559,7 +570,7 @@ public class DataSyncOperator extends SqlReservedKeywordSupport<DataSync> {
 		} else {
 			Map<String, String> config = ConfigurationUtils.load(fromConfig);
 			MapUtils.removeAll(actualDataSource, config.keySet());
-			if (!config.containsKey(GROUP_ID_KEY)) {
+			if (!config.containsKey(GROUP_ID_KEY) && ConfigurationUtils.isKafka(actualDataSource)) {
 				actualDataSource.put(GROUP_ID_KEY, FlinkJobsContext.getProperty(GROUP_ID_PREFIX_KEY) + table);// 设置properties.group.id
 			}
 			if (topic != null && !config.containsKey(TOPIC_KEY)) {

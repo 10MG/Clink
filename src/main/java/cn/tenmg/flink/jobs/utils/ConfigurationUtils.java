@@ -21,7 +21,8 @@ public abstract class ConfigurationUtils {
 	/**
 	 * 加载字符串配置
 	 * 
-	 * @param config 字符串配置
+	 * @param config
+	 *            字符串配置
 	 * @return 返回配置查找表
 	 */
 	public static Map<String, String> load(String config) {
@@ -89,11 +90,23 @@ public abstract class ConfigurationUtils {
 	/**
 	 * 判断一个数据源是否为JDBC
 	 * 
-	 * @param dataSource 数据源
+	 * @param dataSource
+	 *            数据源
 	 * @return 如果该数据源连接器connector为jdbc则返回true否则返回false
 	 */
 	public static boolean isJDBC(Map<String, String> dataSource) {
 		return "jdbc".equals(dataSource.get("connector"));
+	}
+
+	/**
+	 * 判断一个数据源是否为Kafka
+	 * 
+	 * @param dataSource
+	 *            数据源
+	 * @return 如果该数据源连接器connector为kafka则返回true否则返回false
+	 */
+	public static boolean isKafka(Map<String, String> dataSource) {
+		return "kafka".equals(dataSource.get("connector"));
 	}
 
 	private static void put(Map<String, String> map, StringBuilder key, StringBuilder value) {

@@ -3,6 +3,8 @@ package cn.tenmg.flink.jobs.utils;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import cn.tenmg.dsl.NamedScript;
 import cn.tenmg.dsl.utils.DSLUtils;
@@ -18,6 +20,8 @@ import cn.tenmg.flink.jobs.parser.FlinkSQLParamsParser;
 public abstract class SQLUtils {
 
 	public static final String SINGLE_QUOTATION_MARK = "'", SPACE_EQUALS_SPACE = " = ";
+
+	private static final Pattern passwordPattern = Pattern.compile("\\'password\\'[\\s]*\\=[\\s]*\\'[^']*[^,]*\\'");
 
 	/**
 	 * 将使用命名参数的脚本对象模型转换为可运行的Flink SQL
@@ -81,6 +85,23 @@ public abstract class SQLUtils {
 	 */
 	public static void apppendEquals(StringBuffer sqlBuffer) {
 		sqlBuffer.append(SPACE_EQUALS_SPACE);
+	}
+
+	/**
+	 * 隐藏密码
+	 * 
+	 * @param sql
+	 *            SQL
+	 * @return 隐藏密码的SQL
+	 */
+	public static String hiddePassword(String sql) {
+		Matcher matcher = passwordPattern.matcher(sql);
+		StringBuffer sb = new StringBuffer();
+		while (matcher.find()) {
+			matcher.appendReplacement(sb, "'password' = <hidden>");
+		}
+		matcher.appendTail(sb);
+		return sb.toString();
 	}
 
 	private static void appendProperty(StringBuffer sqlBuffer, Entry<String, String> entry) {
