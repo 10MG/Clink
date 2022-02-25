@@ -48,14 +48,12 @@
 
 	<distributionManagement>
 		<repository>
-			<id>nexus-release</id>
-			<name>3rd party</name>
-			<url>https://nexus.1chemic.com/repository/releases/</url>
+			<id>sonatype</id>
+			<url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
 		</repository>
 		<snapshotRepository>
-			<id>nexus-snapshots</id>
-			<name>Department Repository</name>
-			<url>https://nexus.1chemic.com/repository/snapshots/</url>
+			<id>sonatype</id>
+			<url>https://oss.sonatype.org/content/repositories/snapshots/</url>
 		</snapshotRepository>
 	</distributionManagement>
 
