@@ -107,6 +107,10 @@ class       | `String`             | 否 | 运行的主类。可通过配置文�
 serviceName | `String`             | 否 | 运行的服务名称。该名称由用户定义并实现根据服务名称获取服务的方法，[flink-jobs](https://gitee.com/tenmg/flink-jobs)则在运行时调用并确定运行的实际服务。在运行SQL任务时，通常通过flink-jobs内的其他标签（如`<execute-sql>`）指定操作，而无需指定serviceName。
 runtimeMode | `String`             | 否 | 运行模式。可选值："BATCH"/"STREAMING"/"AUTOMATIC"，相关含义详见[Flink](https://flink.apache.org)官方文档。
 
+#### `<configuration>`
+
+Flink作业的个性化配置，格式为`k1=v1[,k2=v3…]`。例如：`<configuration><![CDATA[pipeline.name=customJobName]]></configuration>`表示自定义Flink SQL作业的名称为`customJobName`。具体配置项详见[Flink官方文档](https://flink.apache.org/)。
+
 #### `<options>`
 
 运行选项配置，用于指定flink程序的运行选项。
