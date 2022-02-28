@@ -5,7 +5,7 @@
 	<description>flink-jobs应用程序客户端类库</description>
 	<groupId>cn.tenmg</groupId>
 	<artifactId>flink-jobs-clients</artifactId>
-	<version>1.2.0</version>
+	<version>1.2.1</version>
 	<packaging>jar</packaging>
 
 	<name>flink-jobs-clients</name>

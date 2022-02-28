@@ -1,7 +1,5 @@
 package cn.tenmg.flink.jobs.context;
 
-import java.io.IOException;
-import java.io.StringReader;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -10,7 +8,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 
-import org.apache.flink.configuration.ConfigurationUtils;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.table.api.TableConfig;
 import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
@@ -19,6 +16,7 @@ import org.slf4j.LoggerFactory;
 
 import cn.tenmg.dsl.utils.PropertiesLoaderUtils;
 import cn.tenmg.flink.jobs.exception.DataSourceNotFoundException;
+import cn.tenmg.flink.jobs.utils.ConfigurationUtils;
 import cn.tenmg.flink.jobs.utils.PlaceHolderUtils;
 
 /**
@@ -171,8 +169,9 @@ public abstract class FlinkJobsContext {
 		if (configuration == null) {
 			return getExecutionEnvironment();
 		}
-		StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment(
-				ConfigurationUtils.createConfiguration(loadConfiguration(new Properties(), configuration)));
+		StreamExecutionEnvironment env = StreamExecutionEnvironment
+				.getExecutionEnvironment(org.apache.flink.configuration.ConfigurationUtils
+						.createConfiguration(loadConfiguration(new Properties(), configuration)));
 		put(CURRENT_CONFIGURATION, configuration);
 		put(EXECUTION_ENVIRONMENT, env);
 		return env;
@@ -204,7 +203,8 @@ public abstract class FlinkJobsContext {
 			Properties properties = new Properties();
 			properties.putAll(FlinkJobsContext.getTableExecConfigs());
 			loadConfiguration(properties, getCurrentConfiguration());
-			tableConfig.addConfiguration(ConfigurationUtils.createConfiguration(properties));// 添加配置
+			tableConfig.addConfiguration(
+					org.apache.flink.configuration.ConfigurationUtils.createConfiguration(properties));// 添加配置
 			FlinkJobsContext.put(env, tableEnv);
 			FlinkJobsContext.put(tableEnv, tableEnv.getCurrentCatalog());
 		}
@@ -394,13 +394,7 @@ public abstract class FlinkJobsContext {
 
 	// 加载配置
 	private static Properties loadConfiguration(Properties properties, String configuration) {
-		if (configuration != null) {
-			try {
-				properties.load(new StringReader(configuration));
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
+		properties.putAll(ConfigurationUtils.load(configuration));
 		return properties;
 	}
 

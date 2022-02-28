@@ -24,13 +24,8 @@ public abstract class SqlReservedKeywordSupport<T extends Operate> extends Abstr
 	protected static final Set<String> sqlReservedKeywords = new HashSet<String>();
 
 	static {
-		String keywords = FlinkJobsContext.getProperty("sql.reserved.keywords");
-		if (StringUtils.isNotBlank(keywords)) {
-			String[] words = keywords.split(",");
-			for (int i = 0; i < words.length; i++) {
-				sqlReservedKeywords.add(words[i].trim().toUpperCase());
-			}
-		}
+		addReservedKeywords(FlinkJobsContext.getProperty("sql.reserved.keywords"));
+		addReservedKeywords(FlinkJobsContext.getProperty("sql.custom.keywords"));
 	}
 
 	protected static String wrapIfReservedKeywords(String word) {
@@ -38,6 +33,15 @@ public abstract class SqlReservedKeywordSupport<T extends Operate> extends Abstr
 			return SQL_RESERVED_KEYWORD_WRAP_PREFIX + word + SQL_RESERVED_KEYWORD_WRAP_SUFFIX;
 		}
 		return word;
+	}
+
+	private static void addReservedKeywords(String keywords) {
+		if (StringUtils.isNotBlank(keywords)) {
+			String[] words = keywords.split(",");
+			for (int i = 0; i < words.length; i++) {
+				sqlReservedKeywords.add(words[i].trim().toUpperCase());
+			}
+		}
 	}
 
 }

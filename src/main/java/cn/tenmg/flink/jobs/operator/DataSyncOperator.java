@@ -138,15 +138,24 @@ public class DataSyncOperator extends SqlReservedKeywordSupport<DataSync> {
 
 		String sql = fromCreateTableSQL(fromDataSource, dataSync.getTopic(), table, fromTable, columns, primaryKey,
 				fromConfig);
-		log.info("Create source table by Flink SQL: " + sql);
-		tableEnv.executeSql(sql);
+		if (log.isInfoEnabled()) {
+			log.info("Create source table by Flink SQL: " + SQLUtils.hiddePassword(sql));
+			tableEnv.executeSql(sql);
 
-		sql = toCreateTableSQL(toDataSource, table, columns, primaryKey, dataSync.getToConfig());
-		log.info("Create sink table by Flink SQL: " + sql);
-		tableEnv.executeSql(sql);
+			sql = toCreateTableSQL(toDataSource, table, columns, primaryKey, dataSync.getToConfig());
+			log.info("Create sink table by Flink SQL: " + SQLUtils.hiddePassword(sql));
+			tableEnv.executeSql(sql);
 
-		sql = insertSQL(table, fromTable, columns, params);
-		log.info("Execute Flink SQL: " + sql);
+			sql = insertSQL(table, fromTable, columns, params);
+			log.info("Execute Flink SQL: " + SQLUtils.hiddePassword(sql));
+		} else {
+			tableEnv.executeSql(sql);
+
+			sql = toCreateTableSQL(toDataSource, table, columns, primaryKey, dataSync.getToConfig());
+			tableEnv.executeSql(sql);
+
+			sql = insertSQL(table, fromTable, columns, params);
+		}
 		return tableEnv.executeSql(sql);
 	}
 
@@ -551,7 +560,9 @@ public class DataSyncOperator extends SqlReservedKeywordSupport<DataSync> {
 		sqlBuffer.append(") ").append("WITH (");
 		Map<String, String> actualDataSource = MapUtils.newHashMap(dataSource);
 		if (StringUtils.isBlank(fromConfig)) {
-			actualDataSource.put(GROUP_ID_KEY, FlinkJobsContext.getProperty(GROUP_ID_PREFIX_KEY) + table);// 设置properties.group.id
+			if (ConfigurationUtils.isKafka(actualDataSource)) {
+				actualDataSource.put(GROUP_ID_KEY, FlinkJobsContext.getProperty(GROUP_ID_PREFIX_KEY) + table);// 设置properties.group.id
+			}
 			if (topic != null) {
 				actualDataSource.put(TOPIC_KEY, topic);
 			}
@@ -559,7 +570,7 @@ public class DataSyncOperator extends SqlReservedKeywordSupport<DataSync> {
 		} else {
 			Map<String, String> config = ConfigurationUtils.load(fromConfig);
 			MapUtils.removeAll(actualDataSource, config.keySet());
-			if (!config.containsKey(GROUP_ID_KEY)) {
+			if (!config.containsKey(GROUP_ID_KEY) && ConfigurationUtils.isKafka(actualDataSource)) {
 				actualDataSource.put(GROUP_ID_KEY, FlinkJobsContext.getProperty(GROUP_ID_PREFIX_KEY) + table);// 设置properties.group.id
 			}
 			if (topic != null && !config.containsKey(TOPIC_KEY)) {
@@ -621,27 +632,37 @@ public class DataSyncOperator extends SqlReservedKeywordSupport<DataSync> {
 		StringBuffer sqlBuffer = new StringBuffer();
 		sqlBuffer.append("INSERT INTO ").append(table).append(DSLUtils.BLANK_SPACE).append("(");
 
-		Column column = columns.get(0);
-		String toName = column.getToName();
-		sqlBuffer.append(toName == null ? column.getFromName() : toName);
-		for (int i = 1, size = columns.size(); i < size; i++) {
+		boolean needComma = false;
+		Column column;
+		String toName;
+		for (int i = 0, size = columns.size(); i < size; i++) {
 			column = columns.get(i);
 			toName = column.getToName();
-			sqlBuffer.append(DSLUtils.COMMA).append(DSLUtils.BLANK_SPACE)
-					.append(toName == null ? column.getFromName() : toName);
+			if (!"from".equals(column.getStrategy())) {
+				if (needComma) {
+					sqlBuffer.append(DSLUtils.COMMA);
+				} else {
+					needComma = true;
+				}
+				sqlBuffer.append(DSLUtils.BLANK_SPACE).append(toName == null ? column.getFromName() : toName);
+			}
 		}
 
 		sqlBuffer.append(") SELECT ");
-		column = columns.get(0);
-		String script = column.getScript();
-		sqlBuffer.append(
-				StringUtils.isBlank(script) ? column.getFromName() : toScript(script, column.getFromName(), params));
-		for (int i = 1, size = columns.size(); i < size; i++) {
+		needComma = false;
+		String script;
+		for (int i = 0, size = columns.size(); i < size; i++) {
 			column = columns.get(i);
 			script = column.getScript();
-			sqlBuffer.append(DSLUtils.COMMA).append(DSLUtils.BLANK_SPACE)
-					.append(StringUtils.isBlank(script) ? column.getFromName()
-							: toScript(script, column.getFromName(), params));
+			if (!"from".equals(column.getStrategy())) {
+				if (needComma) {
+					sqlBuffer.append(DSLUtils.COMMA);
+				} else {
+					needComma = true;
+				}
+				sqlBuffer.append(DSLUtils.BLANK_SPACE).append(StringUtils.isBlank(script) ? column.getFromName()
+						: toScript(script, column.getFromName(), params));
+			}
 		}
 
 		sqlBuffer.append(" FROM ").append(fromTable);
