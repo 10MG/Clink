@@ -394,7 +394,10 @@ public abstract class FlinkJobsContext {
 
 	// 加载配置
 	private static Properties loadConfiguration(Properties properties, String configuration) {
-		properties.putAll(ConfigurationUtils.load(configuration));
+		Map<String, String> config = ConfigurationUtils.load(configuration);
+		if (config != null) {
+			properties.putAll(config);
+		}
 		return properties;
 	}
 

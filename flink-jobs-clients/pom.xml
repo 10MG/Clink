@@ -5,7 +5,7 @@
 	<description>flink-jobs应用程序客户端类库</description>
 	<groupId>cn.tenmg</groupId>
 	<artifactId>flink-jobs-clients</artifactId>
-	<version>1.2.1</version>
+	<version>1.2.1-SNAPSHOT</version>
 	<packaging>jar</packaging>
 
 	<name>flink-jobs-clients</name>
@@ -82,6 +82,7 @@
 			<groupId>org.apache.flink</groupId>
 			<artifactId>flink-clients_${scala.binary.version}</artifactId>
 			<version>${flink.version}</version>
+			<scope>provided</scope>
 		</dependency>
 
 		<!-- https://mvnrepository.com/artifact/org.apache.logging.log4j/log4j-api -->
