@@ -44,7 +44,7 @@ public abstract class BasicFlinkJobsRunner {
 	 * @throws Exception
 	 *             发生异常
 	 */
-	public void run(String... args) throws Exception {
+	public void run(String[] args) throws Exception {
 		Arguments arguments;
 		if (args == null || args.length < 1) {
 			throw new IllegalArgumentException("You must provide a parameter in JSON format or the path of json file");
