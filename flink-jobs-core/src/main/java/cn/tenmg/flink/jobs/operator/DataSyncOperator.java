@@ -29,11 +29,11 @@ import cn.tenmg.flink.jobs.model.data.sync.Column;
 import cn.tenmg.flink.jobs.operator.data.sync.MetaDataGetter;
 import cn.tenmg.flink.jobs.operator.data.sync.MetaDataGetter.TableMetaData;
 import cn.tenmg.flink.jobs.operator.data.sync.MetaDataGetterFactory;
-import cn.tenmg.flink.jobs.operator.support.SqlReservedKeywordSupport;
 import cn.tenmg.flink.jobs.parser.FlinkSQLParamsParser;
 import cn.tenmg.flink.jobs.utils.ConfigurationUtils;
 import cn.tenmg.flink.jobs.utils.MapUtils;
 import cn.tenmg.flink.jobs.utils.SQLUtils;
+import cn.tenmg.flink.jobs.utils.StreamTableEnvironmentUtils;
 
 /**
  * 数据同步操作执行器
@@ -42,7 +42,7 @@ import cn.tenmg.flink.jobs.utils.SQLUtils;
  * 
  * @since 1.1.2
  */
-public class DataSyncOperator extends SqlReservedKeywordSupport<DataSync> {
+public class DataSyncOperator extends AbstractOperator<DataSync> {
 
 	private static Logger log = LoggerFactory.getLogger(DataSyncOperator.class);
 
@@ -114,13 +114,10 @@ public class DataSyncOperator extends SqlReservedKeywordSupport<DataSync> {
 			throw new IllegalArgumentException("The property 'from', 'to' or 'table' cannot be blank.");
 		}
 		StreamTableEnvironment tableEnv = FlinkJobsContext.getOrCreateStreamTableEnvironment(env);
-		String currentCatalog = tableEnv.getCurrentCatalog(),
-				defaultCatalog = FlinkJobsContext.getDefaultCatalog(tableEnv),
-				fromTable = FlinkJobsContext.getProperty(FROM_TABLE_PREFIX_KEY) + table,
+		String fromTable = FlinkJobsContext.getProperty(FROM_TABLE_PREFIX_KEY) + table,
 				fromConfig = dataSync.getFromConfig();
-		if (!defaultCatalog.equals(currentCatalog)) {
-			tableEnv.useCatalog(defaultCatalog);
-		}
+		StreamTableEnvironmentUtils.useCatalogOrDefault(tableEnv, null);
+
 		TableConfig tableConfig = tableEnv.getConfig();
 		if (tableConfig != null) {
 			Configuration configuration = tableConfig.getConfiguration();
@@ -615,7 +612,7 @@ public class DataSyncOperator extends SqlReservedKeywordSupport<DataSync> {
 		}
 		sqlBuffer.append(") ").append("WITH (");
 		Map<String, String> actualDataSource = MapUtils.newHashMap(dataSource);
-		actualDataSource.put("table-name", table);
+		actualDataSource.put(SQLUtils.TABLE_NAME, table);
 		if (StringUtils.isBlank(toConfig)) {
 			SQLUtils.appendDataSource(sqlBuffer, actualDataSource);
 		} else {
@@ -705,8 +702,8 @@ public class DataSyncOperator extends SqlReservedKeywordSupport<DataSync> {
 	 *            列
 	 */
 	private static void wrapColumnName(Column column) {
-		column.setFromName(wrapIfReservedKeywords(column.getFromName()));
-		column.setToName(wrapIfReservedKeywords(column.getToName()));
+		column.setFromName(SQLUtils.wrapIfReservedKeywords(column.getFromName()));
+		column.setToName(SQLUtils.wrapIfReservedKeywords(column.getToName()));
 	}
 
 	/**

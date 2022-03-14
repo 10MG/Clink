@@ -133,8 +133,6 @@ public class StandaloneRestClusterClient extends AbstractFlinkJobsClient<Standal
 				}
 			}
 			return null;
-		} catch (Exception e) {
-			throw e;
 		} finally {
 			if (client != null) {
 				client.close();
@@ -148,8 +146,6 @@ public class StandaloneRestClusterClient extends AbstractFlinkJobsClient<Standal
 		try {
 			client = getRestClusterClient();
 			return client.cancel(jobId).get();
-		} catch (Exception e) {
-			throw e;
 		} finally {
 			if (client != null) {
 				client.close();
@@ -163,8 +159,6 @@ public class StandaloneRestClusterClient extends AbstractFlinkJobsClient<Standal
 		try {
 			client = getRestClusterClient();
 			return client.listJobs().get();
-		} catch (Exception e) {
-			throw e;
 		} finally {
 			if (client != null) {
 				client.close();
@@ -177,8 +171,6 @@ public class StandaloneRestClusterClient extends AbstractFlinkJobsClient<Standal
 		try {
 			client = getRestClusterClient();
 			return client.getJobDetails(jobId).get();
-		} catch (Exception e) {
-			throw e;
 		} finally {
 			if (client != null) {
 				client.close();
@@ -192,8 +184,6 @@ public class StandaloneRestClusterClient extends AbstractFlinkJobsClient<Standal
 		try {
 			client = getRestClusterClient();
 			return client.getJobStatus(jobId).get();
-		} catch (Exception e) {
-			throw e;
 		} finally {
 			if (client != null) {
 				client.close();
@@ -207,8 +197,6 @@ public class StandaloneRestClusterClient extends AbstractFlinkJobsClient<Standal
 		try {
 			client = getRestClusterClient();
 			return client.requestJobResult(jobId).get();
-		} catch (Exception e) {
-			throw e;
 		} finally {
 			if (client != null) {
 				client.close();
@@ -223,8 +211,6 @@ public class StandaloneRestClusterClient extends AbstractFlinkJobsClient<Standal
 			client = getRestClusterClient();
 			return client.stopWithSavepoint(jobId, false, FlinkJobsClientsContext.getProperty("state.savepoints.dir"))
 					.get();
-		} catch (Exception e) {
-			throw e;
 		} finally {
 			if (client != null) {
 				client.close();

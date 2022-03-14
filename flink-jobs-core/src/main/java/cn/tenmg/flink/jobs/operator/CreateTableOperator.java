@@ -1,263 +1,162 @@
 package cn.tenmg.flink.jobs.operator;
 
-import cn.tenmg.dsl.utils.DSLUtils;
-import cn.tenmg.dsl.utils.StringUtils;
-import cn.tenmg.flink.jobs.context.FlinkJobsContext;
-import cn.tenmg.flink.jobs.model.CreateTable;
-import cn.tenmg.flink.jobs.utils.*;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+
+import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.sql.*;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-
+import cn.tenmg.dsl.utils.DSLUtils;
+import cn.tenmg.dsl.utils.StringUtils;
+import cn.tenmg.flink.jobs.context.FlinkJobsContext;
+import cn.tenmg.flink.jobs.kit.HashMapKit;
+import cn.tenmg.flink.jobs.model.CreateTable;
+import cn.tenmg.flink.jobs.model.create.table.Column;
+import cn.tenmg.flink.jobs.operator.data.sync.MetaDataGetter;
+import cn.tenmg.flink.jobs.operator.data.sync.MetaDataGetter.TableMetaData;
+import cn.tenmg.flink.jobs.operator.data.sync.MetaDataGetterFactory;
+import cn.tenmg.flink.jobs.utils.SQLUtils;
+import cn.tenmg.flink.jobs.utils.StreamTableEnvironmentUtils;
 
 /**
- *  SQL操作执行器
+ * 建表SQL操作执行器
  *
- *  @author dufeng
+ * @author dufeng
  *
- *  @since 1.3.0
+ * @author June wjzhao@aliyun.com
+ * 
+ * @since 1.3.0
  *
  */
-public class CreateTableOperator extends AbstractSqlOperator<CreateTable>{
+public class CreateTableOperator extends AbstractOperator<CreateTable> {
 
-    private static Logger logger = LoggerFactory.getLogger(CreateTableOperator.class);
+	private static Logger log = LoggerFactory.getLogger(CreateTableOperator.class);
 
-    private static final String TABLE_NAME = "table-name",
-    /**
-     * 删除语句正则表达式
-     */
-    DELETE_CLAUSE_REGEX = "[\\s]*[D|d][E|e][L|l][E|e][T|t][E|e][\\s]+[F|f][R|r][O|o][M|m][\\s]+[\\S]+",
+	private static final String SMART_KEY = "data.sync.smart";
 
-    /**
-     * 更新语句正则表达式
-     */
-    UPDATE_CLAUSE_REGEX = "[\\s]*[U|u][P|p][D|d][A|a][T|t][E|e][\\s]+[\\S]+[\\s]+[S|s][E|e][T|t][\\s]+[\\S]+";
+	@Override
+	public Object execute(StreamExecutionEnvironment env, CreateTable createTable, Map<String, Object> params)
+			throws Exception {
+		String datasource = createTable.getDataSource(), tableName = createTable.getTableName();
+		if (StringUtils.isBlank(datasource) || StringUtils.isBlank(tableName)) {
+			throw new IllegalArgumentException("The property 'dataSource' or 'tableName' cannot be blank.");
+		}
+		StreamTableEnvironment tableEnv = FlinkJobsContext.getOrCreateStreamTableEnvironment(env);
+		StreamTableEnvironmentUtils.useCatalogOrDefault(tableEnv, createTable.getCatalog());
 
-    private static final Pattern WITH_CLAUSE_PATTERN = Pattern
-            .compile("[W|w][I|i][T|t][H|h][\\s]*\\([\\s\\S]*\\)[\\s]*$"),
-            CREATE_CLAUSE_PATTERN = Pattern
-                    .compile("[C|c][R|r][E|e][A|a][T|t][E|e][\\s]+[T|t][A|a][B|b][L|l][E|e][\\s]+[^\\s\\(]+");
+		Map<String, String> dataSource = FlinkJobsContext.getDatasource(datasource);
+		String primaryKey = collation(createTable, dataSource);
+		String sql = createTableSQL(dataSource, tableName, createTable.getBindTableName(), createTable.getColumns(),
+				primaryKey);
+		if (log.isInfoEnabled()) {
+			log.info("Create table by Flink SQL: " + SQLUtils.hiddePassword(sql));
+		}
+		return tableEnv.executeSql(sql);
+	}
 
-    @Override
-    Object execute(StreamTableEnvironment tableEnv, CreateTable operate, Map<String, Object> params) throws Exception {
+	/**
+	 * 校对和整理列配置并返回主键列（多个列之间使用“,”分隔）
+	 * 
+	 * @param createTable
+	 *            建表配置对象
+	 * @param dataSource
+	 *            数据源
+	 * @return 返回主键
+	 * @throws Exception
+	 *             发生异常
+	 */
+	private static String collation(CreateTable createTable, Map<String, String> dataSource) throws Exception {
+		List<Column> columns = createTable.getColumns();
+		if (columns == null) {
+			createTable.setColumns(columns = new ArrayList<Column>());
+		}
+		Boolean smart = createTable.getSmart();
+		if (smart == null) {
+			smart = Boolean.valueOf(FlinkJobsContext.getProperty(SMART_KEY));
+		}
+		String primaryKey = createTable.getPrimaryKey();
+		if (Boolean.TRUE.equals(smart)) {// 智能模式，自动查询列名、数据类型
+			MetaDataGetter metaDataGetter = MetaDataGetterFactory.getMetaDataGetter(dataSource);
+			TableMetaData tableMetaData = metaDataGetter.getTableMetaData(dataSource, createTable.getTableName());
+			Set<String> primaryKeys = tableMetaData.getPrimaryKeys();
+			if (primaryKey == null && primaryKeys != null && !primaryKeys.isEmpty()) {
+				primaryKey = String.join(",", primaryKeys);
+			}
 
-        String dataSourceStr = operate.getDataSource();
-        String tableName = operate.getTableName();
-        Map<String, String> dataSource = FlinkJobsContext.getDatasource(dataSourceStr);
+			if (!columns.isEmpty()) {// 有用户自定义列
+				collationCustom(columns);
+			}
+			addSmartLoadColumns(columns, tableMetaData.getColumns());
+		} else if (columns.isEmpty()) {// 没有用户自定义列
+			throw new IllegalArgumentException(
+					"At least one column must be configured in manual mode, or set the configuration '" + SMART_KEY
+							+ "=true' at " + FlinkJobsContext.getConfigurationFile()
+							+ " to enable automatic column acquisition in smart mode");
+		} else {// 全部是用户自定义列
+			collationCustom(columns);
+		}
+		return primaryKey;
+	}
 
-        Connection con = null;
-        PreparedStatement ps = null;
+	/**
+	 * 添加智能加载的列
+	 * 
+	 * @param columns
+	 *            列的列表
+	 * @param columnsMap
+	 *            智能加载的列
+	 */
+	private static void addSmartLoadColumns(List<Column> columns, Map<String, String> columnsMap) {
+		for (Iterator<Entry<String, String>> it = columnsMap.entrySet().iterator(); it.hasNext();) {
+			Entry<String, String> entry = it.next();
+			Column column = new Column();
+			column.setName(SQLUtils.wrapIfReservedKeywords(entry.getKey()));// SQL保留关键字包装
+			column.setType(entry.getValue());
+			columns.add(column);
+		}
+	}
 
-        try {
-            List<Map<String, Object>> rows = getTableColumnsMetaData(dataSource, "falcon", tableName);
-            StringBuilder sb = new StringBuilder("Create table " + tableName + "(\n");
-            for (int i = 0; i < rows.size(); i++) {
-                Map<String, Object> map = rows.get(i);
-                sb.append(map.get("COLUMN_NAME") + " " + convertDataType(map) + ",\n");
-            }
+	/**
+	 * 整理自定义列
+	 * 
+	 * @param columns
+	 *            自定义列
+	 */
+	private static void collationCustom(List<Column> columns) {
+		for (int i = 0, size = columns.size(); i < size; i++) {
+			Column column = columns.get(i);
+			column.setName(SQLUtils.wrapIfReservedKeywords(column.getName()));// SQL保留关键字包装
+		}
+	}
 
-            String primaryKeyStr = String.join(",", rows.stream().filter(x -> "PRI".equals(x.get("COLUMN_KEY"))).map(x -> x.get("COLUMN_NAME").toString()).collect(Collectors.toList()));
-            if (primaryKeyStr != null) {
-                sb.append("PRIMARY KEY(" + primaryKeyStr + ") NOT ENFORCED \n)");
-            } else {
-                sb.append(")\n");
-            }
+	private static String createTableSQL(Map<String, String> dataSource, String tableName, String bindTableName,
+			List<Column> columns, String primaryKey) throws IOException {
+		StringBuffer sqlBuffer = new StringBuffer();
+		sqlBuffer.append("CREATE TABLE ").append(tableName).append("(");
 
+		Column column = columns.get(0);
+		sqlBuffer.append(column.getName()).append(DSLUtils.BLANK_SPACE).append(column.getType());
 
-            logger.info("generated create table statement: " + sb.toString());
-
-            String statement = wrapDataSource(sb.toString(), dataSource);
-
-            return tableEnv.executeSql(statement);
-        } catch (Exception e) {
-            throw e;
-        } finally {
-            JDBCUtils.close(ps);
-            JDBCUtils.close(con);
-        }
-
-    }
-
-    /**
-     * 包装数据源，即包装Flink SQL的CREATE TABLE语句的WITH子句
-     *
-     * @param script SQL脚本
-     * @throws IOException I/O异常
-     */
-    private static String wrapDataSource(String script, Map<String, String> dataSource) throws IOException {
-        Matcher matcher = WITH_CLAUSE_PATTERN.matcher(script);
-        StringBuffer sqlBuffer = new StringBuffer();
-        if (matcher.find()) {
-            String group = matcher.group();
-            int startIndex = group.indexOf("(") + 1, endIndex = group.lastIndexOf(")");
-            String start = group.substring(0, startIndex), value = group.substring(startIndex, endIndex),
-                    end = group.substring(endIndex);
-            if (StringUtils.isBlank(value)) {
-                matcher.appendReplacement(sqlBuffer, start);
-                SQLUtils.appendDataSource(sqlBuffer, dataSource);
-                if (!dataSource.containsKey(TABLE_NAME)) {
-                    apppendDefaultTableName(sqlBuffer, script);
-                }
-                sqlBuffer.append(end);
-            } else {
-                Map<String, String> config = ConfigurationUtils.load(value),
-                        actualDataSource = MapUtils.newHashMap(dataSource);
-                MapUtils.removeAll(actualDataSource, config.keySet());
-                matcher.appendReplacement(sqlBuffer, start);
-                StringBuilder blank = new StringBuilder();
-                int len = value.length(), i = len - 1;
-                while (i > 0) {
-                    char c = value.charAt(i);
-                    if (c > DSLUtils.BLANK_SPACE) {
-                        break;
-                    }
-                    blank.append(c);
-                    i--;
-                }
-                sqlBuffer.append(value.substring(0, i + 1)).append(DSLUtils.COMMA).append(DSLUtils.BLANK_SPACE);
-                SQLUtils.appendDataSource(sqlBuffer, actualDataSource);
-                if (ConfigurationUtils.isJDBC(actualDataSource) && !config.containsKey(TABLE_NAME)
-                        && !actualDataSource.containsKey(TABLE_NAME)) {
-                    apppendDefaultTableName(sqlBuffer, script);
-                }
-                sqlBuffer.append(blank.reverse()).append(end);
-            }
-        } else {
-            sqlBuffer.append(script);
-            sqlBuffer.append(" WITH (");
-            SQLUtils.appendDataSource(sqlBuffer, dataSource);
-            if (!dataSource.containsKey(TABLE_NAME)) {
-                apppendDefaultTableName(sqlBuffer, script);
-            }
-            sqlBuffer.append(")");
-        }
-        return sqlBuffer.toString();
-    }
-
-    /**
-     * get table columns meta data via database and tableName
-     * @param dataSource
-     * @param database
-     * @param table
-     * @return
-     */
-    private List<Map<String, Object>> getTableColumnsMetaData(Map<String, String> dataSource, String database, String table) {
-        final String query = "select `COLUMN_NAME`, `COLUMN_KEY`, `DATA_TYPE`, `COLUMN_SIZE`, `DECIMAL_DIGITS` from `information_schema`.`COLUMNS` where `TABLE_SCHEMA`=? and `TABLE_NAME`=?";
-        List<Map<String, Object>> rows;
-        logger.info("database: " + database);
-        logger.info("table: " + table);
-        try {
-            if (logger.isDebugEnabled()) {
-                logger.debug(String.format("Executing query '%s'", query));
-            }
-            rows = executeQuery(query, dataSource, database, table);
-        } catch (ClassNotFoundException se) {
-            throw new IllegalArgumentException("Failed to find jdbc driver." + se.getMessage(), se);
-        } catch (SQLException se) {
-            throw new IllegalArgumentException("Failed to get table schema info from StarRocks. " + se.getMessage(), se);
-        }
-        return rows;
-    }
-
-    /**
-     * execute sql query
-     * @param query
-     * @param dataSource
-     * @param args
-     * @return
-     * @throws ClassNotFoundException
-     * @throws SQLException
-     */
-    private List<Map<String, Object>> executeQuery(String query, Map<String, String> dataSource, String... args) throws ClassNotFoundException, SQLException {
-        Connection con = null;
-        con = JDBCUtils.getConnection(dataSource);
-        PreparedStatement stmt = con.prepareStatement(query, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
-        for (int i = 0; i < args.length; i++) {
-            stmt.setString(i + 1, args[i]);
-        }
-
-        logger.info(stmt.toString());
-        ResultSet rs = stmt.executeQuery();
-        rs.next();
-        ResultSetMetaData meta = rs.getMetaData();
-        int columns = meta.getColumnCount();
-        List<Map<String, Object>> list = new ArrayList<>();
-        int currRowIndex = rs.getRow();
-        rs.beforeFirst();
-        while (rs.next()) {
-            Map<String, Object> row = new HashMap<>(columns);
-            for (int i = 1; i <= columns; ++i) {
-                row.put(meta.getColumnName(i), rs.getObject(i));
-            }
-            list.add(row);
-        }
-        rs.absolute(currRowIndex);
-        rs.close();
-        con.close();
-        return list;
-    }
-
-    /**
-     * 追加默认表名，默认表名从CREATE语句中获取
-     *
-     * @param sqlBuffer
-     *            SQL语句缓冲器
-     * @param script
-     *            原SQL脚本
-     */
-    private static void apppendDefaultTableName(StringBuffer sqlBuffer, String script) {
-        Matcher createMatcher = CREATE_CLAUSE_PATTERN.matcher(script);
-        if (createMatcher.find()) {
-            String group = createMatcher.group();
-            StringBuilder tableNameBuilder = new StringBuilder();
-            int i = group.length();
-            while (--i > 0) {
-                char c = group.charAt(i);
-                if (c > DSLUtils.BLANK_SPACE) {
-                    tableNameBuilder.append(c);
-                    break;
-                }
-            }
-            while (--i > 0) {
-                char c = group.charAt(i);
-                if (c > DSLUtils.BLANK_SPACE) {
-                    tableNameBuilder.append(c);
-                } else {
-                    break;
-                }
-            }
-            sqlBuffer.append(DSLUtils.COMMA).append(DSLUtils.BLANK_SPACE).append(SQLUtils.wrapString(TABLE_NAME));
-            SQLUtils.apppendEquals(sqlBuffer);
-            sqlBuffer.append(SQLUtils.wrapString(tableNameBuilder.reverse().toString()));
-        }
-    }
-
-    /**
-     * convert starrocks data type to flink data type
-     * @param map
-     * @return
-     */
-    private String convertDataType(Map<String, Object> map) {
-        String dataType = map.get("DATA_TYPE").toString();
-        if ("varchar".equals(dataType)) {
-            return dataType + "(" + map.get("COLUMN_SIZE").toString() + ")";
-        } else if ("decimal".equals(dataType)) {
-            return dataType + "(" + map.get("COLUMN_SIZE") + "," + map.get("DECIMAL_DIGITS") + ")";
-        } else if ("datetime".equals(dataType)) {
-            return "timestamp(3)";
-        } else {
-            return dataType;
-        }
-    }
+		for (int i = 1, size = columns.size(); i < size; i++) {
+			sqlBuffer.append(DSLUtils.COMMA).append(DSLUtils.BLANK_SPACE).append(column.getName())
+					.append(DSLUtils.BLANK_SPACE).append(column.getType());
+		}
+		if (StringUtils.isNotBlank(primaryKey)) {
+			sqlBuffer.append(DSLUtils.COMMA).append(DSLUtils.BLANK_SPACE).append("PRIMARY KEY (").append(primaryKey)
+					.append(") NOT ENFORCED");
+		}
+		sqlBuffer.append(") ").append("WITH (");
+		SQLUtils.appendDataSource(sqlBuffer, HashMapKit.init(dataSource)
+				.put(SQLUtils.TABLE_NAME, StringUtils.isBlank(bindTableName) ? tableName : bindTableName).get());
+		sqlBuffer.append(")");
+		return sqlBuffer.toString();
+	}
 
 }

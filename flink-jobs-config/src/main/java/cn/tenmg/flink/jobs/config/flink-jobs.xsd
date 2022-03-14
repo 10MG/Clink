@@ -25,7 +25,7 @@
 					minOccurs="0" type="SqlQueryType" />
 				<xsd:element ref="data-sync" maxOccurs="unbounded"
 					minOccurs="0" />
-				<xsd:element name="create-table" maxOccurs="unbounded"
+				<xsd:element ref="create-table" maxOccurs="unbounded"
 					minOccurs="0" />
 			</xsd:choice>
 			<xsd:attribute name="jar" type="xsd:string">
@@ -160,28 +160,6 @@
 		</xsd:complexType>
 	</xsd:element>
 
-	<xsd:element name="create-table">
-		<xsd:annotation>
-			<xsd:documentation>create table</xsd:documentation>
-		</xsd:annotation>
-		<xsd:complexType>
-			<xsd:simpleContent>
-				<xsd:extension base="SqlQueryType">
-					<xsd:attribute name="dataSource">
-						<xsd:annotation>
-							<xsd:documentation>data source</xsd:documentation>
-						</xsd:annotation>
-					</xsd:attribute>
-					<xsd:attribute name="tableName">
-						<xsd:annotation>
-							<xsd:documentation>table name</xsd:documentation>
-						</xsd:annotation>
-					</xsd:attribute>
-				</xsd:extension>
-			</xsd:simpleContent>
-		</xsd:complexType>
-	</xsd:element>
-
 	<xsd:element name="jdbc">
 		<xsd:annotation>
 			<xsd:documentation>执行JDBC</xsd:documentation>
@@ -223,7 +201,7 @@
 			<xsd:documentation>数据同步</xsd:documentation>
 		</xsd:annotation>
 		<xsd:complexType>
-			<xsd:choice>
+			<xsd:choice minOccurs="0" maxOccurs="unbounded">
 				<xsd:element name="from-config" minOccurs="0"
 					maxOccurs="1" type="xsd:string">
 					<xsd:annotation>
@@ -284,6 +262,74 @@
 			<xsd:attribute name="timestamp" type="xsd:string">
 				<xsd:annotation>
 					<xsd:documentation>时间戳字段名，多个字段名使用“,”分隔。设置这个值后，会使用这些字段名创建源表和目标表，并在数据同步时写入这些字段值。
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:attribute>
+			<xsd:attribute name="smart" type="xsd:boolean">
+				<xsd:annotation>
+					<xsd:documentation>是否开启智能模式。不设置时，根据flink-jobs应用程序的全局配置确定是否开启智能模式，flink-jobs应用程序的全局默认配置为`data.sync.smart=true`。
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:attribute>
+		</xsd:complexType>
+	</xsd:element>
+
+	<xsd:element name="create-table">
+		<xsd:annotation>
+			<xsd:documentation>执行SQL</xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexType>
+			<xsd:choice>
+				<xsd:element name="column" minOccurs="0"
+					maxOccurs="unbounded">
+					<xsd:annotation>
+						<xsd:documentation>列</xsd:documentation>
+					</xsd:annotation>
+					<xsd:complexType>
+						<xsd:simpleContent>
+							<xsd:extension base="xsd:string">
+								<xsd:attribute name="name" type="xsd:string"
+									use="required">
+									<xsd:annotation>
+										<xsd:documentation>列名</xsd:documentation>
+									</xsd:annotation>
+								</xsd:attribute>
+							</xsd:extension>
+						</xsd:simpleContent>
+					</xsd:complexType>
+				</xsd:element>
+			</xsd:choice>
+			<xsd:attribute name="saveAs" type="xsd:string">
+				<xsd:annotation>
+					<xsd:documentation>将返回值保存为变量的变量名</xsd:documentation>
+				</xsd:annotation>
+			</xsd:attribute>
+			<xsd:attribute name="catalog" type="xsd:string">
+				<xsd:annotation>
+					<xsd:documentation>使用的目录。默认由Flink决定</xsd:documentation>
+				</xsd:annotation>
+			</xsd:attribute>
+			<xsd:attribute name="dataSource" type="xsd:string"
+				use="required">
+				<xsd:annotation>
+					<xsd:documentation>数据源名称。目前仅支持JDBC数据源</xsd:documentation>
+				</xsd:annotation>
+			</xsd:attribute>
+			<xsd:attribute name="tableName" type="xsd:string"
+				use="required">
+				<xsd:annotation>
+					<xsd:documentation>表名</xsd:documentation>
+				</xsd:annotation>
+			</xsd:attribute>
+			<xsd:attribute name="bindTableName" type="xsd:string">
+				<xsd:annotation>
+					<xsd:documentation>绑定的表名，即WITH子句的“table-name”，默认与tableName相同
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:attribute>
+			<xsd:attribute name="primaryKey" type="xsd:string">
+				<xsd:annotation>
+					<xsd:documentation>主键，多个列名以“,”分隔。当开启智能模式时，会自动获取主键信息。
 					</xsd:documentation>
 				</xsd:annotation>
 			</xsd:attribute>

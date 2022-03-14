@@ -13,7 +13,8 @@ import cn.tenmg.flink.jobs.config.model.data.sync.Column;
 /**
  * 数据同步
  * 
- * @author June wjzhao@aliyun.com cbb 2545095524@qq.com
+ * @author cbb 2545095524@qq.com
+ * @author June wjzhao@aliyun.com
  * 
  * @since 1.1.4
  *

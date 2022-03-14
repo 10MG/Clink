@@ -10,7 +10,9 @@ import javax.xml.bind.annotation.XmlValue;
 /**
  * 同步数据列
  * 
- * @author June wjzhao@aliyun.com cbb 2545095524@qq.com
+ * @author cbb 2545095524@qq.com
+ * 
+ * @author June wjzhao@aliyun.com
  * 
  * @since 1.1.4
  *
