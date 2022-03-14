@@ -59,8 +59,6 @@ public class JdbcOperator extends AbstractOperator<Jdbc> {
 					return ps.execute();
 				}
 				return ps.executeLargeUpdate();
-			} catch (Exception e) {
-				throw e;
 			} finally {
 				JDBCUtils.close(ps);
 				JDBCUtils.close(con);

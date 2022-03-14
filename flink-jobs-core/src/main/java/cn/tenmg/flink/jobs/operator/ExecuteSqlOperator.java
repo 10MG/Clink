@@ -76,8 +76,6 @@ public class ExecuteSqlOperator extends AbstractSqlOperator<ExecuteSql> {
 								JSONUtils.toJSONString(parameters)));
 					}
 					return ps.executeLargeUpdate();// 执行删除
-				} catch (Exception e) {
-					throw e;
 				} finally {
 					JDBCUtils.close(ps);
 					JDBCUtils.close(con);
