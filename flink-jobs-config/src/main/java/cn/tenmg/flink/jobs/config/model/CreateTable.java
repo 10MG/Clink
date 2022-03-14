@@ -6,6 +6,11 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 
 /**
+ * Flink SQL的sqlQuery操作配置
+ *
+ * @author dufeng
+ *
+ * @since 1.3.0
  *
  */
 @XmlAccessorType(XmlAccessType.FIELD)

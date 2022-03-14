@@ -19,6 +19,15 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+
+/**
+ *  SQL操作执行器
+ *
+ *  @author dufeng
+ *
+ *  @since 1.3.0
+ *
+ */
 public class CreateTableOperator extends AbstractSqlOperator<CreateTable>{
 
     private static Logger logger = LoggerFactory.getLogger(CreateTableOperator.class);
@@ -79,6 +88,12 @@ public class CreateTableOperator extends AbstractSqlOperator<CreateTable>{
 
     }
 
+    /**
+     * 包装数据源，即包装Flink SQL的CREATE TABLE语句的WITH子句
+     *
+     * @param script SQL脚本
+     * @throws IOException I/O异常
+     */
     private static String wrapDataSource(String script, Map<String, String> dataSource) throws IOException {
         Matcher matcher = WITH_CLAUSE_PATTERN.matcher(script);
         StringBuffer sqlBuffer = new StringBuffer();
@@ -129,6 +144,13 @@ public class CreateTableOperator extends AbstractSqlOperator<CreateTable>{
         return sqlBuffer.toString();
     }
 
+    /**
+     * get table columns meta data via database and tableName
+     * @param dataSource
+     * @param database
+     * @param table
+     * @return
+     */
     private List<Map<String, Object>> getTableColumnsMetaData(Map<String, String> dataSource, String database, String table) {
         final String query = "select `COLUMN_NAME`, `COLUMN_KEY`, `DATA_TYPE`, `COLUMN_SIZE`, `DECIMAL_DIGITS` from `information_schema`.`COLUMNS` where `TABLE_SCHEMA`=? and `TABLE_NAME`=?";
         List<Map<String, Object>> rows;
@@ -147,6 +169,15 @@ public class CreateTableOperator extends AbstractSqlOperator<CreateTable>{
         return rows;
     }
 
+    /**
+     * execute sql query
+     * @param query
+     * @param dataSource
+     * @param args
+     * @return
+     * @throws ClassNotFoundException
+     * @throws SQLException
+     */
     private List<Map<String, Object>> executeQuery(String query, Map<String, String> dataSource, String... args) throws ClassNotFoundException, SQLException {
         Connection con = null;
         con = JDBCUtils.getConnection(dataSource);
@@ -176,6 +207,14 @@ public class CreateTableOperator extends AbstractSqlOperator<CreateTable>{
         return list;
     }
 
+    /**
+     * 追加默认表名，默认表名从CREATE语句中获取
+     *
+     * @param sqlBuffer
+     *            SQL语句缓冲器
+     * @param script
+     *            原SQL脚本
+     */
     private static void apppendDefaultTableName(StringBuffer sqlBuffer, String script) {
         Matcher createMatcher = CREATE_CLAUSE_PATTERN.matcher(script);
         if (createMatcher.find()) {
@@ -203,6 +242,11 @@ public class CreateTableOperator extends AbstractSqlOperator<CreateTable>{
         }
     }
 
+    /**
+     * convert starrocks data type to flink data type
+     * @param map
+     * @return
+     */
     private String convertDataType(Map<String, Object> map) {
         String dataType = map.get("DATA_TYPE").toString();
         if ("varchar".equals(dataType)) {
