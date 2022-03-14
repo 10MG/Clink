@@ -25,6 +25,8 @@
 					minOccurs="0" type="SqlQueryType" />
 				<xsd:element ref="data-sync" maxOccurs="unbounded"
 					minOccurs="0" />
+				<xsd:element name="create-table" maxOccurs="unbounded"
+					minOccurs="0" />
 			</xsd:choice>
 			<xsd:attribute name="jar" type="xsd:string">
 				<xsd:annotation>
@@ -151,6 +153,28 @@
 						<xsd:annotation>
 							<xsd:documentation>采用的数据源名称。不指定时，采用Flink SQL的默认数据源
 							</xsd:documentation>
+						</xsd:annotation>
+					</xsd:attribute>
+				</xsd:extension>
+			</xsd:simpleContent>
+		</xsd:complexType>
+	</xsd:element>
+
+	<xsd:element name="create-table">
+		<xsd:annotation>
+			<xsd:documentation>create table</xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexType>
+			<xsd:simpleContent>
+				<xsd:extension base="SqlQueryType">
+					<xsd:attribute name="dataSource">
+						<xsd:annotation>
+							<xsd:documentation>data source</xsd:documentation>
+						</xsd:annotation>
+					</xsd:attribute>
+					<xsd:attribute name="tableName">
+						<xsd:annotation>
+							<xsd:documentation>table name</xsd:documentation>
 						</xsd:annotation>
 					</xsd:attribute>
 				</xsd:extension>

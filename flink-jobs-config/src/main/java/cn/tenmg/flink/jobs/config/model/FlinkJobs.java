@@ -68,7 +68,8 @@ public class FlinkJobs implements Serializable {
 			@XmlElement(name = "execute-sql", type = ExecuteSql.class, namespace = NAMESPACE),
 			@XmlElement(name = "sql-query", type = SqlQuery.class, namespace = NAMESPACE),
 			@XmlElement(name = "jdbc", type = Jdbc.class, namespace = NAMESPACE),
-			@XmlElement(name = "data-sync", type = DataSync.class, namespace = NAMESPACE) })
+			@XmlElement(name = "data-sync", type = DataSync.class, namespace = NAMESPACE),
+			@XmlElement(name = "create-table", type = CreateTable.class, namespace = NAMESPACE)})
 	private List<Operate> operates;
 
 	/**
