@@ -218,10 +218,70 @@
 					</xsd:annotation>
 				</xsd:element>
 				<xsd:element name="column" minOccurs="0"
-					maxOccurs="unbounded" type="ColumnType">
+					maxOccurs="unbounded">
 					<xsd:annotation>
 						<xsd:documentation>同步数据列</xsd:documentation>
 					</xsd:annotation>
+					<xsd:complexType>
+						<xsd:simpleContent>
+							<xsd:extension base="xsd:string">
+								<xsd:attribute name="fromName" type="xsd:string"
+									use="required">
+									<xsd:annotation>
+										<xsd:documentation>来源列名</xsd:documentation>
+									</xsd:annotation>
+								</xsd:attribute>
+								<xsd:attribute name="fromType">
+									<xsd:annotation>
+										<xsd:documentation>来源列数据类型。如果缺省，则如果开启智能模式会自动获取目标数据类型，如果关闭智能模式则必填
+										</xsd:documentation>
+									</xsd:annotation>
+									<xsd:simpleType>
+										<xsd:union memberTypes="DataType xsd:string"></xsd:union>
+									</xsd:simpleType>
+								</xsd:attribute>
+								<xsd:attribute name="toName" type="xsd:string">
+									<xsd:annotation>
+										<xsd:documentation>目标列名。默认为来源列名</xsd:documentation>
+									</xsd:annotation>
+								</xsd:attribute>
+								<xsd:attribute name="toType">
+									<xsd:annotation>
+										<xsd:documentation>目标列数据类型。如果缺省，则如果开启智能模式会自动获取，如果关闭智能模式则默认为来源列数据类型
+										</xsd:documentation>
+									</xsd:annotation>
+									<xsd:simpleType>
+										<xsd:union memberTypes="DataType xsd:string"></xsd:union>
+									</xsd:simpleType>
+								</xsd:attribute>
+								<xsd:attribute name="strategy">
+									<xsd:annotation>
+										<xsd:documentation>策略。可选值：both/from/to，both表示来源列和目标列均创建，from表示仅创建原来列，to表示仅创建目标列，默认为both。
+										</xsd:documentation>
+									</xsd:annotation>
+									<xsd:simpleType>
+										<xsd:restriction base="xsd:string">
+											<xsd:enumeration value="both">
+												<xsd:annotation>
+													来源列和目标列均创建
+												</xsd:annotation>
+											</xsd:enumeration>
+											<xsd:enumeration value="from">
+												<xsd:annotation>
+													仅创建原来列
+												</xsd:annotation>
+											</xsd:enumeration>
+											<xsd:enumeration value="to">
+												<xsd:annotation>
+													仅创建目标列
+												</xsd:annotation>
+											</xsd:enumeration>
+										</xsd:restriction>
+									</xsd:simpleType>
+								</xsd:attribute>
+							</xsd:extension>
+						</xsd:simpleContent>
+					</xsd:complexType>
 				</xsd:element>
 			</xsd:choice>
 			<xsd:attribute name="saveAs" type="xsd:string">
@@ -400,66 +460,7 @@
 		</xsd:simpleContent>
 	</xsd:complexType>
 
-	<xsd:complexType name="ColumnType">
-		<xsd:simpleContent>
-			<xsd:extension base="xsd:string">
-				<xsd:attribute name="fromName" type="xsd:string"
-					use="required">
-					<xsd:annotation>
-						<xsd:documentation>来源列名</xsd:documentation>
-					</xsd:annotation>
-				</xsd:attribute>
-				<xsd:attribute name="fromType">
-					<xsd:annotation>
-						<xsd:documentation>来源列数据类型。如果缺省，则如果开启智能模式会自动获取目标数据类型，如果关闭智能模式则必填
-						</xsd:documentation>
-					</xsd:annotation>
-					<xsd:simpleType>
-						<xsd:union memberTypes="DataType xsd:string"></xsd:union>
-					</xsd:simpleType>
-				</xsd:attribute>
-				<xsd:attribute name="toName" type="xsd:string">
-					<xsd:annotation>
-						<xsd:documentation>目标列名。默认为来源列名</xsd:documentation>
-					</xsd:annotation>
-				</xsd:attribute>
-				<xsd:attribute name="toType">
-					<xsd:annotation>
-						<xsd:documentation>目标列数据类型。如果缺省，则如果开启智能模式会自动获取，如果关闭智能模式则默认为来源列数据类型
-						</xsd:documentation>
-					</xsd:annotation>
-					<xsd:simpleType>
-						<xsd:union memberTypes="DataType xsd:string"></xsd:union>
-					</xsd:simpleType>
-				</xsd:attribute>
-				<xsd:attribute name="strategy">
-					<xsd:annotation>
-						<xsd:documentation>策略。可选值：both/from/to，both表示来源列和目标列均创建，from表示仅创建原来列，to表示仅创建目标列，默认为both。
-						</xsd:documentation>
-					</xsd:annotation>
-					<xsd:simpleType>
-						<xsd:restriction base="xsd:string">
-							<xsd:enumeration value="both">
-								<xsd:annotation>
-									来源列和目标列均创建
-								</xsd:annotation>
-							</xsd:enumeration>
-							<xsd:enumeration value="from">
-								<xsd:annotation>
-									仅创建原来列
-								</xsd:annotation>
-							</xsd:enumeration>
-							<xsd:enumeration value="to">
-								<xsd:annotation>
-									仅创建目标列
-								</xsd:annotation>
-							</xsd:enumeration>
-						</xsd:restriction>
-					</xsd:simpleType>
-				</xsd:attribute>
-			</xsd:extension>
-		</xsd:simpleContent>
-	</xsd:complexType>
+
 	<xsd:simpleType name="DataType">
 		<xsd:annotation>
 			<xsd:documentation>常用选择数据类型</xsd:documentation>

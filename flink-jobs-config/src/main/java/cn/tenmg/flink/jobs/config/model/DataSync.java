@@ -82,7 +82,7 @@ public class DataSync implements Operate, Serializable {
 	/**
 	 * 同步数据列
 	 */
-	@XmlElement(name = "column", namespace = FlinkJobs.NAMESPACE)
+	@XmlElement(name = "column")
 	private List<Column> columns;
 
 	@Override

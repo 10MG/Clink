@@ -145,6 +145,7 @@ public class CreateTableOperator extends AbstractOperator<CreateTable> {
 		sqlBuffer.append(column.getName()).append(DSLUtils.BLANK_SPACE).append(column.getType());
 
 		for (int i = 1, size = columns.size(); i < size; i++) {
+			column = columns.get(i);
 			sqlBuffer.append(DSLUtils.COMMA).append(DSLUtils.BLANK_SPACE).append(column.getName())
 					.append(DSLUtils.BLANK_SPACE).append(column.getType());
 		}

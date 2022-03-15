@@ -31,7 +31,6 @@ public class CreateTable implements Operate, Serializable {
 	@XmlAttribute
 	private String saveAs;
 
-	
 	@XmlAttribute
 	private String catalog;
 
@@ -62,7 +61,7 @@ public class CreateTable implements Operate, Serializable {
 	@XmlAttribute
 	private Boolean smart;
 
-	@XmlElement(name = "column", namespace = FlinkJobs.NAMESPACE)
+	@XmlElement(name = "column")
 	private List<Column> columns;
 
 	@Override
