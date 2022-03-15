@@ -25,12 +25,12 @@ public class StarrocksMetaDataGetter extends AbstractJDBCMetaDataGetter {
 	@Override
 	Connection getConnection(Map<String, String> dataSource) throws Exception {
 		String driver = dataSource.get("driver"), url = dataSource.get("jdbc-url"),
-				dadatabase = dataSource.get("database-name");
+				database = dataSource.get("database-name");
 		if (StringUtils.isBlank(driver)) {
 			driver = FlinkJobsContext.getDefaultJDBCDriver(JDBCUtils.getProduct(url));
 		}
-		if (StringUtils.isNotBlank(dadatabase)) {
-			url += "/" + dadatabase;
+		if (StringUtils.isNotBlank(database)) {
+			url += "/" + database;
 		}
 		Class.forName(driver);
 		return DriverManager.getConnection(url, dataSource.get("username"), dataSource.get("password"));
