@@ -91,7 +91,7 @@ public class StandaloneRestClusterClient extends AbstractFlinkJobsClient<Standal
 				if (options.containsKey("parallelism")) {
 					parallelism = options.get("parallelism");
 				}
-				if (options.containsKey("fromSavepoint")) {
+				if (!flinkJobs.isAllwaysNewJob() && options.containsKey("fromSavepoint")) {
 					String savepointPath = options.get("fromSavepoint");
 					if (options.containsKey("allowNonRestoredState")) {
 						savepointRestoreSettings = SavepointRestoreSettings.forPath(savepointPath,
