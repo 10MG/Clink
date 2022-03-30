@@ -61,7 +61,7 @@ public class CreateTable implements Operate, Serializable {
 	@XmlAttribute
 	private Boolean smart;
 
-	@XmlElement(name = "column")
+	@XmlElement(name = "column", namespace = FlinkJobs.NAMESPACE)
 	private List<Column> columns;
 
 	@Override
