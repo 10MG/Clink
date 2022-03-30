@@ -1,7 +1,9 @@
 package cn.tenmg.flink.jobs.clients;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.io.StringReader;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -13,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Queue;
+import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.flink.api.common.JobID;
@@ -35,7 +38,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import cn.tenmg.flink.jobs.clients.context.FlinkJobsClientsContext;
+import cn.tenmg.flink.jobs.clients.utils.Sets;
 import cn.tenmg.flink.jobs.config.model.FlinkJobs;
+import cn.tenmg.flink.jobs.config.model.Operate;
 
 /**
  * 独立群集REST客户端flink-jobs客户端。用于远程提交、监控和停止flink任务
@@ -51,6 +56,8 @@ public class StandaloneRestClusterClient extends AbstractFlinkJobsClient<Standal
 	private static final Queue<Configuration> configurations = new LinkedList<Configuration>();
 
 	private static final int COUNT;
+
+	private static final Set<String> localOperates = Sets.as("Jdbc");
 
 	static {
 		Configuration configuration = ConfigurationUtils
@@ -111,28 +118,72 @@ public class StandaloneRestClusterClient extends AbstractFlinkJobsClient<Standal
 			if (!isEmptyArguments(arguments)) {
 				builder.setArguments(arguments);
 			}
-			JobGraph jobGraph = PackagedProgramUtils.createJobGraph(builder.build(), configuration,
-					Integer.parseInt(parallelism),
-					Boolean.valueOf(FlinkJobsClientsContext.getProperty("suppress.output", "false")));
-
-			Properties customConf = toProperties(flinkJobs.getConfiguration());
-			client = getRestClusterClient(configuration, customConf);
-			for (int i = 0; i < COUNT; i++) {
-				try {
-					return client.submitJob(jobGraph).get();
-				} catch (Exception e) {
-					if (client != null) {
-						client.close();
-					}
-					if (i < COUNT) {
-						log.error("Try to submit job fail", e);
-						client = getRestClusterClient(getConfiguration(), customConf);// try next
-					} else {
-						throw e;
+			boolean submit;
+			if (flinkJobs.getServiceName() == null) {
+				submit = false;
+				List<Operate> operates = flinkJobs.getOperates();
+				if (operates != null) {
+					for (int i = 0, size = operates.size(); i < size; i++) {
+						if (!localOperates.contains(operates.get(i).getType())) {
+							submit = true;
+							break;
+						}
 					}
 				}
+			} else {
+				submit = true;
 			}
-			return null;
+			PackagedProgram packagedProgram = builder.build();
+			boolean suppressOutput = Boolean.valueOf(FlinkJobsClientsContext.getProperty("suppress.output", "false"));
+			if (submit) {
+				JobGraph jobGraph = PackagedProgramUtils.createJobGraph(packagedProgram, configuration,
+						Integer.parseInt(parallelism), suppressOutput);
+				Properties customConf = toProperties(flinkJobs.getConfiguration());
+				client = getRestClusterClient(configuration, customConf);
+				for (int i = 0; i < COUNT; i++) {
+					try {
+						return client.submitJob(jobGraph).get();
+					} catch (Exception e) {
+						if (client != null) {
+							client.close();
+						}
+						if (i < COUNT) {
+							log.error("Try to submit job fail", e);
+							client = getRestClusterClient(getConfiguration(), customConf);// try next
+						} else {
+							throw e;
+						}
+					}
+				}
+				return null;
+			} else {
+				final ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
+				Thread.currentThread().setContextClassLoader(packagedProgram.getUserCodeClassLoader());
+				final PrintStream originalOut = System.out;
+				final PrintStream originalErr = System.err;
+				final ByteArrayOutputStream stdOutBuffer;
+				final ByteArrayOutputStream stdErrBuffer;
+				if (suppressOutput) {
+					// temporarily write STDERR and STDOUT to a byte array.
+					stdOutBuffer = new ByteArrayOutputStream();
+					System.setOut(new PrintStream(stdOutBuffer));
+					stdErrBuffer = new ByteArrayOutputStream();
+					System.setErr(new PrintStream(stdErrBuffer));
+				} else {
+					stdOutBuffer = null;
+					stdErrBuffer = null;
+				}
+				try {
+					packagedProgram.invokeInteractiveModeForExecution();
+				} finally {
+					if (suppressOutput) {
+						System.setOut(originalOut);
+						System.setErr(originalErr);
+					}
+					Thread.currentThread().setContextClassLoader(contextClassLoader);
+				}
+				return null;
+			}
 		} finally {
 			if (client != null) {
 				client.close();
