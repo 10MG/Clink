@@ -33,9 +33,9 @@ public class JdbcOperator extends AbstractOperator<Jdbc> {
 	@Override
 	public Object execute(StreamExecutionEnvironment env, Jdbc jdbc, Map<String, Object> params) throws Exception {
 		NamedScript namedScript = DSLUtils.parse(jdbc.getScript(), params);
-		String datasource = jdbc.getDataSource();
-		Script<List<Object>> sql = DSLUtils.toScript(namedScript.getScript(), namedScript.getParams(),
-				JDBCParamsParser.getInstance());
+		String datasource = jdbc.getDataSource(), script = namedScript.getScript();
+		Map<String, Object> usedParams = namedScript.getParams();
+		Script<List<Object>> sql = DSLUtils.toScript(script, usedParams, JDBCParamsParser.getInstance());
 		if (StringUtils.isNotBlank(datasource)) {
 			Map<String, String> dataSource = FlinkJobsContext.getDatasource(datasource);
 			Connection con = null;
@@ -48,8 +48,8 @@ public class JdbcOperator extends AbstractOperator<Jdbc> {
 				List<Object> paramters = sql.getParams();
 				JDBCUtils.setParams(ps, paramters);
 
-				log.info(String.format("Execute JDBC SQL: %s; parameters: %s", statement,
-						JSONUtils.toJSONString(params)));
+				log.info(String.format("Execute JDBC SQL: %s; parameters: %s", script,
+						JSONUtils.toJSONString(usedParams)));
 				String method = jdbc.getMethod();
 				if ("executeLargeUpdate".equals(method)) {
 					return ps.executeLargeUpdate();

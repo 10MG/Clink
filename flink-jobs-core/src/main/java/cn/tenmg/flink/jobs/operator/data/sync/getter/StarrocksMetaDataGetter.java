@@ -39,7 +39,7 @@ public class StarrocksMetaDataGetter extends AbstractJDBCMetaDataGetter {
 	@Override
 	protected Set<String> getPrimaryKeys(Connection con, String catalog, String schema, String tableName)
 			throws SQLException {
-		StringBuilder sqlBuilder = new StringBuilder("SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE COLUMN_KEY IN ('PRI','UNI')");
+		StringBuilder sqlBuilder = new StringBuilder("SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE COLUMN_KEY = 'PRI'");
 		if (schema != null) {
 			sqlBuilder.append(" AND TABLE_SCHEMA = ?");
 		}
