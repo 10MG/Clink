@@ -53,6 +53,7 @@
 			<groupId>org.apache-extras.beanshell</groupId>
 			<artifactId>bsh</artifactId>
 			<version>2.0b6</version>
+			<optional>true</optional>
 		</dependency>
 
 		<!-- https://mvnrepository.com/artifact/org.apache.flink/flink-connector-kafka -->

@@ -139,7 +139,7 @@ public abstract class SQLUtils {
 			if (StringUtils.isBlank(value)) {
 				matcher.appendReplacement(sqlBuffer, start);
 				SQLUtils.appendDataSource(sqlBuffer, dataSource);
-				if (!dataSource.containsKey(TABLE_NAME)) {
+				if (ConfigurationUtils.isJDBC(dataSource) && !dataSource.containsKey(TABLE_NAME)) {
 					apppendDefaultTableName(sqlBuffer, script);
 				}
 				sqlBuffer.append(end);
@@ -170,7 +170,7 @@ public abstract class SQLUtils {
 			sqlBuffer.append(script);
 			sqlBuffer.append(" WITH (");
 			SQLUtils.appendDataSource(sqlBuffer, dataSource);
-			if (!dataSource.containsKey(TABLE_NAME)) {
+			if (ConfigurationUtils.isJDBC(dataSource) && !dataSource.containsKey(TABLE_NAME)) {
 				apppendDefaultTableName(sqlBuffer, script);
 			}
 			sqlBuffer.append(")");
