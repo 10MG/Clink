@@ -3,6 +3,7 @@ package cn.tenmg.flink.jobs.operator.data.sync.getter;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -25,7 +26,7 @@ import cn.tenmg.flink.jobs.utils.JDBCUtils;
  */
 public abstract class AbstractJDBCMetaDataGetter implements MetaDataGetter {
 
-	private static final String COLUMN_NAME = "COLUMN_NAME", DATA_TYPE = "DATA_TYPE", COLUMN_SIZE = "COLUMN_SIZE",
+	protected static final String COLUMN_NAME = "COLUMN_NAME", DATA_TYPE = "DATA_TYPE", COLUMN_SIZE = "COLUMN_SIZE",
 			DECIMAL_DIGITS = "DECIMAL_DIGITS", IS_NULLABLE = "IS_NULLABLE", NO = "NO", LEFT_BRACKET = "(",
 			RIGTH_BRACKET = ")", TYPE_PREFFIX = "flink.sql.type" + FlinkJobsContext.CONFIG_SPLITER,
 			DEFAULT_TYPE = FlinkJobsContext.getProperty(TYPE_PREFFIX + "default"),
@@ -69,6 +70,31 @@ public abstract class AbstractJDBCMetaDataGetter implements MetaDataGetter {
 	 */
 	abstract Connection getConnection(Map<String, String> dataSource) throws Exception;
 
+	/**
+	 * 获取数据表的主键列名集
+	 * 
+	 * @param con
+	 *            连接
+	 * @param catalog
+	 *            目录
+	 * @param schema
+	 *            数据库实例
+	 * @param tableName
+	 *            表名
+	 * @return 主键列名集
+	 * @throws SQLException
+	 *             执行发生SQL异常
+	 */
+	protected Set<String> getPrimaryKeys(Connection con, String catalog, String schema, String tableName)
+			throws SQLException {
+		ResultSet primaryKeysSet = con.getMetaData().getPrimaryKeys(catalog, schema, tableName);
+		Set<String> primaryKeys = new HashSet<String>();
+		while (primaryKeysSet.next()) {
+			primaryKeys.add(primaryKeysSet.getString(COLUMN_NAME));
+		}
+		return primaryKeys;
+	}
+
 	@Override
 	public TableMetaData getTableMetaData(Map<String, String> dataSource, String tableName) throws Exception {
 		Connection con = null;
@@ -77,13 +103,7 @@ public abstract class AbstractJDBCMetaDataGetter implements MetaDataGetter {
 			con.setAutoCommit(true);
 			DatabaseMetaData metaData = con.getMetaData();
 			String catalog = con.getCatalog(), schema = con.getSchema();
-
-			ResultSet primaryKeysSet = metaData.getPrimaryKeys(catalog, schema, tableName);
-			Set<String> primaryKeys = new HashSet<String>();
-			while (primaryKeysSet.next()) {
-				primaryKeys.add(primaryKeysSet.getString(COLUMN_NAME));
-			}
-
+			Set<String> primaryKeys = getPrimaryKeys(con, catalog, schema, tableName);
 			ResultSet columnsSet = metaData.getColumns(catalog, schema, tableName, null);
 			String columnName, type;
 			Map<String, String> columns = new LinkedHashMap<String, String>();
@@ -97,8 +117,6 @@ public abstract class AbstractJDBCMetaDataGetter implements MetaDataGetter {
 				columns.put(columnName, type);
 			}
 			return new TableMetaData(primaryKeys, columns);
-		} catch (Exception e) {
-			throw e;
 		} finally {
 			JDBCUtils.close(con);
 		}

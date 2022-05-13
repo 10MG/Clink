@@ -9,7 +9,7 @@ import cn.tenmg.flink.jobs.model.Operate;
 import cn.tenmg.flink.jobs.operator.AbstractOperator;
 
 /**
- * 支持SQL保留关键字的操作器抽象类
+ * 支持SQL保留关键字的操作器抽象类。已废弃，将在下一个版本移除，请使用SQLUtils.wrapIfReservedKeywords替换
  * 
  * @author June wjzhao@aliyun.com
  *
@@ -17,6 +17,7 @@ import cn.tenmg.flink.jobs.operator.AbstractOperator;
  *            操作类型
  * @since 1.1.5
  */
+@Deprecated
 public abstract class SqlReservedKeywordSupport<T extends Operate> extends AbstractOperator<T> {
 
 	protected static final String SQL_RESERVED_KEYWORD_WRAP_PREFIX = "`", SQL_RESERVED_KEYWORD_WRAP_SUFFIX = "`";

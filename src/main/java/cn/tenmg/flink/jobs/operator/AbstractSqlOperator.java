@@ -11,6 +11,7 @@ import com.alibaba.fastjson.JSON;
 import cn.tenmg.flink.jobs.Operator;
 import cn.tenmg.flink.jobs.context.FlinkJobsContext;
 import cn.tenmg.flink.jobs.model.SqlQuery;
+import cn.tenmg.flink.jobs.utils.StreamTableEnvironmentUtils;
 
 /**
  * 虚SQL操作执行器
@@ -35,19 +36,8 @@ public abstract class AbstractSqlOperator<T extends SqlQuery> implements Operato
 	public void execute(StreamExecutionEnvironment env, String config, Map<String, Object> params) throws Exception {
 		StreamTableEnvironment tableEnv = FlinkJobsContext.getOrCreateStreamTableEnvironment(env);
 		T operate = JSON.parseObject(config, type);
-		String catalog = operate.getCatalog(), currentCatalog = tableEnv.getCurrentCatalog(),
-				saveAs = operate.getSaveAs();
-		if (catalog == null) {// 使用默认目录
-			String defaultCatalog = FlinkJobsContext.getDefaultCatalog(tableEnv);
-			if (!defaultCatalog.equals(currentCatalog)) {
-				tableEnv.useCatalog(defaultCatalog);
-			}
-		} else {// 使用自定义目录
-			if (!catalog.equals(currentCatalog)) {
-				tableEnv.useCatalog(catalog);
-			}
-		}
-
+		StreamTableEnvironmentUtils.useCatalogOrDefault(tableEnv, operate.getCatalog());
+		String saveAs = operate.getSaveAs();
 		if (saveAs == null) {
 			execute(tableEnv, JSON.parseObject(config, type), params);
 		} else {
