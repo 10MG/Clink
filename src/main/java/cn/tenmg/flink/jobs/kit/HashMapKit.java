@@ -31,7 +31,20 @@ public class HashMapKit<K, V> {
 	public static <K, V> HashMapKit<K, V> init(K key, V value) {
 		HashMapKit<K, V> kit = new HashMapKit<K, V>();
 		kit.put(key, value);
-		return new HashMapKit<K, V>();
+		return kit;
+	}
+
+	/**
+	 * 初始化HashMap配套工具，将键值存入后哈希查找表中，并返回HashMapKit对象
+	 * 
+	 * @param map
+	 *            查找表对象
+	 * @return 返回HashMapKit对象
+	 */
+	public static <K, V> HashMapKit<K, V> init(Map<K, V> map) {
+		HashMapKit<K, V> kit = new HashMapKit<K, V>();
+		kit.put(map);
+		return kit;
 	}
 
 	/**

@@ -92,7 +92,7 @@ public interface FlinkJobsClient<T> {
 	 * @throws Exception
 	 *             发生异常
 	 */
-	ClusterClient<T> getRestClusterClient() throws Exception;
+	ClusterClient<T> getClusterClient() throws Exception;
 
 	/**
 	 * 使用自定义配置获取flink集群REST客户端
@@ -103,6 +103,28 @@ public interface FlinkJobsClient<T> {
 	 * @throws Exception
 	 *             发生异常
 	 */
+	ClusterClient<T> getClusterClient(Properties customConf) throws Exception;
+
+	/**
+	 * 使用默认配置获取flink集群REST客户端。已废弃，请使用getClusterClient替换
+	 * 
+	 * @return 返回flink集群REST客户端
+	 * @throws Exception
+	 *             发生异常
+	 */
+	@Deprecated
+	ClusterClient<T> getRestClusterClient() throws Exception;
+
+	/**
+	 * 使用自定义配置获取flink集群REST客户端。已废弃，请使用getClusterClient替换
+	 * 
+	 * @param customConf
+	 *            自定义配置
+	 * @return 返回flink集群REST客户端
+	 * @throws Exception
+	 *             发生异常
+	 */
+	@Deprecated
 	ClusterClient<T> getRestClusterClient(Properties customConf) throws Exception;
 
 }

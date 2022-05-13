@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -29,11 +30,11 @@ import cn.tenmg.flink.jobs.model.data.sync.Column;
 import cn.tenmg.flink.jobs.operator.data.sync.MetaDataGetter;
 import cn.tenmg.flink.jobs.operator.data.sync.MetaDataGetter.TableMetaData;
 import cn.tenmg.flink.jobs.operator.data.sync.MetaDataGetterFactory;
-import cn.tenmg.flink.jobs.operator.support.SqlReservedKeywordSupport;
 import cn.tenmg.flink.jobs.parser.FlinkSQLParamsParser;
 import cn.tenmg.flink.jobs.utils.ConfigurationUtils;
 import cn.tenmg.flink.jobs.utils.MapUtils;
 import cn.tenmg.flink.jobs.utils.SQLUtils;
+import cn.tenmg.flink.jobs.utils.StreamTableEnvironmentUtils;
 
 /**
  * 数据同步操作执行器
@@ -42,7 +43,7 @@ import cn.tenmg.flink.jobs.utils.SQLUtils;
  * 
  * @since 1.1.2
  */
-public class DataSyncOperator extends SqlReservedKeywordSupport<DataSync> {
+public class DataSyncOperator extends AbstractOperator<DataSync> {
 
 	private static Logger log = LoggerFactory.getLogger(DataSyncOperator.class);
 
@@ -114,13 +115,10 @@ public class DataSyncOperator extends SqlReservedKeywordSupport<DataSync> {
 			throw new IllegalArgumentException("The property 'from', 'to' or 'table' cannot be blank.");
 		}
 		StreamTableEnvironment tableEnv = FlinkJobsContext.getOrCreateStreamTableEnvironment(env);
-		String currentCatalog = tableEnv.getCurrentCatalog(),
-				defaultCatalog = FlinkJobsContext.getDefaultCatalog(tableEnv),
-				fromTable = FlinkJobsContext.getProperty(FROM_TABLE_PREFIX_KEY) + table,
+		String fromTable = FlinkJobsContext.getProperty(FROM_TABLE_PREFIX_KEY) + table,
 				fromConfig = dataSync.getFromConfig();
-		if (!defaultCatalog.equals(currentCatalog)) {
-			tableEnv.useCatalog(defaultCatalog);
-		}
+		StreamTableEnvironmentUtils.useCatalogOrDefault(tableEnv, null);
+
 		TableConfig tableConfig = tableEnv.getConfig();
 		if (tableConfig != null) {
 			Configuration configuration = tableConfig.getConfiguration();
@@ -133,16 +131,16 @@ public class DataSyncOperator extends SqlReservedKeywordSupport<DataSync> {
 
 		Map<String, String> fromDataSource = FlinkJobsContext.getDatasource(from),
 				toDataSource = FlinkJobsContext.getDatasource(to);
-		String primaryKey = collation(dataSync, fromDataSource, toDataSource, params);
+		Set<String> primaryKeys = collation(dataSync, fromDataSource, toDataSource, params);
 		List<Column> columns = dataSync.getColumns();
 
-		String sql = fromCreateTableSQL(fromDataSource, dataSync.getTopic(), table, fromTable, columns, primaryKey,
+		String sql = fromCreateTableSQL(fromDataSource, dataSync.getTopic(), table, fromTable, columns, primaryKeys,
 				fromConfig);
 		if (log.isInfoEnabled()) {
 			log.info("Create source table by Flink SQL: " + SQLUtils.hiddePassword(sql));
 			tableEnv.executeSql(sql);
 
-			sql = toCreateTableSQL(toDataSource, table, columns, primaryKey, dataSync.getToConfig());
+			sql = toCreateTableSQL(toDataSource, table, columns, primaryKeys, dataSync.getToConfig());
 			log.info("Create sink table by Flink SQL: " + SQLUtils.hiddePassword(sql));
 			tableEnv.executeSql(sql);
 
@@ -151,7 +149,7 @@ public class DataSyncOperator extends SqlReservedKeywordSupport<DataSync> {
 		} else {
 			tableEnv.executeSql(sql);
 
-			sql = toCreateTableSQL(toDataSource, table, columns, primaryKey, dataSync.getToConfig());
+			sql = toCreateTableSQL(toDataSource, table, columns, primaryKeys, dataSync.getToConfig());
 			tableEnv.executeSql(sql);
 
 			sql = insertSQL(table, fromTable, columns, params);
@@ -174,7 +172,7 @@ public class DataSyncOperator extends SqlReservedKeywordSupport<DataSync> {
 	 * @throws Exception
 	 *             发生异常
 	 */
-	private static String collation(DataSync dataSync, Map<String, String> fromDataSource,
+	private static Set<String> collation(DataSync dataSync, Map<String, String> fromDataSource,
 			Map<String, String> toDataSource, Map<String, Object> params) throws Exception {
 		List<Column> columns = dataSync.getColumns();
 		if (columns == null) {
@@ -184,7 +182,16 @@ public class DataSyncOperator extends SqlReservedKeywordSupport<DataSync> {
 		if (smart == null) {
 			smart = Boolean.valueOf(FlinkJobsContext.getProperty(SMART_KEY));
 		}
+		Set<String> primaryKeys = null;
 		String primaryKey = dataSync.getPrimaryKey(), timestamp = dataSync.getTimestamp();
+		if (StringUtils.isNotBlank(primaryKey)) {
+			primaryKeys = new HashSet<String>();
+			String[] columnNames = primaryKey.split(",");
+			for (int i = 0; i < columnNames.length; i++) {
+				primaryKeys.add(columnNames[i].trim());
+			}
+		}
+
 		boolean customTimestampBlank = StringUtils.isBlank(timestamp);
 		if (customTimestampBlank) {// 没有指定时间戳列名，使用配置的全局默认值，并根据目标表的实际情况确定是否添加时间戳列
 			timestamp = getDefaultTimestamp();
@@ -194,11 +201,9 @@ public class DataSyncOperator extends SqlReservedKeywordSupport<DataSync> {
 		if (Boolean.TRUE.equals(smart)) {// 智能模式，自动查询列名、数据类型
 			MetaDataGetter metaDataGetter = MetaDataGetterFactory.getMetaDataGetter(toDataSource);
 			TableMetaData tableMetaData = metaDataGetter.getTableMetaData(toDataSource, dataSync.getTable());
-			Set<String> primaryKeys = tableMetaData.getPrimaryKeys();
-			if (primaryKey == null && primaryKeys != null && !primaryKeys.isEmpty()) {
-				primaryKey = String.join(",", primaryKeys);
+			if (primaryKey == null) {
+				primaryKeys = tableMetaData.getPrimaryKeys();
 			}
-
 			Map<String, String> columnsMap = tableMetaData.getColumns();
 			if (columns.isEmpty()) {// 没有用户自定义列
 				addSmartLoadColumns(columns, columnsMap, params, timestampMap);
@@ -226,7 +231,7 @@ public class DataSyncOperator extends SqlReservedKeywordSupport<DataSync> {
 				columns.add(column);
 			}
 		}
-		return primaryKey;
+		return primaryKeys;
 	}
 
 	private static void collationPartlyCustom(List<Column> columns, Map<String, Object> params,
@@ -534,28 +539,36 @@ public class DataSyncOperator extends SqlReservedKeywordSupport<DataSync> {
 	}
 
 	private static String fromCreateTableSQL(Map<String, String> dataSource, String topic, String table,
-			String fromTable, List<Column> columns, String primaryKey, String fromConfig) throws IOException {
+			String fromTable, List<Column> columns, Set<String> primaryKeys, String fromConfig) throws IOException {
+		Set<String> actualPrimaryKeys = newSet(primaryKeys);
 		StringBuffer sqlBuffer = new StringBuffer();
 		sqlBuffer.append("CREATE TABLE ").append(fromTable).append("(");
 		Column column;
+		String toName;
 		int i = 0, size = columns.size();
 		while (i < size) {
 			column = columns.get(i++);
-			if (!"to".equals(column.getStrategy())) {
+			if ("to".equals(column.getStrategy())) {
+				toName = column.getToName();
+				actualPrimaryKeys.remove(toName == null ? column.getFromName() : toName);
+			} else {
 				sqlBuffer.append(column.getFromName()).append(DSLUtils.BLANK_SPACE).append(column.getFromType());
 				break;
 			}
 		}
 		while (i < size) {
 			column = columns.get(i++);
-			if (!"to".equals(column.getStrategy())) {
+			if ("to".equals(column.getStrategy())) {
+				toName = column.getToName();
+				actualPrimaryKeys.remove(toName == null ? column.getFromName() : toName);
+			} else {
 				sqlBuffer.append(DSLUtils.COMMA).append(DSLUtils.BLANK_SPACE).append(column.getFromName())
 						.append(DSLUtils.BLANK_SPACE).append(column.getFromType());
 			}
 		}
-		if (StringUtils.isNotBlank(primaryKey)) {
-			sqlBuffer.append(DSLUtils.COMMA).append(DSLUtils.BLANK_SPACE).append("PRIMARY KEY (").append(primaryKey)
-					.append(") NOT ENFORCED");
+		if (!actualPrimaryKeys.isEmpty()) {
+			sqlBuffer.append(DSLUtils.COMMA).append(DSLUtils.BLANK_SPACE).append("PRIMARY KEY (")
+					.append(String.join(", ", actualPrimaryKeys)).append(") NOT ENFORCED");
 		}
 		sqlBuffer.append(") ").append("WITH (");
 		Map<String, String> actualDataSource = MapUtils.newHashMap(dataSource);
@@ -584,38 +597,42 @@ public class DataSyncOperator extends SqlReservedKeywordSupport<DataSync> {
 	}
 
 	private static String toCreateTableSQL(Map<String, String> dataSource, String table, List<Column> columns,
-			String primaryKey, String toConfig) throws IOException {
+			Set<String> primaryKeys, String toConfig) throws IOException {
+		Set<String> actualPrimaryKeys = newSet(primaryKeys);
 		StringBuffer sqlBuffer = new StringBuffer();
 		sqlBuffer.append("CREATE TABLE ").append(table).append("(");
-
 		Column column;
-		String toName;
+		String toName, columnName;
 		int i = 0, size = columns.size();
 		while (i < size) {
 			column = columns.get(i++);
-			if (!"from".equals(column.getStrategy())) {
-				toName = column.getToName();
-				sqlBuffer.append(toName == null ? column.getFromName() : toName).append(DSLUtils.BLANK_SPACE)
-						.append(column.getToType());
+			toName = column.getToName();
+			columnName = toName == null ? column.getFromName() : toName;
+			if ("from".equals(column.getStrategy())) {
+				actualPrimaryKeys.remove(columnName);
+			} else {
+				sqlBuffer.append(columnName).append(DSLUtils.BLANK_SPACE).append(column.getToType());
 				break;
 			}
 		}
 		while (i < size) {
 			column = columns.get(i++);
-			if (!"from".equals(column.getStrategy())) {
-				toName = column.getToName();
-				sqlBuffer.append(DSLUtils.COMMA).append(DSLUtils.BLANK_SPACE)
-						.append(toName == null ? column.getFromName() : toName).append(DSLUtils.BLANK_SPACE)
-						.append(column.getToType());
+			toName = column.getToName();
+			columnName = toName == null ? column.getFromName() : toName;
+			if ("from".equals(column.getStrategy())) {
+				actualPrimaryKeys.remove(columnName);
+			} else {
+				sqlBuffer.append(DSLUtils.COMMA).append(DSLUtils.BLANK_SPACE).append(columnName)
+						.append(DSLUtils.BLANK_SPACE).append(column.getToType());
 			}
 		}
-		if (StringUtils.isNotBlank(primaryKey)) {
-			sqlBuffer.append(DSLUtils.COMMA).append(DSLUtils.BLANK_SPACE).append("PRIMARY KEY (").append(primaryKey)
-					.append(") NOT ENFORCED");
+		if (!actualPrimaryKeys.isEmpty()) {
+			sqlBuffer.append(DSLUtils.COMMA).append(DSLUtils.BLANK_SPACE).append("PRIMARY KEY (")
+					.append(String.join(", ", actualPrimaryKeys)).append(") NOT ENFORCED");
 		}
 		sqlBuffer.append(") ").append("WITH (");
 		Map<String, String> actualDataSource = MapUtils.newHashMap(dataSource);
-		actualDataSource.put("table-name", table);
+		actualDataSource.put(SQLUtils.TABLE_NAME, table);
 		if (StringUtils.isBlank(toConfig)) {
 			SQLUtils.appendDataSource(sqlBuffer, actualDataSource);
 		} else {
@@ -705,8 +722,16 @@ public class DataSyncOperator extends SqlReservedKeywordSupport<DataSync> {
 	 *            列
 	 */
 	private static void wrapColumnName(Column column) {
-		column.setFromName(wrapIfReservedKeywords(column.getFromName()));
-		column.setToName(wrapIfReservedKeywords(column.getToName()));
+		column.setFromName(SQLUtils.wrapIfReservedKeywords(column.getFromName()));
+		column.setToName(SQLUtils.wrapIfReservedKeywords(column.getToName()));
+	}
+
+	private static Set<String> newSet(Set<String> set) {
+		Set<String> newSet = new HashSet<String>();
+		if (set != null) {
+			newSet.addAll(set);
+		}
+		return newSet;
 	}
 
 	/**
