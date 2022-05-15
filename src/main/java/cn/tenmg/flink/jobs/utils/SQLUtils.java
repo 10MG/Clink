@@ -32,11 +32,22 @@ public abstract class SQLUtils {
 			CREATE_CLAUSE_PATTERN = Pattern
 					.compile("[C|c][R|r][E|e][A|a][T|t][E|e][\\s]+[T|t][A|a][B|b][L|l][E|e][\\s]+[^\\s\\(]+");
 
-	private static final Set<String> sqlReservedKeywords = new HashSet<String>();
+	private static final Set<String> sqlReservedKeywords = new HashSet<String>(),
+			smartTableMameConnectors = new HashSet<String>();
 
 	static {
-		addReservedKeywords(FlinkJobsContext.getProperty("sql.reserved.keywords"));
-		addReservedKeywords(FlinkJobsContext.getProperty("sql.custom.keywords"));
+		addReservedKeywords(FlinkJobsContext.getProperty("flink.sql.reserved.keywords"));
+		addReservedKeywords(FlinkJobsContext.getProperty("flink.sql.custom.keywords"));
+		String config = FlinkJobsContext.getProperty("flink.sql.smart.table-name");
+		if (config != null) {
+			String[] connectors = config.split(",");
+			for (int i = 0; i < connectors.length; i++) {
+				smartTableMameConnectors.add(connectors[i].trim());
+			}
+		}
+		addReservedKeywords(FlinkJobsContext.getProperty("sql.reserved.keywords"));// 废弃，暂时保留兼容
+		addReservedKeywords(FlinkJobsContext.getProperty("sql.custom.keywords"));// 废弃，暂时保留兼容
+
 	}
 
 	/**
@@ -129,7 +140,7 @@ public abstract class SQLUtils {
 			if (StringUtils.isBlank(value)) {
 				matcher.appendReplacement(sqlBuffer, start);
 				SQLUtils.appendDataSource(sqlBuffer, dataSource);
-				if (ConfigurationUtils.isJDBC(dataSource) && !dataSource.containsKey(TABLE_NAME)) {
+				if (needDefaultTableName(dataSource) && !dataSource.containsKey(TABLE_NAME)) {
 					apppendDefaultTableName(sqlBuffer, script);
 				}
 				sqlBuffer.append(end);
@@ -150,7 +161,7 @@ public abstract class SQLUtils {
 				}
 				sqlBuffer.append(value.substring(0, i + 1)).append(DSLUtils.COMMA).append(DSLUtils.BLANK_SPACE);
 				SQLUtils.appendDataSource(sqlBuffer, actualDataSource);
-				if (ConfigurationUtils.isJDBC(actualDataSource) && !config.containsKey(TABLE_NAME)
+				if (needDefaultTableName(actualDataSource) && !config.containsKey(TABLE_NAME)
 						&& !actualDataSource.containsKey(TABLE_NAME)) {
 					apppendDefaultTableName(sqlBuffer, script);
 				}
@@ -160,7 +171,7 @@ public abstract class SQLUtils {
 			sqlBuffer.append(script);
 			sqlBuffer.append(" WITH (");
 			SQLUtils.appendDataSource(sqlBuffer, dataSource);
-			if (ConfigurationUtils.isJDBC(dataSource) && !dataSource.containsKey(TABLE_NAME)) {
+			if (needDefaultTableName(dataSource) && !dataSource.containsKey(TABLE_NAME)) {
 				apppendDefaultTableName(sqlBuffer, script);
 			}
 			sqlBuffer.append(")");
@@ -173,6 +184,34 @@ public abstract class SQLUtils {
 			return RESERVED_KEYWORD_WRAP_PREFIX + word + RESERVED_KEYWORD_WRAP_SUFFIX;
 		}
 		return word;
+	}
+
+	/**
+	 * 判断一个数据源是否需要添加默认的table-name
+	 * 
+	 * @param dataSource 数据源
+	 * @return 如果数据源需要添加默认的table-name则返回true，否则返回false
+	 */
+	private static boolean needDefaultTableName(Map<String, String> dataSource) {
+		String connector, config;
+		for (Iterator<String> it = smartTableMameConnectors.iterator(); it.hasNext();) {
+			connector = it.next();
+			config = dataSource.get("connector");
+			if (connector.equals(config)) {
+				return true;
+			} else if (config != null) {
+				if (connector.endsWith("*")) {
+					if (config.startsWith(connector.substring(0, connector.length() - 1))) {
+						return true;
+					}
+				} else if (connector.startsWith("*")) {
+					if (config.endsWith(connector.substring(1, connector.length()))) {
+						return true;
+					}
+				}
+			}
+		}
+		return false;
 	}
 
 	/**
