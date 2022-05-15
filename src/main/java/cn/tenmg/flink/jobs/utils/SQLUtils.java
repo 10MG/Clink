@@ -45,8 +45,8 @@ public abstract class SQLUtils {
 				smartTableMameConnectors.add(connectors[i].trim());
 			}
 		}
-		addReservedKeywords(FlinkJobsContext.getProperty("sql.reserved.keywords"));// 废弃
-		addReservedKeywords(FlinkJobsContext.getProperty("sql.custom.keywords"));// 废弃
+		addReservedKeywords(FlinkJobsContext.getProperty("sql.reserved.keywords"));// 废弃，暂时保留兼容
+		addReservedKeywords(FlinkJobsContext.getProperty("sql.custom.keywords"));// 废弃，暂时保留兼容
 
 	}
 
