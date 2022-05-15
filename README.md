@@ -620,11 +620,12 @@ flink.sql.custom.keywords=PERIOD
 
 ### 其他配置
 
-### flink.sql.smart.table-name
+#### flink.sql.smart.table-name
 
 `flink.sql.smart.table-name`是flink-jobs运行Flink SQL时，当发现使用了特定连接器创建表时，若用户没有在SQL的WITH子句中指定`table-name`，则会根据建表语句自动生成并指定`table-name`。该配置支持使用“*”做前缀或者后缀通配符。默认值为：
 
 ```
+## When using these connectors, the table-name is automatically added if it's absent
 flink.sql.smart.table-name=jdbc,starrocks,hbase*
 ```
 
