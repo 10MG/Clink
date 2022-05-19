@@ -57,7 +57,7 @@ public class StandaloneRestClusterClient extends AbstractFlinkJobsClient<Standal
 
 	private static final int COUNT;
 
-	private static final Set<String> localOperates = Sets.as("Jdbc");
+	private static final Set<String> localOperates = Sets.as("Bsh", "Jdbc");
 
 	static {
 		Configuration configuration = ConfigurationUtils
@@ -118,7 +118,7 @@ public class StandaloneRestClusterClient extends AbstractFlinkJobsClient<Standal
 			if (!isEmptyArguments(arguments)) {
 				builder.setArguments(arguments);
 			}
-			boolean submit;
+			boolean submit = true;
 			if (flinkJobs.getServiceName() == null) {
 				submit = false;
 				List<Operate> operates = flinkJobs.getOperates();
@@ -130,8 +130,6 @@ public class StandaloneRestClusterClient extends AbstractFlinkJobsClient<Standal
 						}
 					}
 				}
-			} else {
-				submit = true;
 			}
 			PackagedProgram packagedProgram = builder.build();
 			boolean suppressOutput = Boolean.valueOf(FlinkJobsClientsContext.getProperty("suppress.output", "false"));
