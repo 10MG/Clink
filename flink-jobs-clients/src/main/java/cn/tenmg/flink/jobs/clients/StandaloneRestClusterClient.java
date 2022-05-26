@@ -38,6 +38,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import cn.tenmg.flink.jobs.clients.context.FlinkJobsClientsContext;
+import cn.tenmg.flink.jobs.clients.utils.FlinkJobsClientsUtils;
 import cn.tenmg.flink.jobs.clients.utils.Sets;
 import cn.tenmg.flink.jobs.config.model.FlinkJobs;
 import cn.tenmg.flink.jobs.config.model.Operate;
@@ -258,8 +259,7 @@ public class StandaloneRestClusterClient extends AbstractFlinkJobsClient<Standal
 		RestClusterClient<StandaloneClusterId> client = null;
 		try {
 			client = getRestClusterClient();
-			return client.stopWithSavepoint(jobId, false, FlinkJobsClientsContext.getProperty("state.savepoints.dir"))
-					.get();
+			return FlinkJobsClientsUtils.stop(client, jobId).get();
 		} finally {
 			if (client != null) {
 				client.close();
