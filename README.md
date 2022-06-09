@@ -983,7 +983,7 @@ WHERE EMAIL IS NOT NULL
 
 ## 相关链接
 
-flink-jobs-launcher开源地址：https://gitee.com/tenmg/flink-jobs-launcher
+flink-json-plus开源地址：https://gitee.com/tenmg/flink-json-plus
 
 DSL开源地址：https://gitee.com/tenmg/dsl
 
