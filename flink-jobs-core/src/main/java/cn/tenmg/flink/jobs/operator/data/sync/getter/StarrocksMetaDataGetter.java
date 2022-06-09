@@ -32,7 +32,7 @@ public class StarrocksMetaDataGetter extends AbstractJDBCMetaDataGetter {
 		if (StringUtils.isNotBlank(database)) {
 			url += "/" + database;
 		}
-		Class.forName(driver);
+		// Class.forName(driver); JDK 1.6之后，不需要显示加载JDBC驱动类，flink要求JDK 1.8+
 		return DriverManager.getConnection(url, dataSource.get("username"), dataSource.get("password"));
 	}
 
