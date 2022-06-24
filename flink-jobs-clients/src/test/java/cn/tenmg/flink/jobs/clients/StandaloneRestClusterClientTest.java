@@ -39,8 +39,8 @@ public class StandaloneRestClusterClientTest {
 		System.out.println("Job status: " + jobStatus);
 		
 		// 高级功能
-		//RestClusterClient<StandaloneClusterId> restClusterClient = client.getRestClusterClient(customConf);
-		RestClusterClient<StandaloneClusterId> restClusterClient = client.getRestClusterClient();
+		//RestClusterClient<StandaloneClusterId> restClusterClient = client.getClusterClient(customConf);
+		RestClusterClient<StandaloneClusterId> restClusterClient = client.getClusterClient();
 		JobDetailsInfo jobDetailsInfo = restClusterClient.getJobDetails(jobId).get();
 		System.out.println("Job details info: " + JSON.toJSONString(jobDetailsInfo));
 		JobResult jobResult = restClusterClient.requestJobResult(jobId).get();
