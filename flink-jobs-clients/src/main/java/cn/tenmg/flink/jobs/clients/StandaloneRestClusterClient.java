@@ -194,7 +194,7 @@ public class StandaloneRestClusterClient extends AbstractFlinkJobsClient<Standal
 	public Acknowledge cancel(JobID jobId) throws Exception {
 		RestClusterClient<StandaloneClusterId> client = null;
 		try {
-			client = getRestClusterClient();
+			client = getClusterClient();
 			return client.cancel(jobId).get();
 		} finally {
 			if (client != null) {
@@ -207,7 +207,7 @@ public class StandaloneRestClusterClient extends AbstractFlinkJobsClient<Standal
 	public Collection<JobStatusMessage> listJobs() throws Exception {
 		RestClusterClient<StandaloneClusterId> client = null;
 		try {
-			client = getRestClusterClient();
+			client = getClusterClient();
 			return client.listJobs().get();
 		} finally {
 			if (client != null) {
@@ -219,7 +219,7 @@ public class StandaloneRestClusterClient extends AbstractFlinkJobsClient<Standal
 	public JobDetailsInfo getJobDetails(JobID jobId) throws Exception {
 		RestClusterClient<StandaloneClusterId> client = null;
 		try {
-			client = getRestClusterClient();
+			client = getClusterClient();
 			return client.getJobDetails(jobId).get();
 		} finally {
 			if (client != null) {
@@ -232,7 +232,7 @@ public class StandaloneRestClusterClient extends AbstractFlinkJobsClient<Standal
 	public JobStatus getJobStatus(JobID jobId) throws Exception {
 		RestClusterClient<StandaloneClusterId> client = null;
 		try {
-			client = getRestClusterClient();
+			client = getClusterClient();
 			return client.getJobStatus(jobId).get();
 		} finally {
 			if (client != null) {
@@ -245,7 +245,7 @@ public class StandaloneRestClusterClient extends AbstractFlinkJobsClient<Standal
 	public JobResult requestJobResult(JobID jobId) throws Exception {
 		RestClusterClient<StandaloneClusterId> client = null;
 		try {
-			client = getRestClusterClient();
+			client = getClusterClient();
 			return client.requestJobResult(jobId).get();
 		} finally {
 			if (client != null) {
@@ -258,7 +258,7 @@ public class StandaloneRestClusterClient extends AbstractFlinkJobsClient<Standal
 	public String stop(JobID jobId) throws Exception {
 		RestClusterClient<StandaloneClusterId> client = null;
 		try {
-			client = getRestClusterClient();
+			client = getClusterClient();
 			return FlinkJobsClientsUtils.stop(client, jobId).get();
 		} finally {
 			if (client != null) {
@@ -275,16 +275,6 @@ public class StandaloneRestClusterClient extends AbstractFlinkJobsClient<Standal
 	@Override
 	public RestClusterClient<StandaloneClusterId> getClusterClient(Properties customConf) throws Exception {
 		return getRestClusterClient(getConfiguration(), customConf);
-	}
-
-	@Override
-	public RestClusterClient<StandaloneClusterId> getRestClusterClient() throws Exception {
-		return getClusterClient();
-	}
-
-	@Override
-	public RestClusterClient<StandaloneClusterId> getRestClusterClient(Properties customConf) throws Exception {
-		return getClusterClient(customConf);
 	}
 
 	private static synchronized Configuration getConfiguration() {
