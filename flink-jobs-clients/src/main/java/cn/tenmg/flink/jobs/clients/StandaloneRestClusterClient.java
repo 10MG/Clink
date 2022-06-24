@@ -34,8 +34,6 @@ import org.apache.flink.runtime.jobgraph.SavepointRestoreSettings;
 import org.apache.flink.runtime.jobmaster.JobResult;
 import org.apache.flink.runtime.messages.Acknowledge;
 import org.apache.flink.runtime.rest.messages.job.JobDetailsInfo;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import cn.tenmg.flink.jobs.clients.context.FlinkJobsClientsContext;
 import cn.tenmg.flink.jobs.clients.utils.FlinkJobsClientsUtils;
@@ -51,8 +49,6 @@ import cn.tenmg.flink.jobs.config.model.Operate;
  * @since 1.2.0
  */
 public class StandaloneRestClusterClient extends AbstractFlinkJobsClient<StandaloneClusterId> {
-
-	private static final Logger log = LoggerFactory.getLogger(StandaloneRestClusterClient.class);
 
 	private static final Queue<Configuration> configurations = new LinkedList<Configuration>();
 
@@ -86,185 +82,150 @@ public class StandaloneRestClusterClient extends AbstractFlinkJobsClient<Standal
 
 	@Override
 	public JobID submit(FlinkJobs flinkJobs) throws Exception {
-		RestClusterClient<StandaloneClusterId> client = null;
-		try {
-			Map<String, String> options = flinkJobs.getOptions();
-			String classpaths = FlinkJobsClientsContext.getProperty("classpaths"),
-					parallelism = FlinkJobsClientsContext.getProperty("parallelism.default", "1");
-			SavepointRestoreSettings savepointRestoreSettings = SavepointRestoreSettings.none();
-			if (options != null && !options.isEmpty()) {
-				if (options.containsKey("classpaths")) {
-					classpaths = options.get("classpaths");
-				}
-				if (options.containsKey("parallelism")) {
-					parallelism = options.get("parallelism");
-				}
-				if (!flinkJobs.isAllwaysNewJob() && options.containsKey("fromSavepoint")) {
-					String savepointPath = options.get("fromSavepoint");
-					if (options.containsKey("allowNonRestoredState")) {
-						savepointRestoreSettings = SavepointRestoreSettings.forPath(savepointPath,
-								"true".equals(options.get("allowNonRestoredState")));
-					} else {
-						savepointRestoreSettings = SavepointRestoreSettings.forPath(savepointPath);
-					}
-				}
+		Map<String, String> options = flinkJobs.getOptions();
+		String classpaths = FlinkJobsClientsContext.getProperty("classpaths"),
+				parallelism = FlinkJobsClientsContext.getProperty("parallelism.default", "1");
+		SavepointRestoreSettings savepointRestoreSettings = SavepointRestoreSettings.none();
+		if (options != null && !options.isEmpty()) {
+			if (options.containsKey("classpaths")) {
+				classpaths = options.get("classpaths");
 			}
-
-			Configuration configuration = getConfiguration();
-			Builder builder = PackagedProgram.newBuilder().setConfiguration(configuration)
-					.setEntryPointClassName(getEntryPointClassName(flinkJobs)).setJarFile(new File(getJar(flinkJobs)))
-					.setUserClassPaths(toURLs(classpaths)).setSavepointRestoreSettings(savepointRestoreSettings);
-
-			String arguments = getArguments(flinkJobs);
-			if (!isEmptyArguments(arguments)) {
-				builder.setArguments(arguments);
+			if (options.containsKey("parallelism")) {
+				parallelism = options.get("parallelism");
 			}
-			boolean submit = true;
-			if (flinkJobs.getServiceName() == null) {
-				submit = false;
-				List<Operate> operates = flinkJobs.getOperates();
-				if (operates != null) {
-					for (int i = 0, size = operates.size(); i < size; i++) {
-						if (!localOperates.contains(operates.get(i).getType())) {
-							submit = true;
-							break;
-						}
-					}
-				}
-			}
-			PackagedProgram packagedProgram = builder.build();
-			boolean suppressOutput = Boolean.valueOf(FlinkJobsClientsContext.getProperty("suppress.output", "false"));
-			if (submit) {
-				JobGraph jobGraph = PackagedProgramUtils.createJobGraph(packagedProgram, configuration,
-						Integer.parseInt(parallelism), suppressOutput);
-				Properties customConf = toProperties(flinkJobs.getConfiguration());
-				client = getRestClusterClient(configuration, customConf);
-				for (int i = 0; i < COUNT; i++) {
-					try {
-						return client.submitJob(jobGraph).get();
-					} catch (Exception e) {
-						if (client != null) {
-							client.close();
-						}
-						if (i < COUNT) {
-							log.error("Try to submit job fail", e);
-							client = getRestClusterClient(getConfiguration(), customConf);// try next
-						} else {
-							throw e;
-						}
-					}
-				}
-				return null;
-			} else {
-				final ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
-				Thread.currentThread().setContextClassLoader(packagedProgram.getUserCodeClassLoader());
-				final PrintStream originalOut = System.out;
-				final PrintStream originalErr = System.err;
-				final ByteArrayOutputStream stdOutBuffer;
-				final ByteArrayOutputStream stdErrBuffer;
-				if (suppressOutput) {
-					// temporarily write STDERR and STDOUT to a byte array.
-					stdOutBuffer = new ByteArrayOutputStream();
-					System.setOut(new PrintStream(stdOutBuffer));
-					stdErrBuffer = new ByteArrayOutputStream();
-					System.setErr(new PrintStream(stdErrBuffer));
+			if (!flinkJobs.isAllwaysNewJob() && options.containsKey("fromSavepoint")) {
+				String savepointPath = options.get("fromSavepoint");
+				if (options.containsKey("allowNonRestoredState")) {
+					savepointRestoreSettings = SavepointRestoreSettings.forPath(savepointPath,
+							"true".equals(options.get("allowNonRestoredState")));
 				} else {
-					stdOutBuffer = null;
-					stdErrBuffer = null;
+					savepointRestoreSettings = SavepointRestoreSettings.forPath(savepointPath);
 				}
-				try {
-					packagedProgram.invokeInteractiveModeForExecution();
-				} finally {
-					if (suppressOutput) {
-						System.setOut(originalOut);
-						System.setErr(originalErr);
+			}
+		}
+
+		Configuration configuration = getConfiguration();
+		Builder builder = PackagedProgram.newBuilder().setConfiguration(configuration)
+				.setEntryPointClassName(getEntryPointClassName(flinkJobs)).setJarFile(new File(getJar(flinkJobs)))
+				.setUserClassPaths(toURLs(classpaths)).setSavepointRestoreSettings(savepointRestoreSettings);
+
+		String arguments = getArguments(flinkJobs);
+		if (!isEmptyArguments(arguments)) {
+			builder.setArguments(arguments);
+		}
+		boolean submit = true;
+		if (flinkJobs.getServiceName() == null) {
+			submit = false;
+			List<Operate> operates = flinkJobs.getOperates();
+			if (operates != null) {
+				for (int i = 0, size = operates.size(); i < size; i++) {
+					if (!localOperates.contains(operates.get(i).getType())) {
+						submit = true;
+						break;
 					}
-					Thread.currentThread().setContextClassLoader(contextClassLoader);
 				}
-				return null;
 			}
-		} finally {
-			if (client != null) {
-				client.close();
+		}
+		PackagedProgram packagedProgram = builder.build();
+		boolean suppressOutput = Boolean.valueOf(FlinkJobsClientsContext.getProperty("suppress.output", "false"));
+		if (submit) {
+			JobGraph jobGraph = PackagedProgramUtils.createJobGraph(packagedProgram, configuration,
+					Integer.parseInt(parallelism), suppressOutput);
+			Properties customConf = toProperties(flinkJobs.getConfiguration());
+			return retry(new Actuator<JobID>() {
+				@Override
+				public JobID execute(RestClusterClient<StandaloneClusterId> client) throws Exception {
+					return client.submitJob(jobGraph).get();
+				}
+			}, configuration, customConf);
+		} else {
+			final ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
+			Thread.currentThread().setContextClassLoader(packagedProgram.getUserCodeClassLoader());
+			final PrintStream originalOut = System.out;
+			final PrintStream originalErr = System.err;
+			final ByteArrayOutputStream stdOutBuffer;
+			final ByteArrayOutputStream stdErrBuffer;
+			if (suppressOutput) {
+				// temporarily write STDERR and STDOUT to a byte array.
+				stdOutBuffer = new ByteArrayOutputStream();
+				System.setOut(new PrintStream(stdOutBuffer));
+				stdErrBuffer = new ByteArrayOutputStream();
+				System.setErr(new PrintStream(stdErrBuffer));
+			} else {
+				stdOutBuffer = null;
+				stdErrBuffer = null;
 			}
+			try {
+				packagedProgram.invokeInteractiveModeForExecution();
+			} finally {
+				if (suppressOutput) {
+					System.setOut(originalOut);
+					System.setErr(originalErr);
+				}
+				Thread.currentThread().setContextClassLoader(contextClassLoader);
+			}
+			return null;
 		}
 	}
 
 	@Override
 	public Acknowledge cancel(JobID jobId) throws Exception {
-		RestClusterClient<StandaloneClusterId> client = null;
-		try {
-			client = getClusterClient();
-			return client.cancel(jobId).get();
-		} finally {
-			if (client != null) {
-				client.close();
+		return retry(new Actuator<Acknowledge>() {
+			@Override
+			public Acknowledge execute(RestClusterClient<StandaloneClusterId> client) throws Exception {
+				return client.cancel(jobId).get();
 			}
-		}
+		}, getConfiguration(), null);
 	}
 
 	@Override
 	public Collection<JobStatusMessage> listJobs() throws Exception {
-		RestClusterClient<StandaloneClusterId> client = null;
-		try {
-			client = getClusterClient();
-			return client.listJobs().get();
-		} finally {
-			if (client != null) {
-				client.close();
+		return retry(new Actuator<Collection<JobStatusMessage>>() {
+			@Override
+			public Collection<JobStatusMessage> execute(RestClusterClient<StandaloneClusterId> client)
+					throws Exception {
+				return client.listJobs().get();
 			}
-		}
+		}, getConfiguration(), null);
 	}
 
 	public JobDetailsInfo getJobDetails(JobID jobId) throws Exception {
-		RestClusterClient<StandaloneClusterId> client = null;
-		try {
-			client = getClusterClient();
-			return client.getJobDetails(jobId).get();
-		} finally {
-			if (client != null) {
-				client.close();
+		return retry(new Actuator<JobDetailsInfo>() {
+			@Override
+			public JobDetailsInfo execute(RestClusterClient<StandaloneClusterId> client) throws Exception {
+				return client.getJobDetails(jobId).get();
 			}
-		}
+		}, getConfiguration(), null);
 	}
 
 	@Override
 	public JobStatus getJobStatus(JobID jobId) throws Exception {
-		RestClusterClient<StandaloneClusterId> client = null;
-		try {
-			client = getClusterClient();
-			return client.getJobStatus(jobId).get();
-		} finally {
-			if (client != null) {
-				client.close();
+		return retry(new Actuator<JobStatus>() {
+			@Override
+			public JobStatus execute(RestClusterClient<StandaloneClusterId> client) throws Exception {
+				return client.getJobStatus(jobId).get();
 			}
-		}
+		}, getConfiguration(), null);
 	}
 
 	@Override
 	public JobResult requestJobResult(JobID jobId) throws Exception {
-		RestClusterClient<StandaloneClusterId> client = null;
-		try {
-			client = getClusterClient();
-			return client.requestJobResult(jobId).get();
-		} finally {
-			if (client != null) {
-				client.close();
+		return retry(new Actuator<JobResult>() {
+			@Override
+			public JobResult execute(RestClusterClient<StandaloneClusterId> client) throws Exception {
+				return client.requestJobResult(jobId).get();
 			}
-		}
+		}, getConfiguration(), null);
 	}
 
 	@Override
 	public String stop(JobID jobId) throws Exception {
-		RestClusterClient<StandaloneClusterId> client = null;
-		try {
-			client = getClusterClient();
-			return FlinkJobsClientsUtils.stop(client, jobId).get();
-		} finally {
-			if (client != null) {
-				client.close();
+		return retry(new Actuator<String>() {
+			@Override
+			public String execute(RestClusterClient<StandaloneClusterId> client) throws Exception {
+				return FlinkJobsClientsUtils.stop(client, jobId).get();
 			}
-		}
+		}, getConfiguration(), null);
 	}
 
 	@Override
@@ -275,6 +236,36 @@ public class StandaloneRestClusterClient extends AbstractFlinkJobsClient<Standal
 	@Override
 	public RestClusterClient<StandaloneClusterId> getClusterClient(Properties customConf) throws Exception {
 		return getRestClusterClient(getConfiguration(), customConf);
+	}
+
+	private <T> T retry(Actuator<T> actuator, Configuration configuration, Properties customConf) throws Exception {
+		RestClusterClient<StandaloneClusterId> client = null;
+		try {
+			client = getRestClusterClient(configuration, customConf);
+			for (int i = 0; i < COUNT; i++) {
+				try {
+					return actuator.execute(client);
+				} catch (Exception e) {
+					if (client != null) {
+						client.close();
+					}
+					if (i < COUNT) {
+						client = getRestClusterClient(configuration, customConf);// try next
+					} else {
+						throw e;
+					}
+				}
+			}
+		} finally {
+			if (client != null) {
+				client.close();
+			}
+		}
+		return null;
+	}
+
+	private interface Actuator<T> {
+		T execute(RestClusterClient<StandaloneClusterId> client) throws Exception;
 	}
 
 	private static synchronized Configuration getConfiguration() {
