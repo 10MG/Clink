@@ -68,7 +68,7 @@ public abstract class BasicFlinkJobsRunner {
 				env.setRuntimeMode(RuntimeExecutionMode.STREAMING);
 			} else if (RuntimeExecutionMode.AUTOMATIC.equals(mode)) {
 				env.setRuntimeMode(RuntimeExecutionMode.AUTOMATIC);
-			}env.setParallelism(1);
+			}
 
 			// 无参数则初始化空的参数查找表
 			Map<String, Object> params = arguments.getParams();
