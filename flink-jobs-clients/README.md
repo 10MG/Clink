@@ -72,9 +72,9 @@ System.out.println("Job status: " + jobStatus);
 ### 高级功能
 
 ```
-//RestClusterClient<StandaloneClusterId> restClusterClient = client.getRestClusterClient(customConf);// 使用自定义配置获取RestClusterClient
-RestClusterClient<StandaloneClusterId> restClusterClient = client.getRestClusterClient();
-// Use restClusterClient to do something
+//ClusterClient clusterClient = client.getClusterClient(customConf);// 使用自定义配置获取ClusterClient
+ClusterClient clusterClient = client.getClusterClient();
+// Use clusterClient to do something
 ```
 
 ### 停止作业
@@ -124,7 +124,7 @@ Flink作业的个性化配置，格式为`k1=v1[,k2=v3…]`。例如：`<configu
 属性  | 类型     | 必需 | 说明
 ------|----------|----|--------
 key   | `String` | 是 | 选项键。
-value | `String` | 否 | 选项的值。直接通过option内以文本形式提供即可，如`<option>value</option>`或`<option><![CDATA[value]]></option>`。
+value | `String` | 否 | 选项的值。使用标签内文本表示，如`<option>value</option>`或`<option><![CDATA[value]]></option>`。
 
 #### `<params>`
 
@@ -137,7 +137,7 @@ value | `String` | 否 | 选项的值。直接通过option内以文本形式提�
 属性  | 类型     | 必需 | 说明
 ------|----------|----|--------
 name  | `String` | 是 | 参数名。
-value | `String` | 否 | 参数值。
+value | `String` | 否 | 参数值。使用标签内文本表示。
 
 #### `<bsh>`
 
@@ -169,7 +169,7 @@ java代码。采用文本表示，如：`<java>java code</java>`或`<option><![C
 saveAs     | `String` | 否 | 操作结果另存为一个新的变量的名称。变量的值是flink的`tableEnv.executeSql(statement);`的返回值。
 dataSource | `String` | 否 | 使用的数据源名称。这里的数据源是在[flink-jobs](https://gitee.com/tenmg/flink-jobs)应用程序的配置文件中配置，并非在flink-jobs-clients应用程序的配置文件中配置。详见[flink-jobs数据源配置](https://gitee.com/tenmg/flink-jobs#%E6%95%B0%E6%8D%AE%E6%BA%90%E9%85%8D%E7%BD%AE)。
 catalog    | `String` | 否 | 执行SQL使用的Flink SQL的catalog名称。
-script     | `String` | 否 | 基于[DSL](https://gitee.com/tenmg/dsl)的SQL脚本。采用文本表示，如：`<execute-sql>SQL code</execute-sql>`或`<execute-sql><![CDATA[SQL code]]></execute-sql>`。由于Flink SQL不支持DELETE、UPDATE语句，因此如果配置的SQL脚本是DELETE或者UPDATE语句，该语句将在程序main函数中采用JDBC执行。
+script     | `String` | 否 | 基于[DSL](https://gitee.com/tenmg/dsl)的SQL脚本。使用标签内文本表示，如：`<execute-sql>SQL code</execute-sql>`或`<execute-sql><![CDATA[SQL code]]></execute-sql>`。由于Flink SQL不支持DELETE、UPDATE语句，因此如果配置的SQL脚本是DELETE或者UPDATE语句，该语句将在程序main函数中采用JDBC执行。
 
 #### `<sql-query>`
 
@@ -179,7 +179,7 @@ script     | `String` | 否 | 基于[DSL](https://gitee.com/tenmg/dsl)的SQL脚�
 -----------|--------|----|--------
 saveAs     | `String` | 否 | 查询结果另存为临时表的表名及操作结果另存为一个新的变量的名称。变量的值是flink的`tableEnv.executeSql(statement);`的返回值。
 catalog    | `String` | 否 | 执行SQL使用的Flink SQL的catalog名称。
-script     | `String` | 否 | 基于[DSL](https://gitee.com/tenmg/dsl)的SQL脚本。采用文本表示，如：`<sql-query>SQL code</sql-query>`或`<sql-query><![CDATA[SQL code]]></sql-query>`。
+script     | `String` | 否 | 基于[DSL](https://gitee.com/tenmg/dsl)的SQL脚本。使用标签内文本表示，如：`<sql-query>SQL code</sql-query>`或`<sql-query><![CDATA[SQL code]]></sql-query>`。
 
 #### `<jdbc>`
 
@@ -190,7 +190,7 @@ script     | `String` | 否 | 基于[DSL](https://gitee.com/tenmg/dsl)的SQL脚�
 saveAs     | `String` | 否 | 执行结果另存为一个新的变量的名称。变量的值是执行JDBC指定方法的返回值。
 dataSource | `String` | 是 | 使用的数据源名称。这里的数据源是在flink-jobs应用程序的配置文件中配置，并非在flink-jobs-clients应用程序的配置文件中配置。详见[flink-jobs数据源配置](#%E6%95%B0%E6%8D%AE%E6%BA%90%E9%85%8D%E7%BD%AE)。
 method     | `String` | 否 | 调用的JDBC方法。默认是"executeLargeUpdate"。
-script     | `String` | 是 | 基于[DSL](https://gitee.com/tenmg/dsl)的SQL脚本。
+script     | `String` | 是 | 基于[DSL](https://gitee.com/tenmg/dsl)的SQL脚本。使用标签内文本表示。
 
 #### `<data-sync>`
 
@@ -219,7 +219,31 @@ fromType | `String` | 否 | 来源数据类型。如果缺省，则如果开启�
 toName   | `String` | 否 | 目标列名。默认为来源列名。
 toType   | `String` | 否 | 目标列数据类型。如果缺省，则如果开启智能模式会自动获取，如果关闭智能模式则默认为来源列数据类型。
 strategy | `String` | 否 | 同步策略。可选值：both/from/to，both表示来源列和目标列均创建，from表示仅创建原来列，to表示仅创建目标列，默认为both。
-script   | `String` | 否 | 自定义脚本。通常是需要进行函数转换时使用。
+script   | `String` | 否 | 自定义脚本。通常是需要进行函数转换时使用。使用标签内文本表示。
+
+#### `<create-table>`
+
+根据指定的配置信息自动生成Fink SQL并创建一张表。这比手动拼写Flink SQL要高效很多。支持版本：1.3.0+，相关属性及说明如下：
+
+属性          | 类型     | 必需 | 说明
+--------------|----------|----|--------
+dataSource    | `String` | 是 | 使用的数据源名称。flink-jobs从该数据源读取元数据信息，并自动生成Flink SQL。
+tableName     | `String` | 是 | 创建表的表名。即`CREATE TABLE table_name ...`中的`table_name`。
+saveAs        | `String` | 否 | 操作结果另存为一个新的变量的名称。变量的值是flink的`tableEnv.executeSql(statement);`的返回值。
+catalog       | `String` | 否 | 执行SQL使用的Flink SQL的catalog名称。
+bindTableName | `String` | 否 | 绑定的表名，即WITH子句的“table-name”，默认与tableName相同。
+primaryKey    | `String` | 否 | 主键，多个列名以“,”分隔。当开启智能模式时，会自动获取主键信息。
+smart         | `String` | 否 | 是否开启智能模式。不设置时，根据flink-jobs应用程序的全局配置确定是否开启智能模式，flink-jobs应用程序的全局默认配置为`data.sync.smart=true`。
+
+##### Column
+
+列信息配置。开启智能模式时，一般不需要配置，flink-jobs会自动生成列及对应的数据类型。但也可以单独指定某些列的数据类型，不使用自动识别的类型。
+
+属性 | 类型     | 必需 | 说明
+-----|----------|----|--------
+name | `String` | 是 | 列名。
+type | `String` | 是 | 数据类型。使用标签内文本表示。
+
 
 ### XML配置示例
 
