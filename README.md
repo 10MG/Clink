@@ -275,6 +275,31 @@ toType   | `String` | 否 | 目标列数据类型。如果缺省，则如果开�
 strategy | `String` | 否 | 同步策略。可选值：both/from/to，both表示来源列和目标列均创建，from表示仅创建原来列，to表示仅创建目标列，默认为both。
 script   | `String` | 否 | 自定义脚本。通常是需要进行函数转换时使用。
 
+### CreateTable操作
+
+CreateTable操作的作用根据指定的配置信息自动生成Fink SQL并创建一张表。这比手动拼写Flink SQL要高效很多。支持版本：1.3.0+，相关属性及说明如下：
+
+属性          | 类型     | 必需 | 说明
+--------------|----------|----|--------
+type          | `String` | 是 | 操作类型。这里是"CreateTable"。
+dataSource    | `String` | 是 | 使用的数据源名称。flink-jobs从该数据源读取元数据信息，并自动生成Flink SQL。
+tableName     | `String` | 是 | 创建表的表名。即`CREATE TABLE table_name ...`中的`table_name`。
+saveAs        | `String` | 否 | 操作结果另存为一个新的变量的名称。变量的值是flink的`tableEnv.executeSql(statement);`的返回值。
+catalog       | `String` | 否 | 执行SQL使用的Flink SQL的catalog名称。
+bindTableName | `String` | 否 | 绑定的表名，即WITH子句的“table-name”，默认与tableName相同。
+primaryKey    | `String` | 否 | 主键，多个列名以“,”分隔。当开启智能模式时，会自动获取主键信息。
+smart         | `String` | 否 | 是否开启智能模式。不设置时，根据flink-jobs应用程序的全局配置确定是否开启智能模式，flink-jobs应用程序的全局默认配置为`data.sync.smart=true`。
+
+#### Column
+
+列信息配置。开启智能模式时，一般不需要配置，flink-jobs会自动生成列及对应的数据类型。但也可以单独指定某一列的数据类型，而不使用自动识别的类型。
+
+属性 | 类型     | 必需 | 说明
+-----|----------|----|--------
+name | `String` | 是 | 列名。
+type | `String` | 是 | 数据类型。
+
+
 #### 相关配置
 
 可以增加数据同步的相关配置，详见配置文件的[数据同步配置](#%E6%95%B0%E6%8D%AE%E5%90%8C%E6%AD%A5%E9%85%8D%E7%BD%AE)。
