@@ -54,7 +54,7 @@ public abstract class FlinkJobsContext {
 		}
 	}
 
-	public static final String CONFIG_SPLITER = ".";
+	public static final String CONFIG_SPLITER = ".", SMART_MODE_CONFIG_KEY = "flink.jobs.smart";
 
 	private static final ThreadLocal<Map<Object, Object>> resources = new InheritableThreadLocalMap<Map<Object, Object>>();
 

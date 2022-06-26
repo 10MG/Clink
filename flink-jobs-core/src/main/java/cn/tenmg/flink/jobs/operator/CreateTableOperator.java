@@ -39,7 +39,8 @@ public class CreateTableOperator extends AbstractOperator<CreateTable> {
 
 	private static Logger log = LoggerFactory.getLogger(CreateTableOperator.class);
 
-	private static final String SMART_KEY = "data.sync.smart";
+	private static final boolean SMART_DEFAULT = Boolean
+			.valueOf(FlinkJobsContext.getProperty(FlinkJobsContext.SMART_MODE_CONFIG_KEY));
 
 	@Override
 	public Object execute(StreamExecutionEnvironment env, CreateTable createTable, Map<String, Object> params)
@@ -79,7 +80,7 @@ public class CreateTableOperator extends AbstractOperator<CreateTable> {
 		}
 		Boolean smart = createTable.getSmart();
 		if (smart == null) {
-			smart = Boolean.valueOf(FlinkJobsContext.getProperty(SMART_KEY));
+			smart = SMART_DEFAULT;
 		}
 		String primaryKey = createTable.getPrimaryKey();
 		if (Boolean.TRUE.equals(smart)) {// 智能模式，自动查询列名、数据类型
@@ -96,8 +97,9 @@ public class CreateTableOperator extends AbstractOperator<CreateTable> {
 			addSmartLoadColumns(columns, tableMetaData.getColumns());
 		} else if (columns.isEmpty()) {// 没有用户自定义列
 			throw new IllegalArgumentException(
-					"At least one column must be configured in manual mode, or set the configuration '" + SMART_KEY
-							+ "=true' at " + FlinkJobsContext.getConfigurationFile()
+					"At least one column must be configured in manual mode, or set the configuration '"
+							+ FlinkJobsContext.SMART_MODE_CONFIG_KEY + "=true' at "
+							+ FlinkJobsContext.getConfigurationFile()
 							+ " to enable automatic column acquisition in smart mode");
 		} else {// 全部是用户自定义列
 			collationCustom(columns);

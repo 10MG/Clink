@@ -47,10 +47,13 @@ public class DataSyncOperator extends AbstractOperator<DataSync> {
 
 	private static Logger log = LoggerFactory.getLogger(DataSyncOperator.class);
 
-	private static final String SMART_KEY = "data.sync.smart", FROM_TABLE_PREFIX_KEY = "data.sync.from_table_prefix",
-			TOPIC_KEY = "topic", GROUP_ID_KEY = "properties.group.id",
-			GROUP_ID_PREFIX_KEY = "data.sync.group_id_prefix", TIMESTAMP_COLUMNS = "data.sync.timestamp.columns",
-			TIMESTAMP_COLUMNS_SPLIT = ",", TIMESTAMP_FROM_TYPE_KEY = "data.sync.timestamp.from_type",
+	@Deprecated
+	private static final String SMART_KEY = "data.sync.smart";
+
+	private static final String FROM_TABLE_PREFIX_KEY = "data.sync.from_table_prefix", TOPIC_KEY = "topic",
+			GROUP_ID_KEY = "properties.group.id", GROUP_ID_PREFIX_KEY = "data.sync.group_id_prefix",
+			TIMESTAMP_COLUMNS = "data.sync.timestamp.columns", TIMESTAMP_COLUMNS_SPLIT = ",",
+			TIMESTAMP_FROM_TYPE_KEY = "data.sync.timestamp.from_type",
 			TIMESTAMP_TO_TYPE_KEY = "data.sync.timestamp.to_type",
 			TYPE_KEY_PREFIX = "data.sync" + FlinkJobsContext.CONFIG_SPLITER,
 			TO_TYPE_KEY_SUFFIX = FlinkJobsContext.CONFIG_SPLITER + "to_type",
@@ -180,7 +183,9 @@ public class DataSyncOperator extends AbstractOperator<DataSync> {
 		}
 		Boolean smart = dataSync.getSmart();
 		if (smart == null) {
-			smart = Boolean.valueOf(FlinkJobsContext.getProperty(SMART_KEY));
+			String value = FlinkJobsContext.getProperty(SMART_KEY);
+			smart = Boolean.valueOf(
+					value == null ? FlinkJobsContext.getProperty(FlinkJobsContext.SMART_MODE_CONFIG_KEY) : value);
 		}
 		Set<String> primaryKeys = null;
 		String primaryKey = dataSync.getPrimaryKey(), timestamp = dataSync.getTimestamp();
@@ -212,8 +217,9 @@ public class DataSyncOperator extends AbstractOperator<DataSync> {
 			}
 		} else if (columns.isEmpty()) {// 没有用户自定义列
 			throw new IllegalArgumentException(
-					"At least one column must be configured in manual mode, or set the configuration '" + SMART_KEY
-							+ "=true' at " + FlinkJobsContext.getConfigurationFile()
+					"At least one column must be configured in manual mode, or set the configuration '"
+							+ FlinkJobsContext.SMART_MODE_CONFIG_KEY + "=true' at "
+							+ FlinkJobsContext.getConfigurationFile()
 							+ " to enable automatic column acquisition in smart mode");
 		} else {// 全部是用户自定义列
 			collationCustom(columns, params, timestampMap);
