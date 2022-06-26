@@ -12,7 +12,6 @@ flink-jobs-clients是[flink-jobs](https://gitee.com/tenmg/flink-jobs)应用程�
 ### 添加依赖
 
 ```
-
 <!-- https://mvnrepository.com/artifact/cn.tenmg/flink-jobs-clients -->
 <dependency>
     <groupId>cn.tenmg</groupId>
