@@ -31,10 +31,10 @@ flink-jobs对Flink特定版本依赖较弱，已知在1.13+环境下运行良好
 1.  pom.xml添加依赖（Flink等其他相关依赖此处省略），${flink-jobs.version}为版本号，可定义属性或直接使用版本号替换
 
 ```
-<!-- https://mvnrepository.com/artifact/cn.tenmg/flink-jobs -->
+<!-- https://mvnrepository.com/artifact/cn.tenmg/flink-jobs-core -->
 <dependency>
     <groupId>cn.tenmg</groupId>
-    <artifactId>flink-jobs</artifactId>
+    <artifactId>flink-jobs-core</artifactId>
     <version>${flink-jobs.version}</version>
 </dependency>
 ```
