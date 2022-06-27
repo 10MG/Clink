@@ -264,7 +264,7 @@ primaryKey | `String`       | 否 | 主键，多个列名以“,”分隔。当�
 timestamp  | `String`       | 否 | 时间戳列名，多个列名使用“,”分隔。设置这个值后，创建源表和目标表时会添加这些列，并在数据同步时写入这些列。一般使用配置文件统一指定，而不是每个同步任务单独指定。
 smart      | `Boolean`      | 否 | 是否开启智能模式。不设置时，根据全局配置确定是否开启智能模式，全局默认配置为`flink.jobs.smart=true`。
 
- _注意：1.3.0开始 `data.sync.smart` 配置已被废弃，请使用 `flink.jobs.smart` 替代，默认值仍为 `true` 。 `data.sync.smart` 将在 1.4.0 开始不再兼容。_ 
+ _注意：1.3.0 版本开始 `data.sync.smart` 配置已被废弃，请使用 `flink.jobs.smart` 替代，默认值仍为 `true` 。 `data.sync.smart` 将在 1.4.0 版本开始不再兼容。_ 
 
 
 #### Column
@@ -409,7 +409,7 @@ metadata.getter.starrocks=cn.tenmg.flink.jobs.metadata.getter.StarrocksMetaDataG
 
 是否开启数据同步的智能模式，默认为`true`。开启智能模式的潜台词是指，自动通过已实现的元数据获取器（也可自行扩展）获取同步的目标库的元数据以生成Flink SQL的源表（Source Table）、目标表（Slink Table）和相应的插入语句（`INSERT INTO … SELECT … FROM …`）。
 
- _注意：1.3.0开始 `data.sync.smart` 配置已被废弃，请使用 `flink.jobs.smart` 替代，默认值仍为 `true` 。 `data.sync.smart` 将在 1.4.0 开始不再兼容。_ 
+ _注意：1.3.0 版本开始 `data.sync.smart` 配置已被废弃，请使用 `flink.jobs.smart` 替代，默认值仍为 `true` 。 `data.sync.smart` 将在 1.4.0 版本开始不再兼容。_ 
 
 #### data.sync.from_table_prefix
 
@@ -421,11 +421,11 @@ metadata.getter.starrocks=cn.tenmg.flink.jobs.metadata.getter.StarrocksMetaDataG
 
 #### data.sync.metadata.getter.*
 
- _注意：1.3.2开始 `data.sync.metadata.getter.*` 配置已被废弃，请使用 `metadata.getter.*` 替代。_ 
+ _注意：1.3.2 版本开始 `data.sync.metadata.getter.*` 配置已被废弃，请使用 `metadata.getter.*` 替代。_ 
 
 #### data.sync.columns.convert
 
-1.1.3版本开始支持`data.sync.columns.convert`，用于配置数据同步的SELECT子句的列转换函数，可使用`#columnName`占位符表示当前列名，flink-jobs会在运行时将转换函数作为一个SQL片段插入到`INSERT INTO …… SELECT …… FROM ……`语句中。
+1.1.3 版本开始支持`data.sync.columns.convert`，用于配置数据同步的SELECT子句的列转换函数，可使用`#columnName`占位符表示当前列名，flink-jobs会在运行时将转换函数作为一个SQL片段插入到`INSERT INTO …… SELECT …… FROM ……`语句中。
 
 示例1：
 
@@ -453,31 +453,31 @@ data.sync.columns.convert=BIGINT,TIMESTAMP:TO_TIMESTAMP(FROM_UNIXTIME(#columnNam
 
 #### data.sync.timestamp.case_sensitive
 
-1.1.4版本开始支持`data.sync.timestamp.case_sensitive`，用于配置数据同步的时间戳列名的大小写敏感性，他是flink-jobs在识别时间戳列时的策略配置。由于Flink SQL通常是大小写敏感的，因此该值默认为`true`，用户可以根据需要在配置文件中调整配置。大小写敏感的情况下，有关时间戳的列名必须按照实际建表的列名完全匹配，否则无法识别；大小写不敏感，则在匹配时间戳列时对列名忽略大小写。
+1.1.4 版本开始支持`data.sync.timestamp.case_sensitive`，用于配置数据同步的时间戳列名的大小写敏感性，他是flink-jobs在识别时间戳列时的策略配置。由于Flink SQL通常是大小写敏感的，因此该值默认为`true`，用户可以根据需要在配置文件中调整配置。大小写敏感的情况下，有关时间戳的列名必须按照实际建表的列名完全匹配，否则无法识别；大小写不敏感，则在匹配时间戳列时对列名忽略大小写。
 
 #### data.sync.timestamp.from_type
 
-1.1.4版本开始支持`data.sync.timestamp.from_type`，用于配置数据同步的来源时间戳列的默认类型，默认值为`TIMESTAMP(3) METADATA FROM 'value.ingestion-timestamp' VIRTUAL`，这是Flink SQL所支持的几种变更数据捕获（CDC）工具（Debezium/Canal/Maxwell）都支持的。
+1.1.4 版本开始支持`data.sync.timestamp.from_type`，用于配置数据同步的来源时间戳列的默认类型，默认值为`TIMESTAMP(3) METADATA FROM 'value.ingestion-timestamp' VIRTUAL`，这是Flink SQL所支持的几种变更数据捕获（CDC）工具（Debezium/Canal/Maxwell）都支持的。
 
 #### data.sync.timestamp.to_type
 
-1.1.4版本开始支持`data.sync.timestamp.to_type`，用于配置数据同步的目标时间戳列的默认类型，默认值为`TIMESTAMP(3)`，与`data.sync.timestamp.from_type`的默认值具有对应关系。
+1.1.4 版本开始支持`data.sync.timestamp.to_type`，用于配置数据同步的目标时间戳列的默认类型，默认值为`TIMESTAMP(3)`，与`data.sync.timestamp.from_type`的默认值具有对应关系。
 
 #### data.sync.*.from_type
 
-1.1.4版本开始支持`data.sync.*.from_type`，其中`*`需要替换为具体的列名，用于配置数据同步增加的特定时间戳列的来源类型，如果没有配置则使用`data.sync.timestamp.from_type`的值。典型的值为`TIMESTAMP(3) METADATA FROM 'value.ingestion-timestamp' VIRTUAL`或`TIMESTAMP(3) METADATA FROM 'value.source.timestamp' VIRTUAL`（目前仅Debezium支持），可根据具体情况确定。
+1.1.4 版本开始支持`data.sync.*.from_type`，其中`*`需要替换为具体的列名，用于配置数据同步增加的特定时间戳列的来源类型，如果没有配置则使用`data.sync.timestamp.from_type`的值。典型的值为`TIMESTAMP(3) METADATA FROM 'value.ingestion-timestamp' VIRTUAL`或`TIMESTAMP(3) METADATA FROM 'value.source.timestamp' VIRTUAL`（目前仅Debezium支持），可根据具体情况确定。
 
 #### data.sync.*.to_type
 
-1.1.4版本开始支持`data.sync.*.to_type`，其中`*`需要替换为具体的列名，用于配置数据同步增加的特定时间戳列的目标类型，如果没有配置则使用`data.sync.timestamp.to_type`的值。典型的值为`TIMESTAMP(3)`，具体精度可根据数据源的精度确定。
+1.1.4 版本开始支持`data.sync.*.to_type`，其中`*`需要替换为具体的列名，用于配置数据同步增加的特定时间戳列的目标类型，如果没有配置则使用`data.sync.timestamp.to_type`的值。典型的值为`TIMESTAMP(3)`，具体精度可根据数据源的精度确定。
 
 #### data.sync.*.strategy
 
-1.1.4版本开始支持`data.sync.*.strategy`，其中`*`需要替换为具体的列名，用于配置数据同步特定时间戳列的同步策略，可选值：`both/from/to`，both表示来源列和目标列均创建，from表示仅创建原来列，to表示仅创建目标列, 默认为both。
+1.1.4 版本开始支持`data.sync.*.strategy`，其中`*`需要替换为具体的列名，用于配置数据同步特定时间戳列的同步策略，可选值：`both/from/to`，both表示来源列和目标列均创建，from表示仅创建原来列，to表示仅创建目标列, 默认为both。
 
 #### data.sync.*.script
 
-1.1.4版本开始支持`data.sync.*.script`，其中`*`需要替换为具体的列名，用于配置数据同步特定时间戳列的自定义脚本（`SELECT`子句的片段），通常是一个函数或等效表达，例如`NOW()`或`CURRENT_TIMESTAMP`。结合`data.sync.*.strategy=to`使用，可实现写入处理时间的效果。
+1.1.4 版本开始支持`data.sync.*.script`，其中`*`需要替换为具体的列名，用于配置数据同步特定时间戳列的自定义脚本（`SELECT`子句的片段），通常是一个函数或等效表达，例如`NOW()`或`CURRENT_TIMESTAMP`。结合`data.sync.*.strategy=to`使用，可实现写入处理时间的效果。
 
 #### 类型映射
 
@@ -653,11 +653,11 @@ flink.sql.custom.keywords=PERIOD
 ```
 #### sql.reserved.keywords
 
-1.2.2及以前版本的配置，1.2.3版本开始已改为`flink.sql.reserved.keywords`，后续的1.2版本仍然会保持兼容，但强烈建议改为`flink.sql.reserved.keywords`。
+1.2.2 及以前版本的配置，1.2.3 版本开始已改为`flink.sql.reserved.keywords`，后续的 1.2 版本仍然会保持兼容，但强烈建议改为`flink.sql.reserved.keywords`。
 
 #### sql.custom.keywords
 
-1.2.2及以前版本的配置，1.2.3版本开始已改为`flink.sql.custom.keywords`，后续的1.2版本仍然会保持兼容，但强烈建议改为`flink.sql.custom.keywords`。
+1.2.2 及以前版本的配置，1.2.3 版本开始已改为`flink.sql.custom.keywords`，后续的 1.2 版本仍然会保持兼容，但强烈建议改为`flink.sql.custom.keywords`。
 
 ### 其他配置
 
@@ -995,7 +995,7 @@ WHERE EMAIL IS NOT NULL
 
 #### 嵌入式参数
 
-使用`#`加参数名表示（例如，#staffName）嵌入式参数，嵌入式参数会被以字符串的形式嵌入到脚本中。1.1.3版本开始支持嵌入式参数，即对应dsl版本为1.2.2，单独升级dsl也可以支持。
+使用`#`加参数名表示（例如，#staffName）嵌入式参数，嵌入式参数会被以字符串的形式嵌入到脚本中。1.1.3 版本开始支持嵌入式参数，即对应dsl版本为 1.2.2，单独升级dsl也可以支持。
 
 #### 动态参数
 
@@ -1007,7 +1007,7 @@ WHERE EMAIL IS NOT NULL
 
 #### 参数访问符
 
-参数访问符包括两种，即`.`和`[]`, 使用`Map`传参时，优先获取键相等的值，只有键不存在时才会将键降级拆分一一访问对象，直到找到参数并返回，或未找到返回`null`。其中`.`用来访问对象的属性，例如`:staff.name`、`#staff.age`；`[]`用来访问数组、集合的元素，例如`:array[0]`、`#map[key]`。理论上，支持任意级嵌套使用，例如`:list[0][1].name`、`#map[key][1].staff.name`。1.1.3版本开始支持参数访问符，即对应dsl版本为1.2.2，单独升级dsl也可以支持。
+参数访问符包括两种，即`.`和`[]`, 使用`Map`传参时，优先获取键相等的值，只有键不存在时才会将键降级拆分一一访问对象，直到找到参数并返回，或未找到返回`null`。其中`.`用来访问对象的属性，例如`:staff.name`、`#staff.age`；`[]`用来访问数组、集合的元素，例如`:array[0]`、`#map[key]`。理论上，支持任意级嵌套使用，例如`:list[0][1].name`、`#map[key][1].staff.name`。1.1.3 版本开始支持参数访问符，即对应dsl版本为 1.2.2，单独升级dsl也可以支持。
 
 ### 进一步了解
 
