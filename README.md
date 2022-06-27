@@ -392,7 +392,7 @@ datasource.starrocks.database-name=your_db
 
 #### flink.jobs.smart
 
-是否开启智能模式，默认为`true`。开启智能模式的潜台词是指，自动通过已实现的元数据获取器（也可自行扩展）获取元数据以生成并执行Flink SQL。支持智能模式的有数据同步`<data-sync>`和`<create-table>`。
+是否开启智能模式，默认为`true`。开启智能模式的潜台词是指，自动通过已实现的元数据获取器（也可自行扩展）获取元数据以生成并执行Flink SQL。支持智能模式的有数据同步（`DataSync`）和创建表（`CreateTable`）。
 
 #### metadata.getter.*
 
