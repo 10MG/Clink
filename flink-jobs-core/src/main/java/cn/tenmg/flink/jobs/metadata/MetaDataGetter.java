@@ -1,16 +1,15 @@
-package cn.tenmg.flink.jobs.operator.data.sync;
+package cn.tenmg.flink.jobs.metadata;
 
 import java.util.Map;
 import java.util.Set;
 
 /**
- * 元数据获取器。已废弃，请使用cn.tenmg.flink.jobs.metadata.MetaDataGetter替代
+ * 元数据获取器
  * 
  * @author June wjzhao@aliyun.com
  * 
  * @since 1.1.2
  */
-@Deprecated
 public interface MetaDataGetter {
 
 	/**

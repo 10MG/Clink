@@ -1,4 +1,4 @@
-package cn.tenmg.flink.jobs.operator.data.sync.getter;
+package cn.tenmg.flink.jobs.metadata.getter;
 
 import java.sql.Connection;
 import java.util.Map;
@@ -6,13 +6,12 @@ import java.util.Map;
 import cn.tenmg.flink.jobs.utils.JDBCUtils;
 
 /**
- * JDBC元数据获取器。已废弃，请使用cn.tenmg.flink.jobs.metadata.getter.JDBCMetaDataGetter替代
+ * JDBC元数据获取器
  * 
  * @author June wjzhao@aliyun.com
  * 
  * @since 1.1.2
  */
-@Deprecated
 public class JDBCMetaDataGetter extends AbstractJDBCMetaDataGetter {
 
 	@Override

@@ -1,4 +1,4 @@
-package cn.tenmg.flink.jobs.operator.data.sync.getter;
+package cn.tenmg.flink.jobs.metadata.getter;
 
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
@@ -14,17 +14,17 @@ import cn.tenmg.dsl.utils.StringUtils;
 import cn.tenmg.flink.jobs.context.FlinkJobsContext;
 import cn.tenmg.flink.jobs.kit.HashMapKit;
 import cn.tenmg.flink.jobs.kit.ParamsKit;
-import cn.tenmg.flink.jobs.operator.data.sync.MetaDataGetter;
+import cn.tenmg.flink.jobs.metadata.MetaDataGetter;
 import cn.tenmg.flink.jobs.utils.JDBCUtils;
 
 /**
- * JDBC元数据获取器抽象类。已废弃，请使用cn.tenmg.flink.jobs.metadata.getter.AbstractJDBCMetaDataGetter替代
+ * JDBC元数据获取器抽象类
  * 
  * @author June wjzhao@aliyun.com
  * 
  * @since 1.1.3
+ * 
  */
-@Deprecated
 public abstract class AbstractJDBCMetaDataGetter implements MetaDataGetter {
 
 	protected static final String COLUMN_NAME = "COLUMN_NAME", DATA_TYPE = "DATA_TYPE", COLUMN_SIZE = "COLUMN_SIZE",

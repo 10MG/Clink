@@ -1,4 +1,4 @@
-package cn.tenmg.flink.jobs.operator.data.sync.getter;
+package cn.tenmg.flink.jobs.metadata.getter;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -14,14 +14,16 @@ import cn.tenmg.flink.jobs.context.FlinkJobsContext;
 import cn.tenmg.flink.jobs.utils.JDBCUtils;
 
 /**
- * StarRocks元数据获取器。已废弃，请使用cn.tenmg.flink.jobs.metadata.getter.StarrocksMetaDataGetter替代
+ * StarRocks元数据获取器
  * 
  * @author June wjzhao@aliyun.com
  * 
  * @since 1.1.3
  */
-@Deprecated
 public class StarrocksMetaDataGetter extends AbstractJDBCMetaDataGetter {
+
+	private static final boolean ukAsPk = Boolean
+			.valueOf(FlinkJobsContext.getProperty("metadata.starrocks.unique_key_as_primary_key"));
 
 	@Override
 	Connection getConnection(Map<String, String> dataSource) throws Exception {
@@ -40,7 +42,9 @@ public class StarrocksMetaDataGetter extends AbstractJDBCMetaDataGetter {
 	@Override
 	protected Set<String> getPrimaryKeys(Connection con, String catalog, String schema, String tableName)
 			throws SQLException {
-		StringBuilder sqlBuilder = new StringBuilder("SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE COLUMN_KEY = 'PRI'");
+		StringBuilder sqlBuilder = new StringBuilder(
+				"SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE COLUMN_KEY "
+						+ (ukAsPk ? "IN ('PRI','UNI')" : "= 'PRI'"));
 		if (schema != null) {
 			sqlBuilder.append(" AND TABLE_SCHEMA = ?");
 		}

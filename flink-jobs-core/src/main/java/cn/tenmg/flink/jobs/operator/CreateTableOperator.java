@@ -17,11 +17,11 @@ import cn.tenmg.dsl.utils.DSLUtils;
 import cn.tenmg.dsl.utils.StringUtils;
 import cn.tenmg.flink.jobs.context.FlinkJobsContext;
 import cn.tenmg.flink.jobs.kit.HashMapKit;
+import cn.tenmg.flink.jobs.metadata.MetaDataGetter;
+import cn.tenmg.flink.jobs.metadata.MetaDataGetter.TableMetaData;
+import cn.tenmg.flink.jobs.metadata.MetaDataGetterFactory;
 import cn.tenmg.flink.jobs.model.CreateTable;
 import cn.tenmg.flink.jobs.model.create.table.Column;
-import cn.tenmg.flink.jobs.operator.data.sync.MetaDataGetter;
-import cn.tenmg.flink.jobs.operator.data.sync.MetaDataGetter.TableMetaData;
-import cn.tenmg.flink.jobs.operator.data.sync.MetaDataGetterFactory;
 import cn.tenmg.flink.jobs.utils.SQLUtils;
 import cn.tenmg.flink.jobs.utils.StreamTableEnvironmentUtils;
 
