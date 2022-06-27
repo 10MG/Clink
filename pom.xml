@@ -29,6 +29,16 @@
 			<email>wjzhao@aliyun.com</email>
 			<organization>10MG</organization>
 		</developer>
+		<developer>
+			<name>cbb</name>
+			<email>2545095524@qq.com</email>
+			<organization>10MG</organization>
+		</developer>
+		<developer>
+			<name>dufeng</name>
+			<email>dufeng1010@126.com</email>
+			<organization>10MG</organization>
+		</developer>
 	</developers>
 
 	<scm>
