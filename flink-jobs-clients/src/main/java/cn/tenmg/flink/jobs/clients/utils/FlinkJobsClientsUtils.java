@@ -22,17 +22,25 @@ public abstract class FlinkJobsClientsUtils {
 
 	@SuppressWarnings("unchecked")
 	public static CompletableFuture<String> stop(ClusterClient<?> client, JobID jobId) throws Exception {
-		Method method;
-		if (SavepointFormatType == null) {
-			method = client.getClass().getMethod("stopWithSavepoint", JobID.class, Boolean.class, String.class);
-			return (CompletableFuture<String>) method.invoke(client, jobId, false,
-					FlinkJobsClientsContext.getProperty("state.savepoints.dir"));
+		Method methods[] = client.getClass().getMethods(), method = null;
+		for (int i = 0; i < methods.length; i++) {
+			method = methods[i];
+			if ("stopWithSavepoint".equals(method.getName())) {
+				break;
+			}
+		}
+		if (method != null && "stopWithSavepoint".equals(method.getName())) {
+			if (method.getParameterTypes().length == 3) {
+				return (CompletableFuture<String>) method.invoke(client, jobId, false,
+						FlinkJobsClientsContext.getProperty("state.savepoints.dir"));
+			} else {
+				return (CompletableFuture<String>) method.invoke(client, jobId, false,
+						FlinkJobsClientsContext.getProperty("state.savepoints.dir"),
+						SavepointFormatType.getEnumConstants()[0]);
+			}
 		} else {
-			method = client.getClass().getMethod("stopWithSavepoint", JobID.class, Boolean.class, String.class,
-					SavepointFormatType);
-			return (CompletableFuture<String>) method.invoke(client, jobId, false,
-					FlinkJobsClientsContext.getProperty("state.savepoints.dir"),
-					SavepointFormatType.getEnumConstants()[0]);
+			throw new IllegalAccessException(
+					"This method does not support your version of Flink yet, please change the supported version");
 		}
 	}
 
