@@ -55,7 +55,7 @@ public abstract class JDBCUtils {
 		if (StringUtils.isBlank(driver)) {
 			driver = FlinkJobsContext.getDefaultJDBCDriver(getProduct(url));
 		}
-		// Class.forName(driver); JDK 1.6之后，不需要显示加载JDBC驱动类，flink要求JDK 1.8+
+		Class.forName(driver);
 		return DriverManager.getConnection(url, dataSource.get("username"), dataSource.get("password"));
 	}
 

@@ -250,7 +250,7 @@ public class StandaloneRestClusterClient extends AbstractFlinkJobsClient<Standal
 						client.close();
 					}
 					if (i < COUNT) {
-						client = getRestClusterClient(configuration, customConf);// try next
+						client = getRestClusterClient(getConfiguration(), customConf);// try next
 					} else {
 						throw e;
 					}
