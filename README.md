@@ -403,6 +403,17 @@ metadata.getter.jdbc=cn.tenmg.flink.jobs.metadata.getter.JDBCMetaDataGetter
 metadata.getter.starrocks=cn.tenmg.flink.jobs.metadata.getter.StarrocksMetaDataGetter
 ```
 
+#### metadata.starrocks.unique_key_as_primary_key
+
+是否将获取的StarRocks更新模型的`UNIQUE KEY`列作为主键`PRIMARY KEY`。默认为：
+
+```
+metadata.starrocks.unique_key_as_primary_key=true
+
+```
+
+由于只有带主键`PRIMARY KEY`的Flink SQL任务支持安全停止（`stopWithSavepoint`），因此将更新模型的`UNIQUE KEY`作为主键`PRIMARY KEY`是非常有意义的。它意味对于StarRocks更新模型（`UNIQUE KEY`）表使用自动生成的末端表（Sink Table）会带有主键（`PRIMARY KEY`），因此对应的同步（或写入）任务可以被安全停止。
+
 ### 数据同步配置
 
 #### data.sync.smart
