@@ -419,6 +419,10 @@ metadata.getter.starrocks=cn.tenmg.flink.jobs.metadata.getter.StarrocksMetaDataG
 
 数据同步时消费消息队列（Kafka）的`groupid`的前缀，默认为`flink-jobs-data-sync.`。该前缀和目标表（Slink Table）的表名拼接起来构成消费消息队列（Kafka）的`groupid`，但用户在任务中指定`properties.group.id`的除外。
 
+#### data.sync.metadata.getter.*
+
+ _注意：1.3.2开始 `data.sync.metadata.getter.*` 配置已被废弃，请使用 `metadata.getter.*` 替代。_ 
+
 #### data.sync.columns.convert
 
 1.1.3版本开始支持`data.sync.columns.convert`，用于配置数据同步的SELECT子句的列转换函数，可使用`#columnName`占位符表示当前列名，flink-jobs会在运行时将转换函数作为一个SQL片段插入到`INSERT INTO …… SELECT …… FROM ……`语句中。
