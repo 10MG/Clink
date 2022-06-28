@@ -427,7 +427,7 @@ Starrocks的错误详细解释如下：
 ```
 Connection con = ...;
 String catalog = con.getCatalog(), schema = con.getSchema();
-// 如果通过JDBC连接StarRocks，并运行上述代码，我们会发现获取的`catalog`的值实际上应为`schema`，而`schema`则应该是`catalog`。
+// 如果通过JDBC连接StarRocks，并运行上述代码，我们会发现获取的catalog的值实际上应为schema，而schema则应该是catalog。
 ```
 
 ### 数据同步配置
