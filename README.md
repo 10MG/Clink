@@ -416,7 +416,7 @@ metadata.starrocks.unique_key_as_primary_key=true
 
 #### metadata.starrocks.catalog_as_schema
 
-Starrocks JDBC适配有问题。`catalog`和`schema`对调了（`catalog`应为`null`，但它实际上是`schema`的值）。因此，这个配置允许用户选择是否使用`catalog`作为`schema`作为元数据的查询条件，以便正确获取元数据。Starrocks的错误详细解释如下：
+Starrocks 对 JDBC 适配有问题。`catalog`和`schema`对调了（`catalog`应为`null`，但它实际上是`schema`的值）。因此，这个配置允许用户选择是否使用`catalog`作为`schema`作为元数据的查询条件，以便正确获取元数据。Starrocks的错误详细解释如下：
 
 ```
 Connection con = ...;
