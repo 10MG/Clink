@@ -392,11 +392,11 @@ datasource.starrocks.database-name=your_db
 
 #### flink.jobs.smart
 
-是否开启智能模式，默认为`true`。开启智能模式的潜台词是指，自动通过已实现的元数据获取器（也可自行扩展）获取元数据以生成并执行Flink SQL。支持智能模式的有数据同步（`DataSync`）和创建表（`CreateTable`）。
+是否开启智能模式，默认为`true`, 1.3.0 版本开始支持。开启智能模式的潜台词是指，自动通过已实现的元数据获取器（也可自行扩展）获取元数据以生成并执行Flink SQL。支持智能模式的有数据同步（`DataSync`）和创建表（`CreateTable`）。
 
 #### metadata.getter.*
 
-用户可以根据需要实现`cn.tenmg.flink.jobs.metadata.MetaDataGetter`接口并通过该配置项来扩展元数据获取器，也可以使用自实现的元数据获取器来替换原有的元数据获取器。默认配置为：
+1.3.2 版本开始支持（之前版本为`data.sync.metadata.getter.*`），用户可以根据需要实现`cn.tenmg.flink.jobs.metadata.MetaDataGetter`接口并通过该配置项来扩展元数据获取器，也可以使用自实现的元数据获取器来替换原有的元数据获取器。默认配置为：
 
 ```
 metadata.getter.jdbc=cn.tenmg.flink.jobs.metadata.getter.JDBCMetaDataGetter
@@ -405,7 +405,7 @@ metadata.getter.starrocks=cn.tenmg.flink.jobs.metadata.getter.StarrocksMetaDataG
 
 #### metadata.starrocks.unique_key_as_primary_key
 
-是否将获取的StarRocks更新模型的`UNIQUE KEY`列作为主键`PRIMARY KEY`。默认为：
+是否将获取的StarRocks更新模型的`UNIQUE KEY`列作为主键`PRIMARY KEY`，1.3.2 版本开始支持。默认值为：
 
 ```
 metadata.starrocks.unique_key_as_primary_key=true
@@ -413,6 +413,16 @@ metadata.starrocks.unique_key_as_primary_key=true
 ```
 
 由于只有带主键`PRIMARY KEY`的Flink SQL任务支持安全停止（`stopWithSavepoint`），因此将更新模型的`UNIQUE KEY`作为主键`PRIMARY KEY`是非常有意义的。它意味对于StarRocks更新模型（`UNIQUE KEY`）表使用自动生成的末端表（Sink Table）会带有主键（`PRIMARY KEY`），因此对应的同步（或写入）任务可以被安全停止。
+
+#### metadata.starrocks.catalog_as_schema
+
+Starrocks JDBC适配有问题。`catalog`和`schema`对调了（`catalog`应为`null`，但它实际上是`schema`的值）。因此，这个配置允许用户选择是否使用`catalog`作为`schema`作为元数据的查询条件，以便正确获取元数据。Starrocks的错误详细解释如下：
+
+```
+Connection con = ...;
+String catalog = con.getCatalog(), schema = con.getSchema();
+// 如果通过JDBC连接StarRocks，并运行上述代码，我们会发现获取的`catalog`的值实际上应为`schema`，而`schema`则应该是`catalog`。
+```
 
 ### 数据同步配置
 
