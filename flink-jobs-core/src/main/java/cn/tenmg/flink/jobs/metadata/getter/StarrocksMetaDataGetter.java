@@ -22,8 +22,9 @@ import cn.tenmg.flink.jobs.utils.JDBCUtils;
  */
 public class StarrocksMetaDataGetter extends AbstractJDBCMetaDataGetter {
 
-	private static final boolean ukAsPk = Boolean
-			.valueOf(FlinkJobsContext.getProperty("metadata.starrocks.unique_key_as_primary_key"));
+	private static final boolean UK_AS_PK = Boolean
+			.valueOf(FlinkJobsContext.getProperty("metadata.starrocks.unique_key_as_primary_key")),
+			CAL_AS_SCM = Boolean.valueOf(FlinkJobsContext.getProperty("metadata.starrocks.catalog_as_schema"));
 
 	@Override
 	Connection getConnection(Map<String, String> dataSource) throws Exception {
@@ -44,8 +45,10 @@ public class StarrocksMetaDataGetter extends AbstractJDBCMetaDataGetter {
 			throws SQLException {
 		StringBuilder sqlBuilder = new StringBuilder(
 				"SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE COLUMN_KEY "
-						+ (ukAsPk ? "IN ('PRI','UNI')" : "= 'PRI'"));
-		if (schema != null) {
+						+ (UK_AS_PK ? "IN ('PRI','UNI')" : "= 'PRI'"));
+		// StarRocks JDBC适配有问题，catalog和schema对调了（catalog本应为null，但实际上却是schema的值）
+		// 因此这里允许用户选择是否将catalog作为schema
+		if (schema != null || (CAL_AS_SCM && catalog != null)) {
 			sqlBuilder.append(" AND TABLE_SCHEMA = ?");
 		}
 		sqlBuilder.append(" AND TABLE_NAME = ? ORDER BY ORDINAL_POSITION");
@@ -56,6 +59,8 @@ public class StarrocksMetaDataGetter extends AbstractJDBCMetaDataGetter {
 			int nextId = 1;
 			if (schema != null) {
 				ps.setString(nextId++, schema);
+			} else if (CAL_AS_SCM && catalog != null) {
+				ps.setString(nextId++, catalog);
 			}
 			ps.setString(nextId, tableName);
 			rs = ps.executeQuery();
