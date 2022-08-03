@@ -75,11 +75,18 @@ public class ExecuteSqlOperator extends AbstractSqlOperator<ExecuteSql> {
 				statement = SQLUtils.toSQL(namedScript);
 			}
 			statement = SQLUtils.wrapDataSource(statement, dataSource);
+		} else {
+			statement = SQLUtils.toSQL(namedScript);
 		}
 		if (log.isInfoEnabled()) {
 			log.info("Execute Flink SQL: " + SQLUtils.hiddePassword(statement));
 		}
 		return tableEnv.executeSql(statement);
+	}
+	
+	
+	public static void main(String args[]) {
+		System.out.println(SQLUtils.toSQL(new NamedScript("#asdfs")));
 	}
 
 }
