@@ -23,6 +23,16 @@ public class XMLConfigLoader implements ConfigLoader {
 
 	private static final XMLConfigLoader INSTANCE = new XMLConfigLoader();
 
+	private static Unmarshaller unmarshaller;
+
+	static {
+		try {
+			unmarshaller = JAXBContext.newInstance(FlinkJobs.class).createUnmarshaller();
+		} catch (JAXBException e) {
+			e.printStackTrace();
+		}
+	}
+
 	private XMLConfigLoader() {
 		super();
 	}
@@ -40,9 +50,7 @@ public class XMLConfigLoader implements ConfigLoader {
 	 */
 	public FlinkJobs load(String s) {
 		try {
-			JAXBContext context = JAXBContext.newInstance(FlinkJobs.class);
-			Unmarshaller us = context.createUnmarshaller();
-			return (FlinkJobs) us.unmarshal(new StringReader(s));
+			return (FlinkJobs) unmarshaller.unmarshal(new StringReader(s));
 		} catch (JAXBException e) {
 			throw new IllegalArgumentException("Failed to load the flink-jobs configuration", e);
 		}
@@ -57,9 +65,7 @@ public class XMLConfigLoader implements ConfigLoader {
 	 */
 	public FlinkJobs load(File file) {
 		try {
-			JAXBContext context = JAXBContext.newInstance(FlinkJobs.class);
-			Unmarshaller us = context.createUnmarshaller();
-			return (FlinkJobs) us.unmarshal(file);
+			return (FlinkJobs) unmarshaller.unmarshal(file);
 		} catch (JAXBException e) {
 			throw new IllegalArgumentException("Failed to load the flink-jobs configuration", e);
 		}
@@ -74,9 +80,7 @@ public class XMLConfigLoader implements ConfigLoader {
 	 */
 	public FlinkJobs load(FileReader fr) {
 		try {
-			JAXBContext context = JAXBContext.newInstance(FlinkJobs.class);
-			Unmarshaller us = context.createUnmarshaller();
-			return (FlinkJobs) us.unmarshal(fr);
+			return (FlinkJobs) unmarshaller.unmarshal(fr);
 		} catch (JAXBException e) {
 			throw new IllegalArgumentException("Failed to load the flink-jobs configuration", e);
 		}
@@ -92,9 +96,7 @@ public class XMLConfigLoader implements ConfigLoader {
 	@Override
 	public FlinkJobs load(InputStream is) {
 		try {
-			JAXBContext context = JAXBContext.newInstance(FlinkJobs.class);
-			Unmarshaller us = context.createUnmarshaller();
-			return (FlinkJobs) us.unmarshal(is);
+			return (FlinkJobs) unmarshaller.unmarshal(is);
 		} catch (JAXBException e) {
 			throw new IllegalArgumentException("Failed to load the flink-jobs configuration", e);
 		}
