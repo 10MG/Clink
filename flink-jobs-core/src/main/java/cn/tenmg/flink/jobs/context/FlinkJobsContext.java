@@ -323,7 +323,7 @@ public abstract class FlinkJobsContext {
 				throw new DataSourceNotFoundException("DataSource named " + name
 						+ " not found, Please check the configuration file " + getConfigurationFile());
 			} else {
-				log.info("Automatically generate a datasource named " + name);
+				log.info("Automatically generate a DataSource named " + name);
 				dataSource = HashMapKit.init(autoDatasource).put(autoDatasource.get(AUOT_DATASOURCE_IDENTIFIER), name)
 						.get();
 				dataSource.remove(AUOT_DATASOURCE_IDENTIFIER);
