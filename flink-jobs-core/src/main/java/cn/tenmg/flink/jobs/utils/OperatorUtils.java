@@ -3,8 +3,7 @@ package cn.tenmg.flink.jobs.utils;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.commons.lang3.StringUtils;
-
+import cn.tenmg.dsl.utils.StringUtils;
 import cn.tenmg.flink.jobs.Operator;
 import cn.tenmg.flink.jobs.context.FlinkJobsContext;
 

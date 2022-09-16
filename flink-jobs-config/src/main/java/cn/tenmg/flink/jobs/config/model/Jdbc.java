@@ -26,6 +26,9 @@ public class Jdbc implements Operate, Serializable {
 	private String saveAs;
 
 	@XmlAttribute
+	private String when;
+
+	@XmlAttribute
 	private String dataSource;
 
 	@XmlAttribute
@@ -46,6 +49,15 @@ public class Jdbc implements Operate, Serializable {
 
 	public void setSaveAs(String saveAs) {
 		this.saveAs = saveAs;
+	}
+
+	@Override
+	public String getWhen() {
+		return when;
+	}
+
+	public void setWhen(String when) {
+		this.when = when;
 	}
 
 	public String getDataSource() {

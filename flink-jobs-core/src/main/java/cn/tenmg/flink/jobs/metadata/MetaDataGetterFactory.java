@@ -16,10 +16,6 @@ import cn.tenmg.flink.jobs.exception.IllegalConfigurationException;
  */
 public abstract class MetaDataGetterFactory {
 
-	@Deprecated
-	private static final String COLUMNS_GETTER_KEY_PREFIX = "data.sync.metadata.getter"
-			+ FlinkJobsContext.CONFIG_SPLITER;
-
 	private static final String METADATA_GETTER_KEY_PREFIX = "metadata.getter" + FlinkJobsContext.CONFIG_SPLITER;
 
 	private static volatile Map<String, MetaDataGetter> COLUMNS_GETTERS = new HashMap<String, MetaDataGetter>();
@@ -39,9 +35,6 @@ public abstract class MetaDataGetterFactory {
 				columnsGetter = COLUMNS_GETTERS.get(connector);
 				if (columnsGetter == null) {
 					String key = METADATA_GETTER_KEY_PREFIX + connector, className = FlinkJobsContext.getProperty(key);
-					if (className == null) {// 兼容老版本data.sync.metadata.getter.*
-						className = FlinkJobsContext.getProperty(COLUMNS_GETTER_KEY_PREFIX + connector);
-					}
 					if (className == null) {
 						throw new IllegalArgumentException("MetaDataGetter for connector '" + connector
 								+ "' is not supported, Please consider manually implementing the interface "

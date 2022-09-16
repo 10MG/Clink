@@ -23,4 +23,11 @@ public interface Operate {
 	 */
 	String getSaveAs();
 
+	/**
+	 * 获取处理条件
+	 * 
+	 * @return 处理条件
+	 */
+	String getWhen();
+
 }

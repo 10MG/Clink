@@ -25,11 +25,15 @@ public class BasicOperate implements Operate, Serializable {
 	@XmlAttribute
 	private String saveAs;
 
+	@XmlAttribute
+	private String when;
+
 	/**
 	 * 获取操作类型
 	 * 
 	 * @return 操作类型
 	 */
+	@Override
 	public String getType() {
 		return getClass().getSimpleName();
 	};
@@ -39,6 +43,7 @@ public class BasicOperate implements Operate, Serializable {
 	 * 
 	 * @return 处理结果另存为变量名
 	 */
+	@Override
 	public String getSaveAs() {
 		return saveAs;
 	}
@@ -51,5 +56,25 @@ public class BasicOperate implements Operate, Serializable {
 	 */
 	public void setSaveAs(String saveAs) {
 		this.saveAs = saveAs;
+	}
+
+	/**
+	 * 获取处理条件
+	 * 
+	 * @return 处理条件
+	 */
+	@Override
+	public String getWhen() {
+		return when;
+	}
+
+	/**
+	 * 设置处理条件
+	 * 
+	 * @param saveAs
+	 *            处理条件
+	 */
+	public void setWhen(String when) {
+		this.when = when;
 	}
 }

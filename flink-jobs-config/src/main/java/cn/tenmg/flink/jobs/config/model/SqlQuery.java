@@ -26,6 +26,9 @@ public class SqlQuery implements Operate, Serializable {
 	private String saveAs;
 
 	@XmlAttribute
+	private String when;
+
+	@XmlAttribute
 	private String catalog;
 
 	@XmlValue
@@ -36,15 +39,12 @@ public class SqlQuery implements Operate, Serializable {
 	 * 
 	 * @return 操作类型
 	 */
+	@Override
 	public String getType() {
 		return getClass().getSimpleName();
 	};
 
-	/**
-	 * 获取处理结果另存为变量名
-	 * 
-	 * @return 处理结果另存为变量名
-	 */
+	@Override
 	public String getSaveAs() {
 		return saveAs;
 	}
@@ -57,6 +57,15 @@ public class SqlQuery implements Operate, Serializable {
 	 */
 	public void setSaveAs(String saveAs) {
 		this.saveAs = saveAs;
+	}
+
+	@Override
+	public String getWhen() {
+		return when;
+	}
+
+	public void setWhen(String when) {
+		this.when = when;
 	}
 
 	/**

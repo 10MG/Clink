@@ -2,11 +2,16 @@ package cn.tenmg.flink.jobs.operator;
 
 import java.lang.reflect.ParameterizedType;
 import java.util.Map;
+import java.util.Map.Entry;
+
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineManager;
 
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 
 import com.alibaba.fastjson.JSON;
 
+import cn.tenmg.dsl.utils.StringUtils;
 import cn.tenmg.flink.jobs.Operator;
 import cn.tenmg.flink.jobs.model.Operate;
 
@@ -23,6 +28,11 @@ import cn.tenmg.flink.jobs.model.Operate;
  */
 public abstract class AbstractOperator<T extends Operate> implements Operator {
 
+	/**
+	 * 脚本引擎管理器
+	 */
+	protected static final ScriptEngineManager SCRIPT_ENGINE_MANAGER = new ScriptEngineManager();
+
 	protected Class<T> type;
 
 	@SuppressWarnings("unchecked")
@@ -33,11 +43,24 @@ public abstract class AbstractOperator<T extends Operate> implements Operator {
 	@Override
 	public void execute(StreamExecutionEnvironment env, String config, Map<String, Object> params) throws Exception {
 		T operate = JSON.parseObject(config, type);
-		String saveAs = operate.getSaveAs();
-		if (saveAs != null) {
-			params.put(saveAs, execute(env, JSON.parseObject(config, type), params));
-		} else {
-			execute(env, JSON.parseObject(config, type), params);
+		String when = operate.getWhen();
+		boolean execute = true;
+		if (StringUtils.isNotBlank(when)) {
+			ScriptEngine scriptEngine = SCRIPT_ENGINE_MANAGER.getEngineByName("JavaScript");
+			if (params != null && !params.isEmpty()) {
+				for (Entry<String, Object> entry : params.entrySet()) {
+					scriptEngine.put(entry.getKey(), entry.getValue());
+				}
+			}
+			execute = Boolean.TRUE.equals(scriptEngine.eval(when));
+		}
+		if (execute) {
+			String saveAs = operate.getSaveAs();
+			if (saveAs != null) {
+				params.put(saveAs, execute(env, JSON.parseObject(config, type), params));
+			} else {
+				execute(env, JSON.parseObject(config, type), params);
+			}
 		}
 	}
 
@@ -55,5 +78,6 @@ public abstract class AbstractOperator<T extends Operate> implements Operator {
 	 * @throws Exception
 	 *             发生异常
 	 */
-	public abstract Object execute(StreamExecutionEnvironment env, T operate, Map<String, Object> params) throws Exception;
+	public abstract Object execute(StreamExecutionEnvironment env, T operate, Map<String, Object> params)
+			throws Exception;
 }

@@ -32,6 +32,9 @@ public class CreateTable implements Operate, Serializable {
 	private String saveAs;
 
 	@XmlAttribute
+	private String when;
+
+	@XmlAttribute
 	private String catalog;
 
 	/**
@@ -72,6 +75,19 @@ public class CreateTable implements Operate, Serializable {
 	@Override
 	public String getSaveAs() {
 		return saveAs;
+	}
+
+	public void setSaveAs(String saveAs) {
+		this.saveAs = saveAs;
+	}
+
+	@Override
+	public String getWhen() {
+		return when;
+	}
+
+	public void setWhen(String when) {
+		this.when = when;
 	}
 
 	public String getCatalog() {

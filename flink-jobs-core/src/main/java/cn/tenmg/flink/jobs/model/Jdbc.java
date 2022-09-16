@@ -20,6 +20,8 @@ public class Jdbc extends Operate {
 
 	private String script;
 
+	private String resultClass;
+
 	public String getDataSource() {
 		return dataSource;
 	}
@@ -42,6 +44,14 @@ public class Jdbc extends Operate {
 
 	public void setScript(String script) {
 		this.script = script;
+	}
+
+	public String getResultClass() {
+		return resultClass;
+	}
+
+	public void setResultClass(String resultClass) {
+		this.resultClass = resultClass;
 	}
 
 }

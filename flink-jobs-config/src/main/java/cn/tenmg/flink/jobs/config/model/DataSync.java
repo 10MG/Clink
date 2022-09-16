@@ -7,8 +7,11 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlElements;
 
 import cn.tenmg.flink.jobs.config.model.data.sync.Column;
+import cn.tenmg.flink.jobs.config.model.data.sync.ComplexColumn;
+import cn.tenmg.flink.jobs.config.model.data.sync.SimpleColumn;
 
 /**
  * 数据同步
@@ -28,6 +31,9 @@ public class DataSync implements Operate, Serializable {
 
 	@XmlAttribute
 	private String saveAs;
+
+	@XmlAttribute
+	private String when;
 
 	/**
 	 * 来源数据源名称
@@ -82,7 +88,8 @@ public class DataSync implements Operate, Serializable {
 	/**
 	 * 同步数据列
 	 */
-	@XmlElement(name = "column", namespace = FlinkJobs.NAMESPACE)
+	@XmlElements({ @XmlElement(name = "column", namespace = FlinkJobs.NAMESPACE, type = SimpleColumn.class),
+			@XmlElement(name = "complex-column", namespace = FlinkJobs.NAMESPACE, type = ComplexColumn.class) })
 	private List<Column> columns;
 
 	@Override
@@ -90,12 +97,22 @@ public class DataSync implements Operate, Serializable {
 		return getClass().getSimpleName();
 	}
 
+	@Override
 	public String getSaveAs() {
 		return saveAs;
 	}
 
 	public void setSaveAs(String saveAs) {
 		this.saveAs = saveAs;
+	}
+
+	@Override
+	public String getWhen() {
+		return when;
+	}
+
+	public void setWhen(String when) {
+		this.when = when;
 	}
 
 	public String getFrom() {

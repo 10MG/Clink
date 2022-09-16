@@ -2,12 +2,6 @@ package cn.tenmg.flink.jobs.config.model.data.sync;
 
 import java.io.Serializable;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlType;
-import javax.xml.bind.annotation.XmlValue;
-
 /**
  * 同步数据列
  * 
@@ -16,92 +10,97 @@ import javax.xml.bind.annotation.XmlValue;
  * @author June wjzhao@aliyun.com
  * 
  * @since 1.1.4
- *
  */
-@XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "data-sync>column")
-public class Column implements Serializable {
+public interface Column extends Serializable {
+
 	/**
+	 * 获取来源列名
 	 * 
+	 * @return 来源列名
 	 */
-	private static final long serialVersionUID = -4108312485142787579L;
+	String getFromName();
+
 	/**
-	 * 来源列名
+	 * 设置来源列名
+	 * 
+	 * @param fromName
+	 *            来源列名
 	 */
-	@XmlAttribute
-	private String fromName;
+	void setFromName(String fromName);
+
 	/**
-	 * 来源列数据类型。如果缺省，则如果开启智能模式会自动获取目标数据类型作为来源数据类型，如果关闭智能模式则必填
+	 * 获取来源列数据类型
+	 * 
+	 * @return 来源列数据类型
 	 */
-	@XmlAttribute
-	private String fromType;
+	String getFromType();
+
 	/**
-	 * 目标列名。默认为来源列名
+	 * 设置来源列数据类型。如果缺省，则如果开启智能模式会自动获取目标数据类型作为来源数据类型，如果关闭智能模式则必填
+	 * 
+	 * @param fromType
+	 *            来源列数据类型
 	 */
-	@XmlAttribute
-	private String toName;
+	void setFromType(String fromType);
+
 	/**
-	 * 目标列数据类型。如果缺省，则如果开启智能模式会自动获取，如果关闭智能模式则默认为来源列数据类型
+	 * 获取目标列名
+	 * 
+	 * @return 目标列名
 	 */
-	@XmlAttribute
-	private String toType;
+	String getToName();
+
 	/**
-	 * 策略。可选值：both/from/to，both表示来源列和目标列均创建，from表示仅创建原来列，to表示仅创建目标列，默认为both。
+	 * 设置目标列名
+	 * 
+	 * @param toName
+	 *            目标列名
 	 */
-	@XmlAttribute
-	private String strategy;
+	void setToName(String toName);
+
 	/**
-	 * 自定义脚本。通常是需要进行函数转换时使用
+	 * 获取目标列数据类型
+	 * 
+	 * @return 目标列数据类型
 	 */
-	@XmlValue
-	private String script;
+	String getToType();
 
-	public String getFromName() {
-		return fromName;
-	}
+	/**
+	 * 设置目标列数据类型
+	 * 
+	 * @param toType
+	 *            目标列数据类型
+	 */
+	void setToType(String toType);
 
-	public void setFromName(String fromName) {
-		this.fromName = fromName;
-	}
+	/**
+	 * 获取策略
+	 * 
+	 * @return 策略
+	 */
+	String getStrategy();
 
-	public String getFromType() {
-		return fromType;
-	}
+	/**
+	 * 设置策略。可选值：both/from/to，both表示来源列和目标列均创建，from表示仅创建原来列，to表示仅创建目标列，默认为both。
+	 * 
+	 * @param strategy
+	 *            策略
+	 */
+	void setStrategy(String strategy);
 
-	public void setFromType(String fromType) {
-		this.fromType = fromType;
-	}
+	/**
+	 * 获取自定义脚本。通常是需要进行函数转换时使用
+	 * 
+	 * @return 自定义脚本
+	 */
+	String getScript();
 
-	public String getToName() {
-		return toName;
-	}
-
-	public void setToName(String toName) {
-		this.toName = toName;
-	}
-
-	public String getToType() {
-		return toType;
-	}
-
-	public void setToType(String toType) {
-		this.toType = toType;
-	}
-
-	public String getStrategy() {
-		return strategy;
-	}
-
-	public void setStrategy(String strategy) {
-		this.strategy = strategy;
-	}
-
-	public String getScript() {
-		return script;
-	}
-
-	public void setScript(String script) {
-		this.script = script;
-	}
+	/**
+	 * 设置自定义脚本。通常是需要进行函数转换时使用
+	 * 
+	 * @param script
+	 *            自定义脚本
+	 */
+	void setScript(String script);
 
 }
