@@ -26,13 +26,14 @@
 			<artifactId>dsl</artifactId>
 			<version>1.2.8</version>
 		</dependency>
+
 		<!-- https://mvnrepository.com/artifact/org.slf4j/slf4j-api -->
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-api</artifactId>
 			<version>${slf4j-api.version}</version>
+			<scope>provided</scope>
 		</dependency>
-
 		<!-- https://mvnrepository.com/artifact/org.apache.flink/flink-core -->
 		<dependency>
 			<groupId>org.apache.flink</groupId>
