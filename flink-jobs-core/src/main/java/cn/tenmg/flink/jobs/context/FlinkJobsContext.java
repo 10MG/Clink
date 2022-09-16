@@ -16,6 +16,7 @@ import org.slf4j.LoggerFactory;
 
 import cn.tenmg.dsl.utils.PropertiesLoaderUtils;
 import cn.tenmg.flink.jobs.exception.DataSourceNotFoundException;
+import cn.tenmg.flink.jobs.kit.HashMapKit;
 import cn.tenmg.flink.jobs.utils.ConfigurationUtils;
 import cn.tenmg.flink.jobs.utils.PlaceHolderUtils;
 
@@ -58,18 +59,20 @@ public abstract class FlinkJobsContext {
 
 	private static final ThreadLocal<Map<Object, Object>> resources = new InheritableThreadLocalMap<Map<Object, Object>>();
 
-	private static final Map<String, Map<String, String>> dataSources = new HashMap<String, Map<String, String>>();
+	private static final Map<String, Map<String, String>> datasources = new HashMap<String, Map<String, String>>();
+
+	private static final Map<String, String> autoDatasource = new HashMap<String, String>();
 
 	private static final Map<String, String> tableExecConfigs = new HashMap<String, String>();
 
 	private static final String DEFAULT_STRATEGIES_PATH = "flink-jobs-context-loader.properties",
 			CONFIG_LOCATION_KEY = "config.location", CONTEXT_LOCATION_KEY = "context.location",
 			DATASOURCE_PREFIX = "datasource" + CONFIG_SPLITER,
+			AUTO_DATASOURCE_PREFIX = "auto" + CONFIG_SPLITER + DATASOURCE_PREFIX,
 			DATASOURCE_REGEX = "^" + DATASOURCE_PREFIX.replaceAll("\\.", "\\\\.") + "([\\S]+\\.){0,1}[^\\.]+$",
-			EXECUTION_ENVIRONMENT = "ExecutionEnvironment", CURRENT_CONFIGURATION = "CurrentConfiguration";
-
-	private static final int CONFIG_SPLITER_LEN = CONFIG_SPLITER.length(),
-			DATASOURCE_PREFIX_LEN = DATASOURCE_PREFIX.length();
+			AUTO_DATASOURCE_REGEX = "^" + AUTO_DATASOURCE_PREFIX.replaceAll("\\.", "\\\\.") + "[^\\.]+$",
+			EXECUTION_ENVIRONMENT = "ExecutionEnvironment", CURRENT_CONFIGURATION = "CurrentConfiguration",
+			AUOT_DATASOURCE_IDENTIFIER = "auto.datasource.identifier";
 
 	private static Properties defaultProperties, configProperties;
 
@@ -101,22 +104,32 @@ public abstract class FlinkJobsContext {
 			String key, name, param, keyLowercase;
 			Map<String, String> dataSource;
 			boolean ignoreCase = !Boolean.valueOf(getProperty("data.sync.timestamp.case_sensitive"));
+			int configSpliterLen = CONFIG_SPLITER.length(), datasourcePrefixLen = DATASOURCE_PREFIX.length(),
+					autoDatasourcePrefixLen = AUTO_DATASOURCE_PREFIX.length();
 			for (Iterator<Entry<Object, Object>> it = configProperties.entrySet().iterator(); it.hasNext();) {
 				entry = it.next();
 				key = entry.getKey().toString();
 				value = entry.getValue();
 				if (key.matches(DATASOURCE_REGEX)) {
-					param = key.substring(DATASOURCE_PREFIX_LEN);
+					param = key.substring(datasourcePrefixLen);
 					int index = param.indexOf(CONFIG_SPLITER);
 					if (index > 0) {
 						name = param.substring(0, index);
-						param = param.substring(index + CONFIG_SPLITER_LEN);
-						dataSource = dataSources.get(name);
+						param = param.substring(index + configSpliterLen);
+						dataSource = datasources.get(name);
 						if (dataSource == null) {
 							dataSource = new LinkedHashMap<String, String>();
-							dataSources.put(name, dataSource);
+							datasources.put(name, dataSource);
 						}
 						dataSource.put(param, value.toString());
+					}
+				} else if (key.matches(AUTO_DATASOURCE_REGEX)) {
+					param = key.substring(autoDatasourcePrefixLen);
+					int index = param.indexOf(CONFIG_SPLITER);
+					if (index > 0) {
+						name = param.substring(0, index);
+						param = param.substring(index + configSpliterLen);
+						autoDatasource.put(param, value.toString());
 					}
 				} else if (key.startsWith("table.exec")) {
 					tableExecConfigs.put(key, value.toString());
@@ -284,7 +297,7 @@ public abstract class FlinkJobsContext {
 	 * @return 数据源查找表
 	 */
 	public static Map<String, Map<String, String>> getDatasources() {
-		return dataSources;
+		return datasources;
 	}
 
 	/**
@@ -304,10 +317,17 @@ public abstract class FlinkJobsContext {
 	 * @return 数据源
 	 */
 	public static Map<String, String> getDatasource(String name) {
-		Map<String, String> dataSource = dataSources.get(name);
+		Map<String, String> dataSource = datasources.get(name);
 		if (dataSource == null) {
-			throw new DataSourceNotFoundException("DataSource named " + name
-					+ " not found, Please check the configuration file " + getConfigurationFile());
+			if (autoDatasource.isEmpty()) {
+				throw new DataSourceNotFoundException("DataSource named " + name
+						+ " not found, Please check the configuration file " + getConfigurationFile());
+			} else {
+				log.info("Automatically generate a datasource named " + name);
+				dataSource = HashMapKit.init(autoDatasource).put(autoDatasource.get(AUOT_DATASOURCE_IDENTIFIER), name)
+						.get();
+				dataSource.remove(AUOT_DATASOURCE_IDENTIFIER);
+			}
 		}
 		return dataSource;
 	}
