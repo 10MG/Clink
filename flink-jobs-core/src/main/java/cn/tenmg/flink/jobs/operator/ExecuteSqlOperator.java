@@ -83,10 +83,5 @@ public class ExecuteSqlOperator extends AbstractSqlOperator<ExecuteSql> {
 		}
 		return tableEnv.executeSql(statement);
 	}
-	
-	
-	public static void main(String args[]) {
-		System.out.println(SQLUtils.toSQL(new NamedScript("#asdfs")));
-	}
 
 }

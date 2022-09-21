@@ -141,7 +141,7 @@ public class CreateTableOperator extends AbstractOperator<CreateTable> {
 	private static String createTableSQL(Map<String, String> dataSource, String tableName, String bindTableName,
 			List<Column> columns, String primaryKey) throws IOException {
 		StringBuffer sqlBuffer = new StringBuffer();
-		sqlBuffer.append("CREATE TABLE ").append(tableName).append("(");
+		sqlBuffer.append("CREATE TABLE ").append(SQLUtils.wrapIfReservedKeywords(tableName)).append("(");
 
 		Column column = columns.get(0);
 		sqlBuffer.append(column.getName()).append(DSLUtils.BLANK_SPACE).append(column.getType());

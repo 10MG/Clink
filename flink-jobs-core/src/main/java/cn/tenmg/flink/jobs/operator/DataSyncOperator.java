@@ -47,9 +47,6 @@ public class DataSyncOperator extends AbstractOperator<DataSync> {
 
 	private static Logger log = LoggerFactory.getLogger(DataSyncOperator.class);
 
-	@Deprecated
-	private static final String SMART_KEY = "data.sync.smart";
-
 	private static final String FROM_TABLE_PREFIX_KEY = "data.sync.from_table_prefix", TOPIC_KEY = "topic",
 			GROUP_ID_KEY = "properties.group.id", GROUP_ID_PREFIX_KEY = "data.sync.group_id_prefix",
 			TIMESTAMP_COLUMNS = "data.sync.timestamp.columns", TIMESTAMP_COLUMNS_SPLIT = ",",
@@ -183,9 +180,7 @@ public class DataSyncOperator extends AbstractOperator<DataSync> {
 		}
 		Boolean smart = dataSync.getSmart();
 		if (smart == null) {
-			String value = FlinkJobsContext.getProperty(SMART_KEY);
-			smart = Boolean.valueOf(
-					value == null ? FlinkJobsContext.getProperty(FlinkJobsContext.SMART_MODE_CONFIG_KEY) : value);
+			smart = Boolean.valueOf(FlinkJobsContext.getProperty(FlinkJobsContext.SMART_MODE_CONFIG_KEY));
 		}
 		Set<String> primaryKeys = null;
 		String primaryKey = dataSync.getPrimaryKey(), timestamp = dataSync.getTimestamp();
@@ -548,7 +543,7 @@ public class DataSyncOperator extends AbstractOperator<DataSync> {
 			String fromTable, List<Column> columns, Set<String> primaryKeys, String fromConfig) throws IOException {
 		Set<String> actualPrimaryKeys = newSet(primaryKeys);
 		StringBuffer sqlBuffer = new StringBuffer();
-		sqlBuffer.append("CREATE TABLE ").append(fromTable).append("(");
+		sqlBuffer.append("CREATE TABLE ").append(SQLUtils.wrapIfReservedKeywords(fromTable)).append("(");
 		Column column;
 		String toName;
 		int i = 0, size = columns.size();
@@ -585,18 +580,16 @@ public class DataSyncOperator extends AbstractOperator<DataSync> {
 			if (topic != null) {
 				actualDataSource.put(TOPIC_KEY, topic);
 			}
-			SQLUtils.appendDataSource(sqlBuffer, actualDataSource);
+			appendDataSource(sqlBuffer, actualDataSource, table);
 		} else {
-			Map<String, String> config = ConfigurationUtils.load(fromConfig);
-			MapUtils.removeAll(actualDataSource, config.keySet());
-			if (!config.containsKey(GROUP_ID_KEY) && ConfigurationUtils.isKafka(actualDataSource)) {
+			actualDataSource.putAll(ConfigurationUtils.load(fromConfig));
+			if (!actualDataSource.containsKey(GROUP_ID_KEY) && ConfigurationUtils.isKafka(actualDataSource)) {
 				actualDataSource.put(GROUP_ID_KEY, FlinkJobsContext.getProperty(GROUP_ID_PREFIX_KEY) + table);// 设置properties.group.id
 			}
-			if (topic != null && !config.containsKey(TOPIC_KEY)) {
+			if (topic != null && !actualDataSource.containsKey(TOPIC_KEY)) {
 				actualDataSource.put(TOPIC_KEY, topic);
 			}
-			SQLUtils.appendDataSource(sqlBuffer, actualDataSource);
-			sqlBuffer.append(DSLUtils.COMMA).append(DSLUtils.BLANK_SPACE).append(fromConfig);
+			appendDataSource(sqlBuffer, actualDataSource, table);
 		}
 		sqlBuffer.append(")");
 		return sqlBuffer.toString();
@@ -606,7 +599,7 @@ public class DataSyncOperator extends AbstractOperator<DataSync> {
 			Set<String> primaryKeys, String toConfig) throws IOException {
 		Set<String> actualPrimaryKeys = newSet(primaryKeys);
 		StringBuffer sqlBuffer = new StringBuffer();
-		sqlBuffer.append("CREATE TABLE ").append(table).append("(");
+		sqlBuffer.append("CREATE TABLE ").append(SQLUtils.wrapIfReservedKeywords(table)).append("(");
 		Column column;
 		String toName, columnName;
 		int i = 0, size = columns.size();
@@ -638,13 +631,12 @@ public class DataSyncOperator extends AbstractOperator<DataSync> {
 		}
 		sqlBuffer.append(") ").append("WITH (");
 		Map<String, String> actualDataSource = MapUtils.newHashMap(dataSource);
-		actualDataSource.put(SQLUtils.TABLE_NAME, table);
 		if (StringUtils.isBlank(toConfig)) {
-			SQLUtils.appendDataSource(sqlBuffer, actualDataSource);
+			appendDataSource(sqlBuffer, actualDataSource, table);
 		} else {
 			Map<String, String> config = ConfigurationUtils.load(toConfig);
 			MapUtils.removeAll(actualDataSource, config.keySet());
-			SQLUtils.appendDataSource(sqlBuffer, actualDataSource);
+			appendDataSource(sqlBuffer, actualDataSource, table);
 			sqlBuffer.append(DSLUtils.COMMA).append(DSLUtils.BLANK_SPACE).append(toConfig);
 		}
 		sqlBuffer.append(")");
@@ -653,7 +645,8 @@ public class DataSyncOperator extends AbstractOperator<DataSync> {
 
 	private static String insertSQL(String table, String fromTable, List<Column> columns, Map<String, Object> params) {
 		StringBuffer sqlBuffer = new StringBuffer();
-		sqlBuffer.append("INSERT INTO ").append(table).append(DSLUtils.BLANK_SPACE).append("(");
+		sqlBuffer.append("INSERT INTO ").append(SQLUtils.wrapIfReservedKeywords(table)).append(DSLUtils.BLANK_SPACE)
+				.append("(");
 
 		boolean needComma = false;
 		Column column;
@@ -688,7 +681,7 @@ public class DataSyncOperator extends AbstractOperator<DataSync> {
 			}
 		}
 
-		sqlBuffer.append(" FROM ").append(fromTable);
+		sqlBuffer.append(" FROM ").append(SQLUtils.wrapIfReservedKeywords(fromTable));
 		return sqlBuffer.toString();
 
 	}
@@ -700,7 +693,7 @@ public class DataSyncOperator extends AbstractOperator<DataSync> {
 				.getValue();
 	}
 
-	public static final Map<String, String> toMap(boolean toLowercase, String... strings) {
+	private static final Map<String, String> toMap(boolean toLowercase, String... strings) {
 		Map<String, String> map = new HashMap<String, String>();
 		String string;
 		if (toLowercase) {
@@ -738,6 +731,16 @@ public class DataSyncOperator extends AbstractOperator<DataSync> {
 			newSet.addAll(set);
 		}
 		return newSet;
+	}
+
+	private static void appendDataSource(StringBuffer sqlBuffer, Map<String, String> dataSource, String table) {
+		SQLUtils.appendDataSource(sqlBuffer, dataSource);
+		if (SQLUtils.needDefaultTableName(dataSource) && !dataSource.containsKey(SQLUtils.TABLE_NAME)) {
+			sqlBuffer.append(DSLUtils.COMMA).append(DSLUtils.BLANK_SPACE)
+					.append(SQLUtils.wrapString(SQLUtils.TABLE_NAME));
+			SQLUtils.apppendEquals(sqlBuffer);
+			sqlBuffer.append(SQLUtils.wrapString(table));
+		}
 	}
 
 	/**

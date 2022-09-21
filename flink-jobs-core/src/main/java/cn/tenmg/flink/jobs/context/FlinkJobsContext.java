@@ -70,9 +70,10 @@ public abstract class FlinkJobsContext {
 			DATASOURCE_PREFIX = "datasource" + CONFIG_SPLITER,
 			AUTO_DATASOURCE_PREFIX = "auto" + CONFIG_SPLITER + DATASOURCE_PREFIX,
 			DATASOURCE_REGEX = "^" + DATASOURCE_PREFIX.replaceAll("\\.", "\\\\.") + "([\\S]+\\.){0,1}[^\\.]+$",
-			AUTO_DATASOURCE_REGEX = "^" + AUTO_DATASOURCE_PREFIX.replaceAll("\\.", "\\\\.") + "[^\\.]+$",
+			AUTO_DATASOURCE_REGEX = "^" + AUTO_DATASOURCE_PREFIX.replaceAll("\\.", "\\\\.")
+					+ "([\\S]+\\.){0,1}[^\\.]+$",
 			EXECUTION_ENVIRONMENT = "ExecutionEnvironment", CURRENT_CONFIGURATION = "CurrentConfiguration",
-			AUOT_DATASOURCE_IDENTIFIER = "auto.datasource.identifier";
+			IDENTIFIER = "identifier";
 
 	private static Properties defaultProperties, configProperties;
 
@@ -125,12 +126,7 @@ public abstract class FlinkJobsContext {
 					}
 				} else if (key.matches(AUTO_DATASOURCE_REGEX)) {
 					param = key.substring(autoDatasourcePrefixLen);
-					int index = param.indexOf(CONFIG_SPLITER);
-					if (index > 0) {
-						name = param.substring(0, index);
-						param = param.substring(index + configSpliterLen);
-						autoDatasource.put(param, value.toString());
-					}
+					autoDatasource.put(param, value.toString());
 				} else if (key.startsWith("table.exec")) {
 					tableExecConfigs.put(key, value.toString());
 				} else if (ignoreCase && key.matches("^data\\.sync\\.[^\\.]+\\.((from|to)_type|script|strategy)$")) {
@@ -324,9 +320,8 @@ public abstract class FlinkJobsContext {
 						+ " not found, Please check the configuration file " + getConfigurationFile());
 			} else {
 				log.info("Automatically generate a DataSource named " + name);
-				dataSource = HashMapKit.init(autoDatasource).put(autoDatasource.get(AUOT_DATASOURCE_IDENTIFIER), name)
-						.get();
-				dataSource.remove(AUOT_DATASOURCE_IDENTIFIER);
+				dataSource = HashMapKit.init(autoDatasource).put(autoDatasource.get(IDENTIFIER), name).get();
+				dataSource.remove(IDENTIFIER);
 			}
 		}
 		return dataSource;

@@ -53,7 +53,8 @@ public abstract class SQLUtils {
 	/**
 	 * 将使用命名参数的脚本对象模型转换为可运行的Flink SQL
 	 * 
-	 * @param namedScript 使用命名参数的脚本对象模型
+	 * @param namedScript
+	 *            使用命名参数的脚本对象模型
 	 * @return 返回可运行的Flink SQL
 	 */
 	public static String toSQL(NamedScript namedScript) {
@@ -63,8 +64,10 @@ public abstract class SQLUtils {
 	/**
 	 * 根据参数查找表将使用命名参数的脚本转换为可运行的Flink SQL
 	 * 
-	 * @param namedscript 使用命名参数的脚本
-	 * @param params      参数查找表
+	 * @param namedscript
+	 *            使用命名参数的脚本
+	 * @param params
+	 *            参数查找表
 	 * @return 返回可运行的Flink SQL
 	 */
 	public static String toSQL(String namedscript, Map<String, ?> params) {
@@ -74,8 +77,10 @@ public abstract class SQLUtils {
 	/**
 	 * 向SQL追加数据源配置
 	 * 
-	 * @param sqlBuffer  SQL缓冲器
-	 * @param dataSource 数据源配置查找表
+	 * @param dataSource
+	 *            数据源配置查找表
+	 * @param sqlBuffer
+	 *            SQL缓冲器
 	 */
 	public static void appendDataSource(StringBuffer sqlBuffer, Map<String, String> dataSource) {
 		Iterator<Entry<String, String>> it = dataSource.entrySet().iterator();
@@ -89,9 +94,27 @@ public abstract class SQLUtils {
 	}
 
 	/**
+	 * 向SQL追加数据源配置
+	 * 
+	 * @param script
+	 *            SQL脚本
+	 * @param dataSource
+	 *            数据源配置查找表
+	 * @param sqlBuffer
+	 *            SQL缓冲器
+	 */
+	public static void appendDataSource(String script, Map<String, String> dataSource, StringBuffer sqlBuffer) {
+		appendDataSource(sqlBuffer, dataSource);
+		if (needDefaultTableName(dataSource) && !dataSource.containsKey(TABLE_NAME)) {
+			apppendDefaultTableName(sqlBuffer, script);
+		}
+	}
+
+	/**
 	 * 包装SQL字符串
 	 * 
-	 * @param value 字符串
+	 * @param value
+	 *            字符串
 	 * @return 返回包装后的SQL字符串
 	 */
 	public static String wrapString(String value) {
@@ -101,7 +124,8 @@ public abstract class SQLUtils {
 	/**
 	 * 追加空格等号空格
 	 * 
-	 * @param sqlBuffer SQL缓冲器
+	 * @param sqlBuffer
+	 *            SQL缓冲器
 	 */
 	public static void apppendEquals(StringBuffer sqlBuffer) {
 		sqlBuffer.append(SPACE_EQUALS_SPACE);
@@ -110,7 +134,8 @@ public abstract class SQLUtils {
 	/**
 	 * 隐藏密码
 	 * 
-	 * @param sql SQL
+	 * @param sql
+	 *            SQL
 	 * @return 隐藏密码的SQL
 	 */
 	public static String hiddePassword(String sql) {
@@ -126,8 +151,10 @@ public abstract class SQLUtils {
 	/**
 	 * 包装数据源，即包装Flink SQL的CREATE TABLE语句的WITH子句
 	 * 
-	 * @param script SQL脚本
-	 * @throws IOException I/O异常
+	 * @param script
+	 *            SQL脚本
+	 * @throws IOException
+	 *             I/O异常
 	 */
 	public static String wrapDataSource(String script, Map<String, String> dataSource) throws IOException {
 		Matcher matcher = WITH_CLAUSE_PATTERN.matcher(script);
@@ -139,10 +166,7 @@ public abstract class SQLUtils {
 					end = group.substring(endIndex);
 			if (StringUtils.isBlank(value)) {
 				matcher.appendReplacement(sqlBuffer, start);
-				SQLUtils.appendDataSource(sqlBuffer, dataSource);
-				if (needDefaultTableName(dataSource) && !dataSource.containsKey(TABLE_NAME)) {
-					apppendDefaultTableName(sqlBuffer, script);
-				}
+				SQLUtils.appendDataSource(script, dataSource, sqlBuffer);
 				sqlBuffer.append(end);
 			} else {
 				Map<String, String> config = ConfigurationUtils.load(value),
@@ -160,20 +184,13 @@ public abstract class SQLUtils {
 					i--;
 				}
 				sqlBuffer.append(value.substring(0, i + 1)).append(DSLUtils.COMMA).append(DSLUtils.BLANK_SPACE);
-				SQLUtils.appendDataSource(sqlBuffer, actualDataSource);
-				if (needDefaultTableName(actualDataSource) && !config.containsKey(TABLE_NAME)
-						&& !actualDataSource.containsKey(TABLE_NAME)) {
-					apppendDefaultTableName(sqlBuffer, script);
-				}
+				SQLUtils.appendDataSource(script, actualDataSource, sqlBuffer);
 				sqlBuffer.append(blank.reverse()).append(end);
 			}
 		} else {
 			sqlBuffer.append(script);
 			sqlBuffer.append(" WITH (");
-			SQLUtils.appendDataSource(sqlBuffer, dataSource);
-			if (needDefaultTableName(dataSource) && !dataSource.containsKey(TABLE_NAME)) {
-				apppendDefaultTableName(sqlBuffer, script);
-			}
+			SQLUtils.appendDataSource(script, dataSource, sqlBuffer);
 			sqlBuffer.append(")");
 		}
 		return sqlBuffer.toString();
@@ -189,10 +206,11 @@ public abstract class SQLUtils {
 	/**
 	 * 判断一个数据源是否需要添加默认的table-name
 	 * 
-	 * @param dataSource 数据源
+	 * @param dataSource
+	 *            数据源
 	 * @return 如果数据源需要添加默认的table-name则返回true，否则返回false
 	 */
-	private static boolean needDefaultTableName(Map<String, String> dataSource) {
+	public static boolean needDefaultTableName(Map<String, String> dataSource) {
 		String connector, config;
 		for (Iterator<String> it = smartTableMameConnectors.iterator(); it.hasNext();) {
 			connector = it.next();
@@ -217,8 +235,10 @@ public abstract class SQLUtils {
 	/**
 	 * 追加默认表名，默认表名从CREATE语句中获取
 	 * 
-	 * @param sqlBuffer SQL语句缓冲器
-	 * @param script    原SQL脚本
+	 * @param sqlBuffer
+	 *            SQL语句缓冲器
+	 * @param script
+	 *            原SQL脚本
 	 */
 	private static void apppendDefaultTableName(StringBuffer sqlBuffer, String script) {
 		Matcher createMatcher = CREATE_CLAUSE_PATTERN.matcher(script);
@@ -243,7 +263,7 @@ public abstract class SQLUtils {
 			}
 			sqlBuffer.append(DSLUtils.COMMA).append(DSLUtils.BLANK_SPACE).append(SQLUtils.wrapString(TABLE_NAME));
 			SQLUtils.apppendEquals(sqlBuffer);
-			sqlBuffer.append(SQLUtils.wrapString(tableNameBuilder.reverse().toString()));
+			sqlBuffer.append(SQLUtils.wrapString(wrapIfReservedKeywords(tableNameBuilder.reverse().toString())));
 		}
 	}
 
@@ -264,7 +284,8 @@ public abstract class SQLUtils {
 	/**
 	 * 包装配置的值
 	 * 
-	 * @param value 配置的值
+	 * @param value
+	 *            配置的值
 	 * @return 返回包装后的配置值
 	 */
 	private static String wrapValue(String value) {
