@@ -20,6 +20,21 @@ public class HashMapKit<K, V> {
 	private HashMap<K, V> hashMap = new HashMap<K, V>();
 
 	/**
+	 * 初始化只有一个键值对的HashMap并返回
+	 * 
+	 * @param key
+	 *            键
+	 * @param value
+	 *            值
+	 * @return 返回只有一个键值对的HashMap对象
+	 */
+	public static <K, V> HashMap<K, V> single(K key, V value) {
+		HashMap<K, V> hashMap = new HashMap<K, V>();
+		hashMap.put(key, value);
+		return hashMap;
+	}
+
+	/**
 	 * 初始化HashMap配套工具，将键值存入后哈希查找表中，并返回HashMapKit对象
 	 * 
 	 * @param key

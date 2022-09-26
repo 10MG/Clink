@@ -16,7 +16,6 @@ import org.slf4j.LoggerFactory;
 import cn.tenmg.dsl.utils.DSLUtils;
 import cn.tenmg.dsl.utils.StringUtils;
 import cn.tenmg.flink.jobs.context.FlinkJobsContext;
-import cn.tenmg.flink.jobs.kit.HashMapKit;
 import cn.tenmg.flink.jobs.metadata.MetaDataGetter;
 import cn.tenmg.flink.jobs.metadata.MetaDataGetter.TableMetaData;
 import cn.tenmg.flink.jobs.metadata.MetaDataGetterFactory;
@@ -156,8 +155,8 @@ public class CreateTableOperator extends AbstractOperator<CreateTable> {
 					.append(") NOT ENFORCED");
 		}
 		sqlBuffer.append(") ").append("WITH (");
-		SQLUtils.appendDataSource(sqlBuffer, HashMapKit.init(dataSource)
-				.put(SQLUtils.TABLE_NAME, StringUtils.isBlank(bindTableName) ? tableName : bindTableName).get());
+		SQLUtils.appendDataSource(sqlBuffer, dataSource,
+				StringUtils.isBlank(bindTableName) ? tableName : bindTableName);
 		sqlBuffer.append(")");
 		return sqlBuffer.toString();
 	}

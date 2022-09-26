@@ -96,6 +96,26 @@ public abstract class SQLUtils {
 	/**
 	 * 向SQL追加数据源配置
 	 * 
+	 * @param sqlBuffer
+	 *            SQL缓冲器
+	 * @param dataSource
+	 *            数据源配置查找表
+	 * @param defaultTableName
+	 *            默认表名
+	 */
+	public static void appendDataSource(StringBuffer sqlBuffer, Map<String, String> dataSource,
+			String defaultTableName) {
+		appendDataSource(sqlBuffer, dataSource);
+		if (needDefaultTableName(dataSource) && !dataSource.containsKey(TABLE_NAME)) {
+			sqlBuffer.append(DSLUtils.COMMA).append(DSLUtils.BLANK_SPACE).append(wrapString(TABLE_NAME));
+			apppendEquals(sqlBuffer);
+			sqlBuffer.append(wrapString(defaultTableName));
+		}
+	}
+
+	/**
+	 * 向SQL追加数据源配置
+	 * 
 	 * @param script
 	 *            SQL脚本
 	 * @param dataSource
@@ -103,10 +123,10 @@ public abstract class SQLUtils {
 	 * @param sqlBuffer
 	 *            SQL缓冲器
 	 */
-	public static void appendDataSource(String script, Map<String, String> dataSource, StringBuffer sqlBuffer) {
+	private static void appendDataSource(String script, Map<String, String> dataSource, StringBuffer sqlBuffer) {
 		appendDataSource(sqlBuffer, dataSource);
 		if (needDefaultTableName(dataSource) && !dataSource.containsKey(TABLE_NAME)) {
-			apppendDefaultTableName(sqlBuffer, script);
+			extractAndApppendDefaultTableName(sqlBuffer, script);
 		}
 	}
 
@@ -233,14 +253,28 @@ public abstract class SQLUtils {
 	}
 
 	/**
-	 * 追加默认表名，默认表名从CREATE语句中获取
+	 * 向SQL语句缓冲器中追加默认表名
+	 * 
+	 * @param sqlBuffer
+	 *            SQL语句缓冲器
+	 * @param defaultTableName
+	 *            默认表名
+	 */
+	public static void apppendDefaultTableName(StringBuffer sqlBuffer, String defaultTableName) {
+		sqlBuffer.append(DSLUtils.COMMA).append(DSLUtils.BLANK_SPACE).append(wrapString(TABLE_NAME));
+		apppendEquals(sqlBuffer);
+		sqlBuffer.append(wrapString(wrapIfReservedKeywords(defaultTableName)));
+	}
+
+	/**
+	 * 从CREATE语句中提取并追加默认表名
 	 * 
 	 * @param sqlBuffer
 	 *            SQL语句缓冲器
 	 * @param script
 	 *            原SQL脚本
 	 */
-	private static void apppendDefaultTableName(StringBuffer sqlBuffer, String script) {
+	private static void extractAndApppendDefaultTableName(StringBuffer sqlBuffer, String script) {
 		Matcher createMatcher = CREATE_CLAUSE_PATTERN.matcher(script);
 		if (createMatcher.find()) {
 			String group = createMatcher.group();
@@ -261,9 +295,7 @@ public abstract class SQLUtils {
 					break;
 				}
 			}
-			sqlBuffer.append(DSLUtils.COMMA).append(DSLUtils.BLANK_SPACE).append(SQLUtils.wrapString(TABLE_NAME));
-			SQLUtils.apppendEquals(sqlBuffer);
-			sqlBuffer.append(SQLUtils.wrapString(wrapIfReservedKeywords(tableNameBuilder.reverse().toString())));
+			apppendDefaultTableName(sqlBuffer, tableNameBuilder.reverse().toString());
 		}
 	}
 

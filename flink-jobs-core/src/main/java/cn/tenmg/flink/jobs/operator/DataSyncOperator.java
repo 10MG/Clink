@@ -24,6 +24,7 @@ import cn.tenmg.dsl.utils.DSLUtils;
 import cn.tenmg.dsl.utils.StringUtils;
 import cn.tenmg.flink.jobs.context.FlinkJobsContext;
 import cn.tenmg.flink.jobs.exception.IllegalConfigurationException;
+import cn.tenmg.flink.jobs.kit.HashMapKit;
 import cn.tenmg.flink.jobs.kit.ParamsKit;
 import cn.tenmg.flink.jobs.metadata.MetaDataGetter;
 import cn.tenmg.flink.jobs.metadata.MetaDataGetter.TableMetaData;
@@ -580,7 +581,7 @@ public class DataSyncOperator extends AbstractOperator<DataSync> {
 			if (topic != null) {
 				actualDataSource.put(TOPIC_KEY, topic);
 			}
-			appendDataSource(sqlBuffer, actualDataSource, table);
+			SQLUtils.appendDataSource(sqlBuffer, actualDataSource, table);
 		} else {
 			actualDataSource.putAll(ConfigurationUtils.load(fromConfig));
 			if (!actualDataSource.containsKey(GROUP_ID_KEY) && ConfigurationUtils.isKafka(actualDataSource)) {
@@ -589,7 +590,7 @@ public class DataSyncOperator extends AbstractOperator<DataSync> {
 			if (topic != null && !actualDataSource.containsKey(TOPIC_KEY)) {
 				actualDataSource.put(TOPIC_KEY, topic);
 			}
-			appendDataSource(sqlBuffer, actualDataSource, table);
+			SQLUtils.appendDataSource(sqlBuffer, actualDataSource, table);
 		}
 		sqlBuffer.append(")");
 		return sqlBuffer.toString();
@@ -630,14 +631,11 @@ public class DataSyncOperator extends AbstractOperator<DataSync> {
 					.append(String.join(", ", actualPrimaryKeys)).append(") NOT ENFORCED");
 		}
 		sqlBuffer.append(") ").append("WITH (");
-		Map<String, String> actualDataSource = MapUtils.newHashMap(dataSource);
 		if (StringUtils.isBlank(toConfig)) {
-			appendDataSource(sqlBuffer, actualDataSource, table);
+			SQLUtils.appendDataSource(sqlBuffer, dataSource, table);
 		} else {
-			Map<String, String> config = ConfigurationUtils.load(toConfig);
-			MapUtils.removeAll(actualDataSource, config.keySet());
-			appendDataSource(sqlBuffer, actualDataSource, table);
-			sqlBuffer.append(DSLUtils.COMMA).append(DSLUtils.BLANK_SPACE).append(toConfig);
+			SQLUtils.appendDataSource(sqlBuffer,
+					HashMapKit.init(dataSource).put(ConfigurationUtils.load(toConfig)).get(), table);
 		}
 		sqlBuffer.append(")");
 		return sqlBuffer.toString();
@@ -731,16 +729,6 @@ public class DataSyncOperator extends AbstractOperator<DataSync> {
 			newSet.addAll(set);
 		}
 		return newSet;
-	}
-
-	private static void appendDataSource(StringBuffer sqlBuffer, Map<String, String> dataSource, String table) {
-		SQLUtils.appendDataSource(sqlBuffer, dataSource);
-		if (SQLUtils.needDefaultTableName(dataSource) && !dataSource.containsKey(SQLUtils.TABLE_NAME)) {
-			sqlBuffer.append(DSLUtils.COMMA).append(DSLUtils.BLANK_SPACE)
-					.append(SQLUtils.wrapString(SQLUtils.TABLE_NAME));
-			SQLUtils.apppendEquals(sqlBuffer);
-			sqlBuffer.append(SQLUtils.wrapString(table));
-		}
 	}
 
 	/**
