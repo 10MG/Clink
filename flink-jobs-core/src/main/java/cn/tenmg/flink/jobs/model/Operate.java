@@ -60,7 +60,7 @@ public class Operate implements Serializable {
 	/**
 	 * 设置处理条件
 	 * 
-	 * @param saveAs
+	 * @param when
 	 *            处理条件
 	 */
 	public void setWhen(String when) {
