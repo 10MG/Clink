@@ -198,7 +198,7 @@ Bsh操作的作用是运行基于Beanshell的java代码，支持版本：1.1.0+�
 -------|-------------|----|--------
 type   | `String`    | 是 | 操作类型。这里是"Bsh"。
 saveAs | `String`    | 否 | 操作结果另存为一个新的变量的名称。变量的值是基于Beanshell的java代码的返回值（通过`return xxx;`表示）。
-when   | `String`    | 否 | 操作的条件，当且仅当该条件满足时，才执行该操作。
+when   | `String`    | 否 | 操作的条件，当且仅当该条件满足时，才执行该操作。不指定时，默认表示条件成立。
 vars   | `List<Var>` | 否 | 参数声明列表。
 java   | `String`    | 是 | java代码。注意：使用泛型时，不能使用尖括号声明泛型。例如，使用Map不能使用“Map<String , String> map = new HashMap<String , String>();”，但可以使用“Map map = new HashMap();”。
 
@@ -217,7 +217,7 @@ ExecuteSql操作的作用是运行基于[DSL](https://gitee.com/tenmg/dsl)的SQL
 -----------|----------|----|--------
 type       | `String` | 是 | 操作类型。这里是"ExecuteSql"。
 saveAs     | `String` | 否 | 操作结果另存为一个新的变量的名称。变量的值是flink的`tableEnv.executeSql(statement);`的返回值。
-when       | `String` | 否 | 操作的条件，当且仅当该条件满足时，才执行该操作。
+when       | `String` | 否 | 操作的条件，当且仅当该条件满足时，才执行该操作。不指定时，默认表示条件成立。
 dataSource | `String` | 否 | 使用的数据源名称。
 catalog    | `String` | 否 | 执行SQL使用的Flink SQL的catalog名称。
 script     | `String` | 是 | 基于[DSL](https://gitee.com/tenmg/dsl)的SQL脚本。由于Flink SQL不支持DELETE、UPDATE语句，因此如果配置的SQL脚本是DELETE或者UPDATE语句，该语句将在程序main函数中采用JDBC执行。
@@ -229,7 +229,7 @@ SqlQuery操作的作用是运行基于[DSL](https://gitee.com/tenmg/dsl)的SQL�
 属性       | 类型  | 必需 | 说明
 -----------|----------|----|--------
 saveAs     | `String` | 否 | 查询结果另存为临时表的表名及操作结果另存为一个新的变量的名称。变量的值是flink的`tableEnv.executeSql(statement);`的返回值。
-when       | `String` | 否 | 操作的条件，当且仅当该条件满足时，才执行该操作。
+when       | `String` | 否 | 操作的条件，当且仅当该条件满足时，才执行该操作。不指定时，默认表示条件成立。
 catalog    | `String` | 否 | 执行SQL使用的Flink SQL的catalog名称。
 script     | `String` | 是 | 基于[DSL](https://gitee.com/tenmg/dsl)的SQL脚本。
 
@@ -241,7 +241,7 @@ Jdbc操作的作用是运行基于[DSL](https://gitee.com/tenmg/dsl)的JDBC SQL�
 -----------|----------|----|--------
 type       | `String` | 是 | 操作类型。这里是"Jdbc"。
 saveAs     | `String` | 否 | 执行结果另存为一个新的变量的名称。变量的值是执行JDBC指定方法的返回值。
-when       | `String` | 否 | 操作的条件，当且仅当该条件满足时，才执行该操作。
+when       | `String` | 否 | 操作的条件，当且仅当该条件满足时，才执行该操作。不指定时，默认表示条件成立。
 dataSource | `String` | 是 | 使用的数据源名称。
 method     | `String` | 否 | 调用的JDBC方法，支持"get"/"select"/"execute"/"executeUpdate"/"executeLargeUpdate"，默认是"executeLargeUpdate"。
 script     | `String` | 是 | 基于[DSL](https://gitee.com/tenmg/dsl)的SQL脚本。
@@ -256,7 +256,7 @@ DataSync操作的作用是运行基于Flink SQL的流式任务实现数据同步
 -----------|----------------|----|--------
 type       | `String`       | 是 | 操作类型。这里是"DataSync"。
 saveAs     | `String`       | 否 | 执行结果另存为一个新的变量的名称。变量的值是执行`INSERT`语句返回的`org.apache.flink.table.api.TableResult`对象。
-when       | `String`       | 否 | 操作的条件，当且仅当该条件满足时，才执行该操作。
+when       | `String`       | 否 | 操作的条件，当且仅当该条件满足时，才执行该操作。不指定时，默认表示条件成立。
 from       | `String`       | 是 | 来源数据源名称。目前仅支持Kafka数据源。
 topic      | `String`       | 否 | Kafka主题。也可在fromConfig中配置`topic=xxx`。
 fromConfig | `String`       | 否 | 来源配置。例如：`properties.group.id=flink-jobs`。
@@ -294,7 +294,7 @@ CreateTable操作的作用根据指定的配置信息自动生成Fink SQL并创�
 --------------|----------|----|--------
 type          | `String` | 是 | 操作类型。这里是"CreateTable"。
 saveAs        | `String` | 否 | 操作结果另存为一个新的变量的名称。变量的值是flink的`tableEnv.executeSql(statement);`的返回值。
-when          | `String` | 否 | 操作的条件，当且仅当该条件满足时，才执行该操作。
+when          | `String` | 否 | 操作的条件，当且仅当该条件满足时，才执行该操作。不指定时，默认表示条件成立。
 dataSource    | `String` | 是 | 使用的数据源名称。flink-jobs从该数据源读取元数据信息，并自动生成Flink SQL。
 tableName     | `String` | 是 | 创建表的表名。即`CREATE TABLE table_name ...`中的`table_name`。
 catalog       | `String` | 否 | 执行SQL使用的Flink SQL的catalog名称。
