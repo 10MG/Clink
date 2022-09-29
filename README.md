@@ -198,6 +198,7 @@ Bsh操作的作用是运行基于Beanshell的java代码，支持版本：1.1.0+�
 -------|-------------|----|--------
 type   | `String`    | 是 | 操作类型。这里是"Bsh"。
 saveAs | `String`    | 否 | 操作结果另存为一个新的变量的名称。变量的值是基于Beanshell的java代码的返回值（通过`return xxx;`表示）。
+when   | `String`    | 否 | 操作的条件，当且仅当该条件满足时，才执行该操作。
 vars   | `List<Var>` | 否 | 参数声明列表。
 java   | `String`    | 是 | java代码。注意：使用泛型时，不能使用尖括号声明泛型。例如，使用Map不能使用“Map<String , String> map = new HashMap<String , String>();”，但可以使用“Map map = new HashMap();”。
 
@@ -216,6 +217,7 @@ ExecuteSql操作的作用是运行基于[DSL](https://gitee.com/tenmg/dsl)的SQL
 -----------|----------|----|--------
 type       | `String` | 是 | 操作类型。这里是"ExecuteSql"。
 saveAs     | `String` | 否 | 操作结果另存为一个新的变量的名称。变量的值是flink的`tableEnv.executeSql(statement);`的返回值。
+when       | `String` | 否 | 操作的条件，当且仅当该条件满足时，才执行该操作。
 dataSource | `String` | 否 | 使用的数据源名称。
 catalog    | `String` | 否 | 执行SQL使用的Flink SQL的catalog名称。
 script     | `String` | 是 | 基于[DSL](https://gitee.com/tenmg/dsl)的SQL脚本。由于Flink SQL不支持DELETE、UPDATE语句，因此如果配置的SQL脚本是DELETE或者UPDATE语句，该语句将在程序main函数中采用JDBC执行。
@@ -225,8 +227,9 @@ script     | `String` | 是 | 基于[DSL](https://gitee.com/tenmg/dsl)的SQL脚�
 SqlQuery操作的作用是运行基于[DSL](https://gitee.com/tenmg/dsl)的SQL查询代码，支持版本：1.1.0+，相关属性及说明如下：
 
 属性       | 类型  | 必需 | 说明
------------|--------|----|--------
+-----------|----------|----|--------
 saveAs     | `String` | 否 | 查询结果另存为临时表的表名及操作结果另存为一个新的变量的名称。变量的值是flink的`tableEnv.executeSql(statement);`的返回值。
+when       | `String` | 否 | 操作的条件，当且仅当该条件满足时，才执行该操作。
 catalog    | `String` | 否 | 执行SQL使用的Flink SQL的catalog名称。
 script     | `String` | 是 | 基于[DSL](https://gitee.com/tenmg/dsl)的SQL脚本。
 
@@ -238,8 +241,9 @@ Jdbc操作的作用是运行基于[DSL](https://gitee.com/tenmg/dsl)的JDBC SQL�
 -----------|----------|----|--------
 type       | `String` | 是 | 操作类型。这里是"Jdbc"。
 saveAs     | `String` | 否 | 执行结果另存为一个新的变量的名称。变量的值是执行JDBC指定方法的返回值。
+when       | `String` | 否 | 操作的条件，当且仅当该条件满足时，才执行该操作。
 dataSource | `String` | 是 | 使用的数据源名称。
-method     | `String` | 否 | 调用的JDBC方法。默认是"executeLargeUpdate"。
+method     | `String` | 否 | 调用的JDBC方法，支持"get"/"select"/"execute"/"executeUpdate"/"executeLargeUpdate"，默认是"executeLargeUpdate"。
 script     | `String` | 是 | 基于[DSL](https://gitee.com/tenmg/dsl)的SQL脚本。
 
 目标JDBC SQL代码是在flink-jobs应用程序的main函数中运行的。
@@ -252,6 +256,7 @@ DataSync操作的作用是运行基于Flink SQL的流式任务实现数据同步
 -----------|----------------|----|--------
 type       | `String`       | 是 | 操作类型。这里是"DataSync"。
 saveAs     | `String`       | 否 | 执行结果另存为一个新的变量的名称。变量的值是执行`INSERT`语句返回的`org.apache.flink.table.api.TableResult`对象。
+when       | `String`       | 否 | 操作的条件，当且仅当该条件满足时，才执行该操作。
 from       | `String`       | 是 | 来源数据源名称。目前仅支持Kafka数据源。
 topic      | `String`       | 否 | Kafka主题。也可在fromConfig中配置`topic=xxx`。
 fromConfig | `String`       | 否 | 来源配置。例如：`properties.group.id=flink-jobs`。
@@ -288,9 +293,10 @@ CreateTable操作的作用根据指定的配置信息自动生成Fink SQL并创�
 属性          | 类型     | 必需 | 说明
 --------------|----------|----|--------
 type          | `String` | 是 | 操作类型。这里是"CreateTable"。
+saveAs        | `String` | 否 | 操作结果另存为一个新的变量的名称。变量的值是flink的`tableEnv.executeSql(statement);`的返回值。
+when          | `String` | 否 | 操作的条件，当且仅当该条件满足时，才执行该操作。
 dataSource    | `String` | 是 | 使用的数据源名称。flink-jobs从该数据源读取元数据信息，并自动生成Flink SQL。
 tableName     | `String` | 是 | 创建表的表名。即`CREATE TABLE table_name ...`中的`table_name`。
-saveAs        | `String` | 否 | 操作结果另存为一个新的变量的名称。变量的值是flink的`tableEnv.executeSql(statement);`的返回值。
 catalog       | `String` | 否 | 执行SQL使用的Flink SQL的catalog名称。
 bindTableName | `String` | 否 | 绑定的表名，即WITH子句的“table-name”，默认与tableName相同。
 primaryKey    | `String` | 否 | 主键，多个列名以“,”分隔。当开启智能模式时，会自动获取主键信息。
@@ -312,7 +318,9 @@ type | `String` | 是 | 数据类型。
 
 ### 数据源配置
 
-每个数据源有一个唯一的命名，数据源配置以“datasource”为前缀，以“.”作为分隔符，格式为`datasource.${name}.${key}=${value}`。其中，第一和第二个“.”符号之间的是数据源名称，第二个“.”符号之后和“=”之前的是该数据源具体的配置项，“=”之后的是该配置项的值。数据源的配置项与[Flink](https://flink.apache.org)保持一致，具体配置项详见[Flink官方文档](https://flink.apache.org)。以下给出部分常用数据源配置示例：
+#### 普通数据源
+
+每个数据源有一个唯一的命名，普通数据源配置以“datasource”为前缀，以“.”作为分隔符，格式为`datasource.${name}.${key}=${value}`。其中，第一和第二个“.”符号之间的是数据源名称，第二个“.”符号之后和“=”之前的是该数据源具体的配置项，“=”之后的是该配置项的值。数据源的配置项与[Flink](https://flink.apache.org)保持一致，具体配置项详见[Flink官方文档](https://flink.apache.org)。以下给出部分常用数据源配置示例：
 
 ```
 #FlinkSQL数据源配置
@@ -377,6 +385,27 @@ datasource.starrocks.sink.buffer-flush.interval-ms=10000
 datasource.starrocks.sink.max-retries=3
 datasource.starrocks.connector=starrocks
 datasource.starrocks.database-name=your_db
+```
+
+#### 自动数据源
+
+通常来说，在构建数据仓库（或者数据湖）时，会创建多个数据库目录（schema或catalog）。我们希望在做ETL导入时，只配置一次数仓的数据源（这时不指定具体的数据库目录），然后通过数据源名称来自动确定我们需要导入的目录。自动数据源就是实现这个功能，以避免开发者反复配置数据源。flink-jobs工作时，会优先从普通数据源配置中获取数据源信息，如果没有找到指定名称的普通数据源，则会根据自动数据源的配置，自动生成一个数据源。例如：
+
+```
+# 配置自动数据源，自动数据源会将auto.datasource.identifier外的所有配置，加上auto.datasource.identifier对应的配置值作为键并将数据源名称作为值返回，两者加起来构成一个完整的数据源。
+auto.datasource.jdbc-url=${starrocks.jdbc-url}
+auto.datasource.load-url=${starrocks.load-url}
+auto.datasource.username=${starrocks.username}
+auto.datasource.password=${starrocks.password}
+#auto.datasource.sink.parallelism=${starrocks.sink.parallelism}
+auto.datasource.sink.properties.strip_outer_array=${starrocks.sink.properties.strip_outer_array}
+auto.datasource.sink.properties.format=${starrocks.sink.properties.format}
+# the flushing time interval, range: [1000ms, 3600000ms].
+auto.datasource.sink.buffer-flush.interval-ms=${starrocks.sink.buffer-flush.interval-ms}
+# max retry times of the stream load request, range: [0, 10].
+auto.datasource.sink.max-retries=${starrocks.sink.max-retries}
+auto.datasource.connector=starrocks
+auto.datasource.identifier=database-name
 ```
 
 ### Table API & SQL
