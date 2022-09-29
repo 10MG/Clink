@@ -142,9 +142,10 @@ value | `String` | 否 | 参数值。使用标签内文本表示。
 
 运行基于Beanshell的java代码的配置。
 
-属性   | 类型      | 必需 | 说明
--------|-----------|----|--------
-saveAs | `String`    | 否 | 操作结果另存为一个新的变量的名称。变量的值是基于Beanshell的java代码的返回值（通过`return xxx;`表示）。
+属性   | 类型     | 必需 | 说明
+-------|----------|----|--------
+saveAs | `String` | 否 | 操作结果另存为一个新的变量的名称。变量的值是基于Beanshell的java代码的返回值（通过`return xxx;`表示）。
+when   | `String` | 否 | 操作的条件，当且仅当该条件满足时，才执行该操作。不指定时，默认表示条件成立。
 
 ##### `<var>`
 
@@ -163,9 +164,10 @@ java代码。采用文本表示，如：`<java>java code</java>`或`<option><![C
 
 运行基于[DSL](https://gitee.com/tenmg/dsl)的SQL代码配置。
 
-属性       | 类型  | 必需 | 说明
------------|--------|----|--------
+属性       | 类型     | 必需 | 说明
+-----------|----------|----|--------
 saveAs     | `String` | 否 | 操作结果另存为一个新的变量的名称。变量的值是flink的`tableEnv.executeSql(statement);`的返回值。
+when       | `String` | 否 | 操作的条件，当且仅当该条件满足时，才执行该操作。不指定时，默认表示条件成立。
 dataSource | `String` | 否 | 使用的数据源名称。这里的数据源是在[flink-jobs](https://gitee.com/tenmg/flink-jobs)应用程序的配置文件中配置，并非在flink-jobs-clients应用程序的配置文件中配置。详见[flink-jobs数据源配置](https://gitee.com/tenmg/flink-jobs#%E6%95%B0%E6%8D%AE%E6%BA%90%E9%85%8D%E7%BD%AE)。
 catalog    | `String` | 否 | 执行SQL使用的Flink SQL的catalog名称。
 script     | `String` | 否 | 基于[DSL](https://gitee.com/tenmg/dsl)的SQL脚本。使用标签内文本表示，如：`<execute-sql>SQL code</execute-sql>`或`<execute-sql><![CDATA[SQL code]]></execute-sql>`。由于Flink SQL不支持DELETE、UPDATE语句，因此如果配置的SQL脚本是DELETE或者UPDATE语句，该语句将在程序main函数中采用JDBC执行。
@@ -174,9 +176,10 @@ script     | `String` | 否 | 基于[DSL](https://gitee.com/tenmg/dsl)的SQL脚�
 
 运行基于[DSL](https://gitee.com/tenmg/dsl)的SQL查询代码配置。
 
-属性       | 类型  | 必需 | 说明
------------|--------|----|--------
+属性       | 类型     | 必需 | 说明
+-----------|----------|----|--------
 saveAs     | `String` | 否 | 查询结果另存为临时表的表名及操作结果另存为一个新的变量的名称。变量的值是flink的`tableEnv.executeSql(statement);`的返回值。
+when       | `String` | 否 | 操作的条件，当且仅当该条件满足时，才执行该操作。不指定时，默认表示条件成立。
 catalog    | `String` | 否 | 执行SQL使用的Flink SQL的catalog名称。
 script     | `String` | 否 | 基于[DSL](https://gitee.com/tenmg/dsl)的SQL脚本。使用标签内文本表示，如：`<sql-query>SQL code</sql-query>`或`<sql-query><![CDATA[SQL code]]></sql-query>`。
 
@@ -187,17 +190,19 @@ script     | `String` | 否 | 基于[DSL](https://gitee.com/tenmg/dsl)的SQL脚�
 属性       | 类型     | 必需 | 说明
 -----------|----------|----|--------
 saveAs     | `String` | 否 | 执行结果另存为一个新的变量的名称。变量的值是执行JDBC指定方法的返回值。
+when       | `String` | 否 | 操作的条件，当且仅当该条件满足时，才执行该操作。不指定时，默认表示条件成立。
 dataSource | `String` | 是 | 使用的数据源名称。这里的数据源是在flink-jobs应用程序的配置文件中配置，并非在flink-jobs-clients应用程序的配置文件中配置。详见[flink-jobs数据源配置](#%E6%95%B0%E6%8D%AE%E6%BA%90%E9%85%8D%E7%BD%AE)。
-method     | `String` | 否 | 调用的JDBC方法。默认是"executeLargeUpdate"。
+method     | `String` | 否 | 调用的JDBC方法，支持"get"/"select"/"execute"/"executeUpdate"/"executeLargeUpdate"，默认是"executeLargeUpdate"。
 script     | `String` | 是 | 基于[DSL](https://gitee.com/tenmg/dsl)的SQL脚本。使用标签内文本表示。
 
 #### `<data-sync>`
 
 运行基于Flink SQL的流式任务实现数据同步。相关属性及说明如下：
 
-属性       | 类型            | 必需 | 说明
------------|----------------|----|--------
+属性       | 类型      | 必需 | 说明
+-----------|-----------|----|--------
 saveAs     | `String`  | 否 | 执行结果另存为一个新的变量的名称。变量的值是执行`INSERT`语句返回的`org.apache.flink.table.api.TableResult`对象。一般不使用。
+when       | `String`  | 否 | 操作的条件，当且仅当该条件满足时，才执行该操作。不指定时，默认表示条件成立。
 from       | `String`  | 是 | 来源数据源名称。目前仅支持Kafka数据源。
 topic      | `String`  | 否 | Kafka主题。也可在fromConfig中配置`topic=xxx`。
 fromConfig | `String`  | 否 | 来源配置。例如：`properties.group.id=flink-jobs`。
@@ -226,9 +231,10 @@ script   | `String` | 否 | 自定义脚本。通常是需要进行函数转换�
 
 属性          | 类型     | 必需 | 说明
 --------------|----------|----|--------
+saveAs        | `String` | 否 | 操作结果另存为一个新的变量的名称。变量的值是flink的`tableEnv.executeSql(statement);`的返回值。
+when          | `String` | 否 | 操作的条件，当且仅当该条件满足时，才执行该操作。不指定时，默认表示条件成立。
 dataSource    | `String` | 是 | 使用的数据源名称。flink-jobs从该数据源读取元数据信息，并自动生成Flink SQL。
 tableName     | `String` | 是 | 创建表的表名。即`CREATE TABLE table_name ...`中的`table_name`。
-saveAs        | `String` | 否 | 操作结果另存为一个新的变量的名称。变量的值是flink的`tableEnv.executeSql(statement);`的返回值。
 catalog       | `String` | 否 | 执行SQL使用的Flink SQL的catalog名称。
 bindTableName | `String` | 否 | 绑定的表名，即WITH子句的“table-name”，默认与tableName相同。
 primaryKey    | `String` | 否 | 主键，多个列名以“,”分隔。当开启智能模式时，会自动获取主键信息。
