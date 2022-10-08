@@ -192,7 +192,7 @@ script     | `String` | 否 | 基于[DSL](https://gitee.com/tenmg/dsl)的SQL脚�
 saveAs     | `String` | 否 | 执行结果另存为一个新的变量的名称。变量的值是执行JDBC指定方法的返回值。
 when       | `String` | 否 | 操作的条件，当且仅当该条件满足时，才执行该操作。不指定时，默认表示条件成立。
 dataSource | `String` | 是 | 使用的数据源名称。这里的数据源是在flink-jobs应用程序的配置文件中配置，并非在flink-jobs-clients应用程序的配置文件中配置。详见[flink-jobs数据源配置](#%E6%95%B0%E6%8D%AE%E6%BA%90%E9%85%8D%E7%BD%AE)。
-method     | `String` | 否 | 调用的JDBC方法，支持"get"/"select"/"execute"/"executeUpdate"/"executeLargeUpdate"，默认是"executeLargeUpdate"。
+method     | `String` | 否 | 调用的JDBC方法，支持"get"/"select"/"execute"/"executeUpdate"/"executeLargeUpdate"，默认是"executeUpdate"（1.4.0及之前版本默认值为"executeLargeUpdate"，由于很多数据库连接池或者JDBC驱动未实现该方法，因此1.4.1版本开始改为"executeUpdate"）。可在配置文件中使用`jdbc.default_method`配置项修改默认值。
 script     | `String` | 是 | 基于[DSL](https://gitee.com/tenmg/dsl)的SQL脚本。使用标签内文本表示。
 
 #### `<data-sync>`

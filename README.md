@@ -243,7 +243,7 @@ type       | `String` | 是 | 操作类型。这里是"Jdbc"。
 saveAs     | `String` | 否 | 执行结果另存为一个新的变量的名称。变量的值是执行JDBC指定方法的返回值。
 when       | `String` | 否 | 操作的条件，当且仅当该条件满足时，才执行该操作。不指定时，默认表示条件成立。
 dataSource | `String` | 是 | 使用的数据源名称。
-method     | `String` | 否 | 调用的JDBC方法，支持"get"/"select"/"execute"/"executeUpdate"/"executeLargeUpdate"，默认是"executeLargeUpdate"。
+method     | `String` | 否 | 调用的JDBC方法，支持"get"/"select"/"execute"/"executeUpdate"/"executeLargeUpdate"，默认是"executeUpdate"（1.4.0及之前版本默认值为"executeLargeUpdate"，由于很多数据库连接池或者JDBC驱动未实现该方法，因此1.4.1版本开始改为"executeUpdate"）。可在配置文件中使用`jdbc.default_method`配置项修改默认值。
 script     | `String` | 是 | 基于[DSL](https://gitee.com/tenmg/dsl)的SQL脚本。
 
 目标JDBC SQL代码是在flink-jobs应用程序的main函数中运行的。
@@ -268,7 +268,7 @@ primaryKey | `String`       | 否 | 主键，多个列名以“,”分隔。当�
 timestamp  | `String`       | 否 | 时间戳列名，多个列名使用“,”分隔。设置这个值后，创建源表和目标表时会添加这些列，并在数据同步时写入这些列。一般使用配置文件统一指定，而不是每个同步任务单独指定。
 smart      | `Boolean`      | 否 | 是否开启智能模式。不设置时，根据全局配置确定是否开启智能模式，全局默认配置为`flink.jobs.smart=true`。
 
- _注意：1.3.0 版本开始 `data.sync.smart` 配置已被废弃，请使用 `flink.jobs.smart` 替代，默认值仍为 `true` 。 `data.sync.smart` 将在 1.4.0 版本开始不再兼容。_ 
+ _注意：1.3.0 版本开始 `data.sync.smart` 配置已被废弃，请使用 `flink.jobs.smart` 替代，默认值仍为 `true` 。 `data.sync.smart` 已在 1.4.0 版本开始不再兼容。_ 
 
 
 #### Column
@@ -464,7 +464,7 @@ String catalog = con.getCatalog(), schema = con.getSchema();
 
 是否开启数据同步的智能模式，默认为`true`。开启智能模式的潜台词是指，自动通过已实现的元数据获取器（也可自行扩展）获取同步的目标库的元数据以生成Flink SQL的源表（Source Table）、目标表（Slink Table）和相应的插入语句（`INSERT INTO … SELECT … FROM …`）。
 
- _注意：1.3.0 版本开始 `data.sync.smart` 配置已被废弃，请使用 `flink.jobs.smart` 替代，默认值仍为 `true` 。 `data.sync.smart` 将在 1.4.0 版本开始不再兼容。_ 
+ _注意：1.3.0 版本开始 `data.sync.smart` 配置已被废弃，请使用 `flink.jobs.smart` 替代，默认值仍为 `true` 。 `data.sync.smart` 已在 1.4.0 版本开始不再兼容。_ 
 
 #### data.sync.from_table_prefix
 
@@ -713,6 +713,24 @@ flink.sql.custom.keywords=PERIOD
 #### sql.custom.keywords
 
 1.2.2 及以前版本的配置，1.2.3 版本开始已改为`flink.sql.custom.keywords`，后续的 1.2 版本仍然会保持兼容，但强烈建议改为`flink.sql.custom.keywords`。
+
+### JDBC配置
+
+#### jdbc.*.driver
+
+JDBC数据库连接池默认驱动类配置，其中“*”可以是任意支持的数据库产品名称。默认值为：
+
+```
+# JDBC default driver configuration
+jdbc.mysql.driver=com.mysql.jdbc.Driver
+jdbc.postgresql.driver=org.postgresql.Driver
+jdbc.oracle.driver=oracle.jdbc.OracleDriver
+jdbc.sqlserver.driver=com.microsoft.sqlserver.jdbc.SQLServerDriver
+```
+
+#### jdbc.default_method
+
+在不指定`method`属性时，执行的默认JDBC方法名称。
 
 ### 其他配置
 

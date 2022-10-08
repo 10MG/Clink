@@ -32,7 +32,7 @@ public class Jdbc implements Operate, Serializable {
 	private String dataSource;
 
 	@XmlAttribute
-	private String method = "executeLargeUpdate";
+	private String method = "executeUpdate";
 
 	@XmlValue
 	private String script;

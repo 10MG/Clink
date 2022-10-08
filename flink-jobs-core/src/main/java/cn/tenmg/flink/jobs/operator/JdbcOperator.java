@@ -5,8 +5,10 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.slf4j.Logger;
@@ -17,6 +19,7 @@ import cn.tenmg.dsl.Script;
 import cn.tenmg.dsl.parser.JDBCParamsParser;
 import cn.tenmg.dsl.utils.DSLUtils;
 import cn.tenmg.dsl.utils.StringUtils;
+import cn.tenmg.flink.jobs.context.FlinkJobsContext;
 import cn.tenmg.flink.jobs.jdbc.SQLExecutor;
 import cn.tenmg.flink.jobs.jdbc.executor.ExecuteLargeUpdateSQLExecutor;
 import cn.tenmg.flink.jobs.jdbc.executor.ExecuteSQLExecutor;
@@ -51,6 +54,20 @@ public class JdbcOperator extends AbstractOperator<Jdbc> {
 		}
 	};
 
+	private static Set<String> SQLExecuterKeys = new HashSet<String>() {
+
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 2825056328562857566L;
+		{
+			addAll(SQLExecuters.keySet());
+			add("get");
+			add("select");
+		}
+
+	};
+
 	@Override
 	public Object execute(StreamExecutionEnvironment env, Jdbc jdbc, Map<String, Object> params) throws Exception {
 		NamedScript namedScript = DSLUtils.parse(jdbc.getScript(), params);
@@ -60,6 +77,9 @@ public class JdbcOperator extends AbstractOperator<Jdbc> {
 		if (StringUtils.isNotBlank(datasource)) {
 			log.info(String.format("Execute JDBC SQL: %s; parameters: %s", script, JSONUtils.toJSONString(usedParams)));
 			String method = jdbc.getMethod();
+			if (!SQLExecuterKeys.contains(method)) {
+				method = FlinkJobsContext.getProperty("jdbc.default_method", "execute");
+			}
 			SQLExecutor<?> executer = SQLExecuters.get(method);
 			if (executer == null) {
 				if ("get".equals(method)) {
@@ -69,15 +89,13 @@ public class JdbcOperator extends AbstractOperator<Jdbc> {
 					} else {
 						executer = new GetSQLExecutor<>(Class.forName(resultClass));
 					}
-				} else if ("select".equals(method)) {
+				} else {
 					String resultClass = jdbc.getResultClass();
 					if (StringUtils.isBlank(resultClass)) {
 						executer = new SelectSQLExecutor<>(HashMap.class);
 					} else {
 						executer = new SelectSQLExecutor<>(Class.forName(resultClass));
 					}
-				} else {
-					executer = ExecuteLargeUpdateSQLExecutor.getInstance();
 				}
 			}
 			return execute(datasource, sql.getValue(), sql.getParams(), executer);

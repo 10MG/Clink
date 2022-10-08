@@ -249,6 +249,20 @@ public abstract class FlinkJobsContext {
 	}
 
 	/**
+	 * 根据键获取配置的属性。优先查找用户配置属性，如果用户配置属性不存在从上下文配置中查找，均不存在则返回默认值
+	 * 
+	 * @param key
+	 *            键
+	 * @param defaultValue
+	 *            默认值
+	 * @return 配置属性值或默认值
+	 */
+	public static String getProperty(String key, String defaultValue) {
+		return configProperties.containsKey(key) ? configProperties.getProperty(key)
+				: (defaultProperties.containsKey(key) ? defaultProperties.getProperty(key) : defaultValue);
+	}
+
+	/**
 	 * 根据数据库产品名称（小写）获取默认JDBC驱动类名
 	 * 
 	 * @param productName
