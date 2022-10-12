@@ -34,6 +34,9 @@ public class Jdbc implements Operate, Serializable {
 	@XmlAttribute
 	private String method;
 
+	@XmlAttribute
+	private String resultClass;
+
 	@XmlValue
 	private String script;
 
@@ -74,6 +77,14 @@ public class Jdbc implements Operate, Serializable {
 
 	public void setMethod(String method) {
 		this.method = method;
+	}
+
+	public String getResultClass() {
+		return resultClass;
+	}
+
+	public void setResultClass(String resultClass) {
+		this.resultClass = resultClass;
 	}
 
 	public String getScript() {
