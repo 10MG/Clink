@@ -16,7 +16,7 @@ public class Jdbc extends Operate {
 
 	private String dataSource;
 
-	private String method = "executeUpdate";
+	private String method;
 
 	private String script;
 

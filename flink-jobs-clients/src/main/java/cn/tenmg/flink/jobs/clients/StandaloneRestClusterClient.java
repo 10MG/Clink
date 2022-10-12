@@ -17,7 +17,6 @@ import java.util.Properties;
 import java.util.Queue;
 import java.util.Set;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.flink.api.common.JobID;
 import org.apache.flink.api.common.JobStatus;
 import org.apache.flink.client.deployment.StandaloneClusterId;
@@ -34,6 +33,8 @@ import org.apache.flink.runtime.jobgraph.SavepointRestoreSettings;
 import org.apache.flink.runtime.jobmaster.JobResult;
 import org.apache.flink.runtime.messages.Acknowledge;
 import org.apache.flink.runtime.rest.messages.job.JobDetailsInfo;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import cn.tenmg.flink.jobs.clients.context.FlinkJobsClientsContext;
 import cn.tenmg.flink.jobs.clients.utils.FlinkJobsClientsUtils;
@@ -50,6 +51,8 @@ import cn.tenmg.flink.jobs.config.model.Operate;
  */
 public class StandaloneRestClusterClient extends AbstractFlinkJobsClient<StandaloneClusterId> {
 
+	private static Logger log = LoggerFactory.getLogger(StandaloneRestClusterClient.class);
+
 	private static final Queue<Configuration> configurations = new LinkedList<Configuration>();
 
 	private static final int COUNT;
@@ -60,7 +63,7 @@ public class StandaloneRestClusterClient extends AbstractFlinkJobsClient<Standal
 		Configuration configuration = ConfigurationUtils
 				.createConfiguration(FlinkJobsClientsContext.getConfigProperties());
 		String rpcServers = FlinkJobsClientsContext.getProperty("jobmanager.rpc.servers");
-		if (StringUtils.isBlank(rpcServers)) {
+		if (isBlank(rpcServers)) {
 			configurations.add(configuration);
 		} else {
 			Configuration config;
@@ -126,46 +129,53 @@ public class StandaloneRestClusterClient extends AbstractFlinkJobsClient<Standal
 				}
 			}
 		}
-		PackagedProgram packagedProgram = builder.build();
+		PackagedProgram packagedProgram = null;
 		boolean suppressOutput = Boolean.valueOf(FlinkJobsClientsContext.getProperty("suppress.output", "false"));
-		if (submit) {
-			JobGraph jobGraph = PackagedProgramUtils.createJobGraph(packagedProgram, configuration,
-					Integer.parseInt(parallelism), suppressOutput);
-			Properties customConf = toProperties(flinkJobs.getConfiguration());
-			return retry(new Actuator<JobID>() {
-				@Override
-				public JobID execute(RestClusterClient<StandaloneClusterId> client) throws Exception {
-					return client.submitJob(jobGraph).get();
-				}
-			}, configuration, customConf);
-		} else {
-			final ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
-			Thread.currentThread().setContextClassLoader(packagedProgram.getUserCodeClassLoader());
-			final PrintStream originalOut = System.out;
-			final PrintStream originalErr = System.err;
-			final ByteArrayOutputStream stdOutBuffer;
-			final ByteArrayOutputStream stdErrBuffer;
-			if (suppressOutput) {
-				// temporarily write STDERR and STDOUT to a byte array.
-				stdOutBuffer = new ByteArrayOutputStream();
-				System.setOut(new PrintStream(stdOutBuffer));
-				stdErrBuffer = new ByteArrayOutputStream();
-				System.setErr(new PrintStream(stdErrBuffer));
+		try {
+			packagedProgram = builder.build();
+			if (submit) {
+				JobGraph jobGraph = PackagedProgramUtils.createJobGraph(packagedProgram, configuration,
+						Integer.parseInt(parallelism), suppressOutput);
+				Properties customConf = toProperties(flinkJobs.getConfiguration());
+				return retry(new Actuator<JobID>() {
+					@Override
+					public JobID execute(RestClusterClient<StandaloneClusterId> client) throws Exception {
+						return client.submitJob(jobGraph).get();
+					}
+				}, configuration, customConf);
 			} else {
-				stdOutBuffer = null;
-				stdErrBuffer = null;
-			}
-			try {
-				packagedProgram.invokeInteractiveModeForExecution();
-			} finally {
+				final ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
+				Thread.currentThread().setContextClassLoader(packagedProgram.getUserCodeClassLoader());
+				final PrintStream originalOut = System.out;
+				final PrintStream originalErr = System.err;
+				final ByteArrayOutputStream stdOutBuffer;
+				final ByteArrayOutputStream stdErrBuffer;
 				if (suppressOutput) {
-					System.setOut(originalOut);
-					System.setErr(originalErr);
+					// temporarily write STDERR and STDOUT to a byte array.
+					stdOutBuffer = new ByteArrayOutputStream();
+					System.setOut(new PrintStream(stdOutBuffer));
+					stdErrBuffer = new ByteArrayOutputStream();
+					System.setErr(new PrintStream(stdErrBuffer));
+				} else {
+					stdOutBuffer = null;
+					stdErrBuffer = null;
 				}
-				Thread.currentThread().setContextClassLoader(contextClassLoader);
+				try {
+					packagedProgram.invokeInteractiveModeForExecution();
+				} finally {
+					if (suppressOutput) {
+						System.setOut(originalOut);
+						System.setErr(originalErr);
+					}
+					Thread.currentThread().setContextClassLoader(contextClassLoader);
+				}
 			}
-			return null;
+		} finally {
+			if (packagedProgram != null) {
+				packagedProgram.close();
+			}
 		}
+		return null;
 	}
 
 	@Override
@@ -239,29 +249,27 @@ public class StandaloneRestClusterClient extends AbstractFlinkJobsClient<Standal
 	}
 
 	private <T> T retry(Actuator<T> actuator, Configuration configuration, Properties customConf) throws Exception {
+		for (int i = 1; i < COUNT; i++) {
+			try {
+				return tryOnce(actuator, configuration, customConf);
+			} catch (Exception e) {
+				log.warn("The " + i + "th attempt failed, trying the " + (i + 1) + "th times");
+			}
+
+		}
+		return tryOnce(actuator, configuration, customConf);// Try for the last time
+	}
+
+	private <T> T tryOnce(Actuator<T> actuator, Configuration configuration, Properties customConf) throws Exception {
 		RestClusterClient<StandaloneClusterId> client = null;
 		try {
 			client = getRestClusterClient(configuration, customConf);
-			for (int i = 0; i < COUNT; i++) {
-				try {
-					return actuator.execute(client);
-				} catch (Exception e) {
-					if (client != null) {
-						client.close();
-					}
-					if (i < COUNT) {
-						client = getRestClusterClient(getConfiguration(), customConf);// try next
-					} else {
-						throw e;
-					}
-				}
-			}
+			return actuator.execute(client);
 		} finally {
 			if (client != null) {
 				client.close();
 			}
 		}
-		return null;
 	}
 
 	private interface Actuator<T> {
@@ -312,6 +320,27 @@ public class StandaloneRestClusterClient extends AbstractFlinkJobsClient<Standal
 			properties.load(new StringReader(configuration));
 		}
 		return properties;
+	}
+
+	/**
+	 * 判断指定字符串是否为空（<code>null</code>）、空字符串（<code>""</code>）或者仅含空格的字符串
+	 * 
+	 * @param string
+	 *            指定字符串
+	 * @return 指定字符串为空（<code>null</code>）、空字符串（<code>""</code>）或者仅含空格的字符串返回
+	 *         <code>true</code>，否则返回<code>false</code>
+	 */
+	private static boolean isBlank(String string) {
+		int len;
+		if (string == null || (len = string.length()) == 0) {
+			return true;
+		}
+		for (int i = 0; i < len; i++) {
+			if ((Character.isWhitespace(string.charAt(i)) == false)) {
+				return false;
+			}
+		}
+		return true;
 	}
 
 }

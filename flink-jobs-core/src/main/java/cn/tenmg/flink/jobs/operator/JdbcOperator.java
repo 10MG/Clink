@@ -25,6 +25,7 @@ import cn.tenmg.flink.jobs.jdbc.executor.ExecuteLargeUpdateSQLExecutor;
 import cn.tenmg.flink.jobs.jdbc.executor.ExecuteSQLExecutor;
 import cn.tenmg.flink.jobs.jdbc.executor.ExecuteUpdateSQLExecutor;
 import cn.tenmg.flink.jobs.jdbc.executor.GetSQLExecutor;
+import cn.tenmg.flink.jobs.jdbc.executor.ReadOnlySQLExecutor;
 import cn.tenmg.flink.jobs.jdbc.executor.SelectSQLExecutor;
 import cn.tenmg.flink.jobs.model.Jdbc;
 import cn.tenmg.flink.jobs.utils.JDBCUtils;
@@ -41,7 +42,7 @@ public class JdbcOperator extends AbstractOperator<Jdbc> {
 
 	private static Logger log = LoggerFactory.getLogger(JdbcOperator.class);
 
-	private static Map<String, SQLExecutor<?>> SQLExecuters = new HashMap<String, SQLExecutor<?>>() {
+	private static Map<String, SQLExecutor<?>> sqlExecuters = new HashMap<String, SQLExecutor<?>>() {
 		/**
 		 * 
 		 */
@@ -54,16 +55,29 @@ public class JdbcOperator extends AbstractOperator<Jdbc> {
 		}
 	};
 
-	private static Set<String> SQLExecuterKeys = new HashSet<String>() {
+	private static Map<String, ReadOnlySQLExecutorInfo> readOnlySQLExecutors = new HashMap<String, ReadOnlySQLExecutorInfo>() {
+
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 6192431462976890302L;
+
+		{
+			put("get", new ReadOnlySQLExecutorInfo(GetSQLExecutor.class, Object.class));
+			put("select", new ReadOnlySQLExecutorInfo(SelectSQLExecutor.class, HashMap.class));
+		}
+	};
+
+	private static Set<String> sqlExecuterKeys = new HashSet<String>() {
 
 		/**
 		 * 
 		 */
 		private static final long serialVersionUID = 2825056328562857566L;
+
 		{
-			addAll(SQLExecuters.keySet());
-			add("get");
-			add("select");
+			addAll(sqlExecuters.keySet());
+			addAll(readOnlySQLExecutors.keySet());
 		}
 
 	};
@@ -77,26 +91,12 @@ public class JdbcOperator extends AbstractOperator<Jdbc> {
 		if (StringUtils.isNotBlank(datasource)) {
 			log.info(String.format("Execute JDBC SQL: %s; parameters: %s", script, JSONUtils.toJSONString(usedParams)));
 			String method = jdbc.getMethod();
-			if (!SQLExecuterKeys.contains(method)) {
+			if (!sqlExecuterKeys.contains(method)) {
 				method = FlinkJobsContext.getProperty("jdbc.default_method", "execute");
 			}
-			SQLExecutor<?> executer = SQLExecuters.get(method);
+			SQLExecutor<?> executer = sqlExecuters.get(method);
 			if (executer == null) {
-				if ("get".equals(method)) {
-					String resultClass = jdbc.getResultClass();
-					if (StringUtils.isBlank(resultClass)) {
-						executer = new GetSQLExecutor<>(Object.class);
-					} else {
-						executer = new GetSQLExecutor<>(Class.forName(resultClass));
-					}
-				} else {
-					String resultClass = jdbc.getResultClass();
-					if (StringUtils.isBlank(resultClass)) {
-						executer = new SelectSQLExecutor<>(HashMap.class);
-					} else {
-						executer = new SelectSQLExecutor<>(Class.forName(resultClass));
-					}
-				}
+				executer = getReadOnlySQLExecutor(method, jdbc.getResultClass());
 			}
 			return execute(datasource, sql.getValue(), sql.getParams(), executer);
 		} else {
@@ -104,12 +104,19 @@ public class JdbcOperator extends AbstractOperator<Jdbc> {
 		}
 	}
 
+	private ReadOnlySQLExecutor<?> getReadOnlySQLExecutor(String method, String resultClass) throws Exception {
+		ReadOnlySQLExecutorInfo readOnlySQLExecutorInfo = readOnlySQLExecutors.get(method);
+		Class<?> type = StringUtils.isBlank(resultClass) ? readOnlySQLExecutorInfo.getDefaultResultClass()
+				: Class.forName(resultClass);
+		return readOnlySQLExecutorInfo.getExecutorClass().getConstructor(Class.class).newInstance(type);
+	}
+
 	private <T> T execute(String datasource, String sql, List<Object> params, SQLExecutor<T> sqlExecuter)
 			throws SQLException, ClassNotFoundException {
 		Connection con = null;
 		T result = null;
 		try {
-			con = JDBCUtils.getConnection(datasource);// 获得数据库连接
+			con = JDBCUtils.getConnection(FlinkJobsContext.getDatasource(datasource));// 获得数据库连接
 			con.setAutoCommit(true);
 			con.setReadOnly(sqlExecuter.isReadOnly());
 			result = execute(con, sql, params, sqlExecuter);
@@ -147,4 +154,30 @@ public class JdbcOperator extends AbstractOperator<Jdbc> {
 			JDBCUtils.close(ps);
 		}
 	}
+
+	private static class ReadOnlySQLExecutorInfo {
+
+		@SuppressWarnings("rawtypes")
+		private Class<? extends ReadOnlySQLExecutor> executorClass;
+
+		private Class<?> defaultResultClass;
+
+		@SuppressWarnings("rawtypes")
+		public Class<? extends ReadOnlySQLExecutor> getExecutorClass() {
+			return executorClass;
+		}
+
+		public Class<?> getDefaultResultClass() {
+			return defaultResultClass;
+		}
+
+		@SuppressWarnings("rawtypes")
+		public ReadOnlySQLExecutorInfo(Class<? extends ReadOnlySQLExecutor> executorClass,
+				Class<?> defaultResultClass) {
+			this.executorClass = executorClass;
+			this.defaultResultClass = defaultResultClass;
+		}
+
+	}
+
 }

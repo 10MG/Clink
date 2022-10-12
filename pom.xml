@@ -6,7 +6,7 @@
 	<description>Flink流批一体数据处理快速集成开发框架</description>
 	<groupId>cn.tenmg</groupId>
 	<artifactId>flink-jobs</artifactId>
-	<version>1.4.1</version>
+	<version>1.4.2</version>
 	<packaging>pom</packaging>
 
 	<modules>

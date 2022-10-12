@@ -32,10 +32,9 @@ public abstract class AbstractJDBCMetaDataGetter implements MetaDataGetter {
 			RIGTH_BRACKET = ")", TYPE_PREFFIX = "flink.sql.type" + FlinkJobsContext.CONFIG_SPLITER,
 			DEFAULT_TYPE = FlinkJobsContext.getProperty(TYPE_PREFFIX + "default"),
 			SIZE_OFFSET_SUFFIX = FlinkJobsContext.CONFIG_SPLITER + "size_offset";
-
+	
 	private static final Map<Integer, String> SQL_TYPES = HashMapKit
-			.init(java.sql.Types.VARCHAR, "java.sql.Types.VARCHAR")
-			.put(java.sql.Types.VARCHAR, "java.sql.Types.VARCHAR").put(java.sql.Types.CHAR, "java.sql.Types.CHAR")
+			.init(java.sql.Types.VARCHAR, "java.sql.Types.VARCHAR").put(java.sql.Types.CHAR, "java.sql.Types.CHAR")
 			.put(java.sql.Types.NVARCHAR, "java.sql.Types.NVARCHAR").put(java.sql.Types.NCHAR, "java.sql.Types.NCHAR")
 			.put(java.sql.Types.LONGNVARCHAR, "java.sql.Types.LONGNVARCHAR")
 			.put(java.sql.Types.LONGVARCHAR, "java.sql.Types.LONGVARCHAR")
