@@ -1,9 +1,7 @@
 package cn.tenmg.flink.jobs.clients;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
-import java.io.PrintStream;
 import java.io.StringReader;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -130,12 +128,12 @@ public class StandaloneRestClusterClient extends AbstractFlinkJobsClient<Standal
 			}
 		}
 		PackagedProgram packagedProgram = null;
-		boolean suppressOutput = Boolean.valueOf(FlinkJobsClientsContext.getProperty("suppress.output", "false"));
 		try {
 			packagedProgram = builder.build();
 			if (submit) {
 				JobGraph jobGraph = PackagedProgramUtils.createJobGraph(packagedProgram, configuration,
-						Integer.parseInt(parallelism), suppressOutput);
+						Integer.parseInt(parallelism),
+						Boolean.valueOf(FlinkJobsClientsContext.getProperty("suppress.output", "false")));
 				Properties customConf = toProperties(flinkJobs.getConfiguration());
 				return retry(new Actuator<JobID>() {
 					@Override
@@ -146,33 +144,16 @@ public class StandaloneRestClusterClient extends AbstractFlinkJobsClient<Standal
 			} else {
 				final ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
 				Thread.currentThread().setContextClassLoader(packagedProgram.getUserCodeClassLoader());
-				final PrintStream originalOut = System.out;
-				final PrintStream originalErr = System.err;
-				final ByteArrayOutputStream stdOutBuffer;
-				final ByteArrayOutputStream stdErrBuffer;
-				if (suppressOutput) {
-					// temporarily write STDERR and STDOUT to a byte array.
-					stdOutBuffer = new ByteArrayOutputStream();
-					System.setOut(new PrintStream(stdOutBuffer));
-					stdErrBuffer = new ByteArrayOutputStream();
-					System.setErr(new PrintStream(stdErrBuffer));
-				} else {
-					stdOutBuffer = null;
-					stdErrBuffer = null;
-				}
 				try {
 					packagedProgram.invokeInteractiveModeForExecution();
 				} finally {
-					if (suppressOutput) {
-						System.setOut(originalOut);
-						System.setErr(originalErr);
-					}
 					Thread.currentThread().setContextClassLoader(contextClassLoader);
 				}
 			}
 		} finally {
 			if (packagedProgram != null) {
 				packagedProgram.close();
+				packagedProgram = null;
 			}
 		}
 		return null;
@@ -268,6 +249,7 @@ public class StandaloneRestClusterClient extends AbstractFlinkJobsClient<Standal
 		} finally {
 			if (client != null) {
 				client.close();
+				client = null;
 			}
 		}
 	}
