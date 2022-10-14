@@ -59,7 +59,12 @@ public abstract class JDBCUtils {
 			driver = FlinkJobsContext.getDefaultJDBCDriver(getProduct(url));
 		}
 		Class.forName(driver);
-		return DriverManager.getConnection(url, dataSource.get("username"), dataSource.get("password"));
+		Connection con = DriverManager.getConnection(url, dataSource.get("username"), dataSource.get("password"));
+		String catalog = dataSource.get("database-name");
+		if (StringUtils.isNotBlank(catalog)) {
+			con.setCatalog(catalog);
+		}
+		return con;
 	}
 
 	/**
