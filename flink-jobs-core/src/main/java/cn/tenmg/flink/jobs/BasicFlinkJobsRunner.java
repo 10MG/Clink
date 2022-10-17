@@ -54,7 +54,17 @@ public abstract class BasicFlinkJobsRunner {
 		} else {
 			String json = args[0];
 			if (json.endsWith(".json")) {
-				arguments = JSON.parseObject(new FileInputStream(json), Arguments.class);
+				FileInputStream fis = null;
+				try {
+					fis = new FileInputStream(json);
+					arguments = JSON.parseObject(fis, Arguments.class);
+				} finally {
+					if (fis != null) {
+						fis.close();
+						fis = null;
+					}
+				}
+
 			} else {
 				arguments = JSON.parseObject(json, Arguments.class);
 			}

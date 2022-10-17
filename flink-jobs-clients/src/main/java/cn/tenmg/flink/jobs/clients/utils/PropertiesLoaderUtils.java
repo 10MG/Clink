@@ -26,12 +26,20 @@ public abstract class PropertiesLoaderUtils {
 	 */
 	public static Properties loadFromClassPath(String pathInClassPath) throws IOException {
 		ClassLoader classLoader = ClassUtils.getDefaultClassLoader();
-		InputStream is = classLoader.getResourceAsStream(pathInClassPath);
+		InputStream is = null;
 		Properties properties = new Properties();
-		if (pathInClassPath.endsWith(XML_FILE_SUFFIX)) {
-			properties.loadFromXML(is);
-		} else {
-			properties.load(is);
+		try {
+			is = classLoader.getResourceAsStream(pathInClassPath);
+			if (pathInClassPath.endsWith(XML_FILE_SUFFIX)) {
+				properties.loadFromXML(is);
+			} else {
+				properties.load(is);
+			}
+		} finally {
+			if (is != null) {
+				is.close();
+				is = null;
+			}
 		}
 		return properties;
 	}
