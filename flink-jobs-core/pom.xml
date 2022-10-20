@@ -24,7 +24,7 @@
 		<dependency>
 			<groupId>cn.tenmg</groupId>
 			<artifactId>dsl</artifactId>
-			<version>1.2.8</version>
+			<version>1.2.9</version>
 		</dependency>
 
 		<!-- https://mvnrepository.com/artifact/org.slf4j/slf4j-api -->
