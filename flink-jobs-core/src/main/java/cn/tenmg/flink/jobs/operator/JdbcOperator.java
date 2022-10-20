@@ -89,7 +89,6 @@ public class JdbcOperator extends AbstractOperator<Jdbc> {
 		Map<String, Object> usedParams = namedScript.getParams();
 		Script<List<Object>> sql = DSLUtils.toScript(script, usedParams, JDBCParamsParser.getInstance());
 		if (StringUtils.isNotBlank(datasource)) {
-			log.info(String.format("Execute JDBC SQL: %s; parameters: %s", script, JSONUtils.toJSONString(usedParams)));
 			String method = jdbc.getMethod();
 			if (!sqlExecuterKeys.contains(method)) {
 				method = FlinkJobsContext.getProperty("jdbc.default_method", "execute");
@@ -98,9 +97,11 @@ public class JdbcOperator extends AbstractOperator<Jdbc> {
 			if (executer == null) {
 				executer = getReadOnlySQLExecutor(method, jdbc.getResultClass());
 			}
-			return execute(datasource, sql.getValue(), sql.getParams(), executer);
+			Map<String, String> dataSource = FlinkJobsContext.getDatasource(datasource);
+			log.info(String.format("Execute JDBC SQL: %s; parameters: %s", script, JSONUtils.toJSONString(usedParams)));
+			return execute(dataSource, sql.getValue(), sql.getParams(), executer);
 		} else {
-			throw new IllegalArgumentException("dataSource must be not null");
+			throw new IllegalArgumentException("The datasource property must be not null");
 		}
 	}
 
@@ -111,12 +112,12 @@ public class JdbcOperator extends AbstractOperator<Jdbc> {
 		return readOnlySQLExecutorInfo.getExecutorClass().getConstructor(Class.class).newInstance(type);
 	}
 
-	private <T> T execute(String datasource, String sql, List<Object> params, SQLExecutor<T> sqlExecuter)
+	private <T> T execute(Map<String, String> dataSource, String sql, List<Object> params, SQLExecutor<T> sqlExecuter)
 			throws SQLException, ClassNotFoundException {
 		Connection con = null;
 		T result = null;
 		try {
-			con = JDBCUtils.getConnection(FlinkJobsContext.getDatasource(datasource));// 获得数据库连接
+			con = JDBCUtils.getConnection(dataSource);// 获得数据库连接
 			con.setAutoCommit(true);
 			con.setReadOnly(sqlExecuter.isReadOnly());
 			result = execute(con, sql, params, sqlExecuter);

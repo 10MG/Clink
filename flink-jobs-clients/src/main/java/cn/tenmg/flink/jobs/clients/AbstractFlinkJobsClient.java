@@ -1,5 +1,6 @@
 package cn.tenmg.flink.jobs.clients;
 
+import java.io.File;
 import java.util.Set;
 
 import com.alibaba.fastjson.JSON;
@@ -20,7 +21,7 @@ import cn.tenmg.flink.jobs.config.model.FlinkJobs;
 public abstract class AbstractFlinkJobsClient<T> implements FlinkJobsClient<T> {
 
 	private static final String FLINK_JOBS_DEFAULT_JAR_KEY = "flink.jobs.default.jar",
-			FLINK_JOBS_DEFAULT_CLASS_KEY = "flink.jobs.default.class", JAR = ".jar";
+			FLINK_JOBS_DEFAULT_CLASS_KEY = "flink.jobs.default.class";
 
 	private static final Set<String> EXCLUDES = Sets.as("options", "mainClass", "jar", "allwaysNewJob");
 
@@ -33,31 +34,15 @@ public abstract class AbstractFlinkJobsClient<T> implements FlinkJobsClient<T> {
 	 *            flink-jobs配置对象
 	 * @return 返回运行的JAR
 	 */
-	protected static String getJar(FlinkJobs flinkJobs) {
+	protected static File getJar(FlinkJobs flinkJobs) {
 		String jar = flinkJobs.getJar();
 		if (jar == null) {
 			jar = FlinkJobsClientsContext.getProperty(FLINK_JOBS_DEFAULT_JAR_KEY);
 		}
 		if (jar == null) {
-			throw new IllegalArgumentException("You must specify the jar to run or configurate by key "
-					+ FLINK_JOBS_DEFAULT_JAR_KEY + " in " + FlinkJobsClientsContext.getConfigLocation());
+			return null;
 		}
-		return jar;
-	}
-
-	/**
-	 * 验证JAR文件后缀是否合法
-	 * 
-	 * @param jar
-	 *            JAR文件
-	 * @return 如果合法则返回JAR文件后缀的开始位置，否则将抛出异常
-	 */
-	protected static int validateJar(String jar) {
-		int jarIndex = jar.lastIndexOf(JAR);
-		if (jarIndex <= 0) {
-			throw new IllegalArgumentException("The jar file configuration must end with " + JAR + " suffix");
-		}
-		return jarIndex;
+		return new File(jar);
 	}
 
 	/**

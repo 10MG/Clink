@@ -1,6 +1,5 @@
 package cn.tenmg.flink.jobs.clients;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
 import java.net.MalformedURLException;
@@ -57,6 +56,56 @@ public class StandaloneRestClusterClient extends AbstractFlinkJobsClient<Standal
 
 	private static final Set<String> localOperates = Sets.as("Bsh", "Jdbc");
 
+	private static final Actuator<JobID, JobGraph> submitJobActuator = new Actuator<JobID, JobGraph>() {
+		@Override
+		public JobID execute(RestClusterClient<StandaloneClusterId> client, JobGraph jobGraph) throws Exception {
+			return client.submitJob(jobGraph).get();
+		}
+	};
+
+	private static final Actuator<Acknowledge, JobID> cancelJobActuator = new Actuator<Acknowledge, JobID>() {
+		@Override
+		public Acknowledge execute(RestClusterClient<StandaloneClusterId> client, JobID jobId) throws Exception {
+			return client.cancel(jobId).get();
+		}
+	};
+
+	private static final Actuator<Collection<JobStatusMessage>, Void> listJobsActuator = new Actuator<Collection<JobStatusMessage>, Void>() {
+		@Override
+		public Collection<JobStatusMessage> execute(RestClusterClient<StandaloneClusterId> client, Void none)
+				throws Exception {
+			return client.listJobs().get();
+		}
+	};
+
+	private static final Actuator<JobDetailsInfo, JobID> getJobDetailsActuator = new Actuator<JobDetailsInfo, JobID>() {
+		@Override
+		public JobDetailsInfo execute(RestClusterClient<StandaloneClusterId> client, JobID jobId) throws Exception {
+			return client.getJobDetails(jobId).get();
+		}
+	};
+
+	private static final Actuator<JobStatus, JobID> getJobStatusActuator = new Actuator<JobStatus, JobID>() {
+		@Override
+		public JobStatus execute(RestClusterClient<StandaloneClusterId> client, JobID jobId) throws Exception {
+			return client.getJobStatus(jobId).get();
+		}
+	};
+
+	private static final Actuator<JobResult, JobID> requestJobResultActuator = new Actuator<JobResult, JobID>() {
+		@Override
+		public JobResult execute(RestClusterClient<StandaloneClusterId> client, JobID jobId) throws Exception {
+			return client.requestJobResult(jobId).get();
+		}
+	};
+
+	private static final Actuator<String, JobID> stopJobActuator = new Actuator<String, JobID>() {
+		@Override
+		public String execute(RestClusterClient<StandaloneClusterId> client, JobID jobId) throws Exception {
+			return FlinkJobsClientsUtils.stop(client, jobId).get();
+		}
+	};
+
 	static {
 		Configuration configuration = ConfigurationUtils
 				.createConfiguration(FlinkJobsClientsContext.getConfigProperties());
@@ -107,7 +156,7 @@ public class StandaloneRestClusterClient extends AbstractFlinkJobsClient<Standal
 
 		Configuration configuration = getConfiguration();
 		Builder builder = PackagedProgram.newBuilder().setConfiguration(configuration)
-				.setEntryPointClassName(getEntryPointClassName(flinkJobs)).setJarFile(new File(getJar(flinkJobs)))
+				.setEntryPointClassName(getEntryPointClassName(flinkJobs)).setJarFile(getJar(flinkJobs))
 				.setUserClassPaths(toURLs(classpaths)).setSavepointRestoreSettings(savepointRestoreSettings);
 
 		String arguments = getArguments(flinkJobs);
@@ -135,12 +184,7 @@ public class StandaloneRestClusterClient extends AbstractFlinkJobsClient<Standal
 						Integer.parseInt(parallelism),
 						Boolean.valueOf(FlinkJobsClientsContext.getProperty("suppress.output", "false")));
 				Properties customConf = toProperties(flinkJobs.getConfiguration());
-				return retry(new Actuator<JobID>() {
-					@Override
-					public JobID execute(RestClusterClient<StandaloneClusterId> client) throws Exception {
-						return client.submitJob(jobGraph).get();
-					}
-				}, configuration, customConf);
+				return retry(submitJobActuator, jobGraph, configuration, customConf);
 			} else {
 				final ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
 				Thread.currentThread().setContextClassLoader(packagedProgram.getUserCodeClassLoader());
@@ -161,62 +205,31 @@ public class StandaloneRestClusterClient extends AbstractFlinkJobsClient<Standal
 
 	@Override
 	public Acknowledge cancel(JobID jobId) throws Exception {
-		return retry(new Actuator<Acknowledge>() {
-			@Override
-			public Acknowledge execute(RestClusterClient<StandaloneClusterId> client) throws Exception {
-				return client.cancel(jobId).get();
-			}
-		}, getConfiguration(), null);
+		return retry(cancelJobActuator, jobId, getConfiguration(), null);
 	}
 
 	@Override
 	public Collection<JobStatusMessage> listJobs() throws Exception {
-		return retry(new Actuator<Collection<JobStatusMessage>>() {
-			@Override
-			public Collection<JobStatusMessage> execute(RestClusterClient<StandaloneClusterId> client)
-					throws Exception {
-				return client.listJobs().get();
-			}
-		}, getConfiguration(), null);
+		return retry(listJobsActuator, null, getConfiguration(), null);
 	}
 
 	public JobDetailsInfo getJobDetails(JobID jobId) throws Exception {
-		return retry(new Actuator<JobDetailsInfo>() {
-			@Override
-			public JobDetailsInfo execute(RestClusterClient<StandaloneClusterId> client) throws Exception {
-				return client.getJobDetails(jobId).get();
-			}
-		}, getConfiguration(), null);
+		return retry(getJobDetailsActuator, jobId, getConfiguration(), null);
 	}
 
 	@Override
 	public JobStatus getJobStatus(JobID jobId) throws Exception {
-		return retry(new Actuator<JobStatus>() {
-			@Override
-			public JobStatus execute(RestClusterClient<StandaloneClusterId> client) throws Exception {
-				return client.getJobStatus(jobId).get();
-			}
-		}, getConfiguration(), null);
+		return retry(getJobStatusActuator, jobId, getConfiguration(), null);
 	}
 
 	@Override
 	public JobResult requestJobResult(JobID jobId) throws Exception {
-		return retry(new Actuator<JobResult>() {
-			@Override
-			public JobResult execute(RestClusterClient<StandaloneClusterId> client) throws Exception {
-				return client.requestJobResult(jobId).get();
-			}
-		}, getConfiguration(), null);
+		return retry(requestJobResultActuator, jobId, getConfiguration(), null);
 	}
 
 	@Override
 	public String stop(JobID jobId) throws Exception {
-		return retry(new Actuator<String>() {
-			@Override
-			public String execute(RestClusterClient<StandaloneClusterId> client) throws Exception {
-				return FlinkJobsClientsUtils.stop(client, jobId).get();
-			}
-		}, getConfiguration(), null);
+		return retry(stopJobActuator, jobId, getConfiguration(), null);
 	}
 
 	@Override
@@ -229,23 +242,25 @@ public class StandaloneRestClusterClient extends AbstractFlinkJobsClient<Standal
 		return getRestClusterClient(getConfiguration(), customConf);
 	}
 
-	private <T> T retry(Actuator<T> actuator, Configuration configuration, Properties customConf) throws Exception {
+	private <R, T> R retry(Actuator<R, T> actuator, T params, Configuration configuration, Properties customConf)
+			throws Exception {
 		for (int i = 1; i < COUNT; i++) {
 			try {
-				return tryOnce(actuator, configuration, customConf);
+				return tryOnce(actuator, params, configuration, customConf);
 			} catch (Exception e) {
 				log.warn("The " + i + "th attempt failed, trying the " + (i + 1) + "th times");
 			}
 
 		}
-		return tryOnce(actuator, configuration, customConf);// Try for the last time
+		return tryOnce(actuator, params, configuration, customConf);// Try for the last time
 	}
 
-	private <T> T tryOnce(Actuator<T> actuator, Configuration configuration, Properties customConf) throws Exception {
+	private <R, T> R tryOnce(Actuator<R, T> actuator, T params, Configuration configuration, Properties customConf)
+			throws Exception {
 		RestClusterClient<StandaloneClusterId> client = null;
 		try {
 			client = getRestClusterClient(configuration, customConf);
-			return actuator.execute(client);
+			return actuator.execute(client, params);
 		} finally {
 			if (client != null) {
 				client.close();
@@ -254,8 +269,8 @@ public class StandaloneRestClusterClient extends AbstractFlinkJobsClient<Standal
 		}
 	}
 
-	private interface Actuator<T> {
-		T execute(RestClusterClient<StandaloneClusterId> client) throws Exception;
+	private interface Actuator<R, T> {
+		R execute(RestClusterClient<StandaloneClusterId> client, T params) throws Exception;
 	}
 
 	private static synchronized Configuration getConfiguration() {
