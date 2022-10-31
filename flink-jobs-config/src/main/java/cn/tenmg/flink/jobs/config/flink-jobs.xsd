@@ -148,11 +148,19 @@
 		<xsd:complexType>
 			<xsd:simpleContent>
 				<xsd:extension base="SqlQueryType">
-					<xsd:attribute name="dataSource">
+					<xsd:attribute name="dataSource" type="xsd:string">
 						<xsd:annotation>
-							<xsd:documentation>采用的数据源名称。不指定时，采用Flink SQL的默认数据源
-							</xsd:documentation>
+							<xsd:documentation>采用的数据源名称</xsd:documentation>
 						</xsd:annotation>
+					</xsd:attribute>
+					<xsd:attribute name="dataSourceFilter">
+						<xsd:annotation>
+							<xsd:documentation>采用的数据源过滤器。用于过滤掉不需要的属性</xsd:documentation>
+						</xsd:annotation>
+						<xsd:simpleType>
+							<xsd:union
+								memberTypes="GenericDataSourceFilterType xsd:string"></xsd:union>
+						</xsd:simpleType>
 					</xsd:attribute>
 				</xsd:extension>
 			</xsd:simpleContent>
@@ -174,7 +182,8 @@
 					</xsd:attribute>
 					<xsd:attribute name="method">
 						<xsd:annotation>
-							<xsd:documentation>调用的JDBC方法。默认"executeUpdate"（1.4.0及之前版本默认值为"executeLargeUpdate"，由于很多数据库连接池或者JDBC驱动未实现该方法，因此1.4.1版本开始改为"executeUpdate"）。可在配置文件中使用jdbc.default_method配置项修改默认值。</xsd:documentation>
+							<xsd:documentation>调用的JDBC方法。默认"executeUpdate"（1.4.0及之前版本默认值为"executeLargeUpdate"，由于很多数据库连接池或者JDBC驱动未实现该方法，因此1.4.1版本开始改为"executeUpdate"）。可在配置文件中使用jdbc.default_method配置项修改默认值。
+							</xsd:documentation>
 						</xsd:annotation>
 						<xsd:simpleType>
 							<xsd:restriction base="xsd:string">
@@ -433,6 +442,15 @@
 							<xsd:documentation>数据源名称。目前仅支持JDBC数据源</xsd:documentation>
 						</xsd:annotation>
 					</xsd:attribute>
+					<xsd:attribute name="dataSourceFilter">
+						<xsd:annotation>
+							<xsd:documentation>采用的数据源过滤器。用于过滤掉不需要的属性</xsd:documentation>
+						</xsd:annotation>
+						<xsd:simpleType>
+							<xsd:union
+								memberTypes="GenericDataSourceFilterType xsd:string"></xsd:union>
+						</xsd:simpleType>
+					</xsd:attribute>
 					<xsd:attribute name="tableName" type="xsd:string"
 						use="required">
 						<xsd:annotation>
@@ -595,7 +613,6 @@
 		</xsd:restriction>
 	</xsd:simpleType>
 
-
 	<xsd:simpleType name="StrategyType">
 		<xsd:annotation>
 			<xsd:documentation>策略枚举</xsd:documentation>
@@ -604,6 +621,16 @@
 			<xsd:enumeration value="from" />
 			<xsd:enumeration value="to" />
 			<xsd:enumeration value="both" />
+		</xsd:restriction>
+	</xsd:simpleType>
+
+	<xsd:simpleType name="GenericDataSourceFilterType">
+		<xsd:annotation>
+			<xsd:documentation>常用过滤器枚举</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="source" />
+			<xsd:enumeration value="sink" />
 		</xsd:restriction>
 	</xsd:simpleType>
 </xsd:schema>

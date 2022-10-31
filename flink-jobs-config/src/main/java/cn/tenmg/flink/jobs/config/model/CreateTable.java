@@ -43,6 +43,9 @@ public class CreateTable implements Operate, Serializable {
 	@XmlAttribute
 	private String dataSource;
 
+	@XmlAttribute
+	private String dataSourceFilter;
+
 	/**
 	 * 创建的表名
 	 */
@@ -104,6 +107,14 @@ public class CreateTable implements Operate, Serializable {
 
 	public void setDataSource(String dataSource) {
 		this.dataSource = dataSource;
+	}
+
+	public String getDataSourceFilter() {
+		return dataSourceFilter;
+	}
+
+	public void setDataSourceFilter(String dataSourceFilter) {
+		this.dataSourceFilter = dataSourceFilter;
 	}
 
 	public String getTableName() {

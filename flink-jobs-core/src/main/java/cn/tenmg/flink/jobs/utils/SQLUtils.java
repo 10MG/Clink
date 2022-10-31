@@ -231,25 +231,7 @@ public abstract class SQLUtils {
 	 * @return 如果数据源需要添加默认的table-name则返回true，否则返回false
 	 */
 	public static boolean needDefaultTableName(Map<String, String> dataSource) {
-		String connector, config;
-		for (Iterator<String> it = smartTableMameConnectors.iterator(); it.hasNext();) {
-			connector = it.next();
-			config = dataSource.get("connector");
-			if (connector.equals(config)) {
-				return true;
-			} else if (config != null) {
-				if (connector.endsWith("*")) {
-					if (config.startsWith(connector.substring(0, connector.length() - 1))) {
-						return true;
-					}
-				} else if (connector.startsWith("*")) {
-					if (config.endsWith(connector.substring(1, connector.length()))) {
-						return true;
-					}
-				}
-			}
-		}
-		return false;
+		return MatchUtils.matchesAny(smartTableMameConnectors, dataSource.get("connector"));
 	}
 
 	/**

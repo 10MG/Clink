@@ -7,11 +7,9 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.Queue;
 import java.util.Set;
 
 import org.apache.flink.api.common.JobID;
@@ -23,7 +21,6 @@ import org.apache.flink.client.program.PackagedProgramUtils;
 import org.apache.flink.client.program.rest.RestClusterClient;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.configuration.ConfigurationUtils;
-import org.apache.flink.configuration.JobManagerOptions;
 import org.apache.flink.runtime.client.JobStatusMessage;
 import org.apache.flink.runtime.jobgraph.JobGraph;
 import org.apache.flink.runtime.jobgraph.SavepointRestoreSettings;
@@ -33,7 +30,6 @@ import org.apache.flink.runtime.rest.messages.job.JobDetailsInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import cn.tenmg.flink.jobs.clients.context.FlinkJobsClientsContext;
 import cn.tenmg.flink.jobs.clients.utils.FlinkJobsClientsUtils;
 import cn.tenmg.flink.jobs.clients.utils.Sets;
 import cn.tenmg.flink.jobs.config.model.FlinkJobs;
@@ -49,10 +45,6 @@ import cn.tenmg.flink.jobs.config.model.Operate;
 public class StandaloneRestClusterClient extends AbstractFlinkJobsClient<StandaloneClusterId> {
 
 	private static Logger log = LoggerFactory.getLogger(StandaloneRestClusterClient.class);
-
-	private static final Queue<Configuration> configurations = new LinkedList<Configuration>();
-
-	private static final int COUNT;
 
 	private static final Set<String> localOperates = Sets.as("Bsh", "Jdbc");
 
@@ -106,35 +98,11 @@ public class StandaloneRestClusterClient extends AbstractFlinkJobsClient<Standal
 		}
 	};
 
-	static {
-		Configuration configuration = ConfigurationUtils
-				.createConfiguration(FlinkJobsClientsContext.getConfigProperties());
-		String rpcServers = FlinkJobsClientsContext.getProperty("jobmanager.rpc.servers");
-		if (isBlank(rpcServers)) {
-			configurations.add(configuration);
-		} else {
-			Configuration config;
-			String servers[] = rpcServers.split(","), server[];
-			for (int i = 0; i < servers.length; i++) {
-				config = configuration.clone();
-				server = servers[i].split(":", 2);
-				config.set(JobManagerOptions.ADDRESS, server[0].trim());
-				if (server.length > 1) {
-					config.set(JobManagerOptions.PORT, Integer.parseInt(server[1].trim()));
-				} else if (!config.contains(JobManagerOptions.PORT)) {
-					config.set(JobManagerOptions.PORT, 6123);
-				}
-				configurations.add(config);
-			}
-		}
-		COUNT = configurations.size();
-	}
-
 	@Override
 	public JobID submit(FlinkJobs flinkJobs) throws Exception {
 		Map<String, String> options = flinkJobs.getOptions();
-		String classpaths = FlinkJobsClientsContext.getProperty("classpaths"),
-				parallelism = FlinkJobsClientsContext.getProperty("parallelism.default", "1");
+		String classpaths = properties.getProperty("classpaths"),
+				parallelism = properties.getProperty("parallelism.default", "1");
 		SavepointRestoreSettings savepointRestoreSettings = SavepointRestoreSettings.none();
 		if (options != null && !options.isEmpty()) {
 			if (options.containsKey("classpaths")) {
@@ -182,7 +150,7 @@ public class StandaloneRestClusterClient extends AbstractFlinkJobsClient<Standal
 			if (submit) {
 				JobGraph jobGraph = PackagedProgramUtils.createJobGraph(packagedProgram, configuration,
 						Integer.parseInt(parallelism),
-						Boolean.valueOf(FlinkJobsClientsContext.getProperty("suppress.output", "false")));
+						Boolean.valueOf(properties.getProperty("suppress.output", "false")));
 				Properties customConf = toProperties(flinkJobs.getConfiguration());
 				return retry(submitJobActuator, jobGraph, configuration, customConf);
 			} else {
@@ -244,7 +212,7 @@ public class StandaloneRestClusterClient extends AbstractFlinkJobsClient<Standal
 
 	private <R, T> R retry(Actuator<R, T> actuator, T params, Configuration configuration, Properties customConf)
 			throws Exception {
-		for (int i = 1; i < COUNT; i++) {
+		for (int i = 1, size = configurations.size(); i < size; i++) {
 			try {
 				return tryOnce(actuator, params, configuration, customConf);
 			} catch (Exception e) {
@@ -273,7 +241,7 @@ public class StandaloneRestClusterClient extends AbstractFlinkJobsClient<Standal
 		R execute(RestClusterClient<StandaloneClusterId> client, T params) throws Exception;
 	}
 
-	private static synchronized Configuration getConfiguration() {
+	private synchronized Configuration getConfiguration() {
 		Configuration configuration = configurations.poll();
 		configurations.add(configuration);
 		return configuration;
@@ -317,27 +285,6 @@ public class StandaloneRestClusterClient extends AbstractFlinkJobsClient<Standal
 			properties.load(new StringReader(configuration));
 		}
 		return properties;
-	}
-
-	/**
-	 * 判断指定字符串是否为空（<code>null</code>）、空字符串（<code>""</code>）或者仅含空格的字符串
-	 * 
-	 * @param string
-	 *            指定字符串
-	 * @return 指定字符串为空（<code>null</code>）、空字符串（<code>""</code>）或者仅含空格的字符串返回
-	 *         <code>true</code>，否则返回<code>false</code>
-	 */
-	private static boolean isBlank(String string) {
-		int len;
-		if (string == null || (len = string.length()) == 0) {
-			return true;
-		}
-		for (int i = 0; i < len; i++) {
-			if ((Character.isWhitespace(string.charAt(i)) == false)) {
-				return false;
-			}
-		}
-		return true;
 	}
 
 }

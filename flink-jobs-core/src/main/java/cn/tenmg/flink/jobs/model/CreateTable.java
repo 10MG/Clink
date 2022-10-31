@@ -25,6 +25,8 @@ public class CreateTable extends Operate {
 
 	private String dataSource;
 
+	private String dataSourceFilter;
+
 	private String tableName;
 
 	private String bindTableName;
@@ -71,6 +73,25 @@ public class CreateTable extends Operate {
 	 */
 	public void setDataSource(String dataSource) {
 		this.dataSource = dataSource;
+	}
+
+	/**
+	 * 获取数据源过滤器
+	 * 
+	 * @return 数据源过滤器
+	 */
+	public String getDataSourceFilter() {
+		return dataSourceFilter;
+	}
+
+	/**
+	 * 设置数据源过滤器
+	 * 
+	 * @param dataSourceFilter
+	 *            数据源过滤器
+	 */
+	public void setDataSourceFilter(String dataSourceFilter) {
+		this.dataSourceFilter = dataSourceFilter;
 	}
 
 	/**

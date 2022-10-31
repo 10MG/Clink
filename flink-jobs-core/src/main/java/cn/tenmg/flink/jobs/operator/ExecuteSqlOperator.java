@@ -17,6 +17,7 @@ import cn.tenmg.dsl.utils.StringUtils;
 import cn.tenmg.flink.jobs.context.FlinkJobsContext;
 import cn.tenmg.flink.jobs.model.ExecuteSql;
 import cn.tenmg.flink.jobs.utils.ConfigurationUtils;
+import cn.tenmg.flink.jobs.utils.DataSourceFilterUtils;
 import cn.tenmg.flink.jobs.utils.JDBCUtils;
 import cn.tenmg.flink.jobs.utils.JSONUtils;
 import cn.tenmg.flink.jobs.utils.SQLUtils;
@@ -44,11 +45,13 @@ public class ExecuteSqlOperator extends AbstractSqlOperator<ExecuteSql> {
 			UPDATE_CLAUSE_REGEX = "[\\s]*[U|u][P|p][D|d][A|a][T|t][E|e][\\s]+[\\S]+[\\s]+[S|s][E|e][T|t][\\s]+[\\S]+";
 
 	@Override
-	Object execute(StreamTableEnvironment tableEnv, ExecuteSql sql, Map<String, Object> params) throws Exception {
-		NamedScript namedScript = DSLUtils.parse(sql.getScript(), params);
-		String datasource = sql.getDataSource(), statement = namedScript.getScript();
+	Object execute(StreamTableEnvironment tableEnv, ExecuteSql executeSql, Map<String, Object> params)
+			throws Exception {
+		NamedScript namedScript = DSLUtils.parse(executeSql.getScript(), params);
+		String datasource = executeSql.getDataSource(), statement = namedScript.getScript();
 		if (StringUtils.isNotBlank(datasource)) {
-			Map<String, String> dataSource = FlinkJobsContext.getDatasource(datasource);
+			Map<String, String> dataSource = DataSourceFilterUtils.filter(executeSql.getDataSourceFilter(),
+					FlinkJobsContext.getDatasource(datasource));
 			if (ConfigurationUtils.isJDBC(dataSource)
 					&& (statement.matches(DELETE_CLAUSE_REGEX) || statement.matches(UPDATE_CLAUSE_REGEX))) {// DELETE/UPDATE语句，使用JDBC执行
 				Script<List<Object>> script = DSLUtils.toScript(namedScript.getScript(), namedScript.getParams(),

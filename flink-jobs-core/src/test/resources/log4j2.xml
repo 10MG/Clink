@@ -7,7 +7,7 @@
 	</Appenders>
 	<Loggers>
 		<!-- 设置默认日志级别为INFO -->
-		<Root level="INFO" additivity="false">
+		<Root level="INFO">
 			<AppenderRef ref="Console" />
 		</Root>
 	</Loggers>

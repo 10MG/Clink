@@ -17,6 +17,8 @@ public class ExecuteSql extends SqlQuery {
 
 	private String dataSource;
 
+	private String dataSourceFilter;
+
 	/**
 	 * 获取使用的数据源名称
 	 * 
@@ -36,4 +38,22 @@ public class ExecuteSql extends SqlQuery {
 		this.dataSource = dataSource;
 	}
 
+	/**
+	 * 获取数据源过滤器
+	 * 
+	 * @return 数据源过滤器
+	 */
+	public String getDataSourceFilter() {
+		return dataSourceFilter;
+	}
+
+	/**
+	 * 设置数据源过滤器
+	 * 
+	 * @param dataSourceFilter
+	 *            数据源过滤器
+	 */
+	public void setDataSourceFilter(String dataSourceFilter) {
+		this.dataSourceFilter = dataSourceFilter;
+	}
 }

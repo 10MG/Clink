@@ -8,12 +8,13 @@ import org.slf4j.LoggerFactory;
 import cn.tenmg.flink.jobs.clients.utils.PropertiesLoaderUtils;
 
 /**
- * flink-jobs-clients上下文
+ * flink-jobs-clients上下文。已废弃，1.6.0后将移除。
  * 
  * @author June wjzhao@aliyun.com
  * 
  * @since 1.2.0
  */
+@Deprecated
 public abstract class FlinkJobsClientsContext {
 
 	private static final Logger log = LoggerFactory.getLogger(FlinkJobsClientsContext.class);

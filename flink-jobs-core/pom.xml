@@ -4,7 +4,7 @@
 	<parent>
 		<groupId>cn.tenmg</groupId>
 		<artifactId>flink-jobs</artifactId>
-		<version>1.4.3</version>
+		<version>1.5.0</version>
 	</parent>
 
 	<modelVersion>4.0.0</modelVersion>
@@ -93,7 +93,7 @@
 		<dependency>
 			<groupId>mysql</groupId>
 			<artifactId>mysql-connector-java</artifactId>
-			<version>8.0.30</version>
+			<version>8.0.31</version>
 			<scope>test</scope>
 		</dependency>
 		<!-- https://mvnrepository.com/artifact/org.apache.flink/flink-connector-jdbc -->

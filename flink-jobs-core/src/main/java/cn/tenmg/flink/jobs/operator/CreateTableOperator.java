@@ -21,6 +21,7 @@ import cn.tenmg.flink.jobs.metadata.MetaDataGetter.TableMetaData;
 import cn.tenmg.flink.jobs.metadata.MetaDataGetterFactory;
 import cn.tenmg.flink.jobs.model.CreateTable;
 import cn.tenmg.flink.jobs.model.create.table.Column;
+import cn.tenmg.flink.jobs.utils.DataSourceFilterUtils;
 import cn.tenmg.flink.jobs.utils.SQLUtils;
 import cn.tenmg.flink.jobs.utils.StreamTableEnvironmentUtils;
 
@@ -50,8 +51,9 @@ public class CreateTableOperator extends AbstractOperator<CreateTable> {
 		}
 		StreamTableEnvironment tableEnv = FlinkJobsContext.getOrCreateStreamTableEnvironment(env);
 		StreamTableEnvironmentUtils.useCatalogOrDefault(tableEnv, createTable.getCatalog());
-
-		Map<String, String> dataSource = FlinkJobsContext.getDatasource(datasource);
+		
+		Map<String, String> dataSource = DataSourceFilterUtils.filter(createTable.getDataSourceFilter(),
+				FlinkJobsContext.getDatasource(datasource));
 		String primaryKey = collation(createTable, dataSource);
 		String sql = createTableSQL(dataSource, tableName, createTable.getBindTableName(), createTable.getColumns(),
 				primaryKey);

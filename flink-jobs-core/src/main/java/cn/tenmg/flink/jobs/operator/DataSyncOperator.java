@@ -33,7 +33,7 @@ import cn.tenmg.flink.jobs.model.DataSync;
 import cn.tenmg.flink.jobs.model.data.sync.Column;
 import cn.tenmg.flink.jobs.parser.FlinkSQLParamsParser;
 import cn.tenmg.flink.jobs.utils.ConfigurationUtils;
-import cn.tenmg.flink.jobs.utils.MapUtils;
+import cn.tenmg.flink.jobs.utils.DataSourceFilterUtils;
 import cn.tenmg.flink.jobs.utils.SQLUtils;
 import cn.tenmg.flink.jobs.utils.StreamTableEnvironmentUtils;
 
@@ -130,9 +130,11 @@ public class DataSyncOperator extends AbstractOperator<DataSync> {
 			}
 		}
 
-		Map<String, String> fromDataSource = FlinkJobsContext.getDatasource(from),
-				toDataSource = FlinkJobsContext.getDatasource(to);
-		Set<String> primaryKeys = collation(dataSync, fromDataSource, toDataSource, params);
+		Map<String, String> fromDataSource = DataSourceFilterUtils.filter("source",
+				FlinkJobsContext.getDatasource(from)),
+				toDataSource = DataSourceFilterUtils.filter("sink", FlinkJobsContext.getDatasource(to));
+
+		Set<String> primaryKeys = collation(dataSync, toDataSource, params);
 		List<Column> columns = dataSync.getColumns();
 
 		String sql = fromCreateTableSQL(fromDataSource, dataSync.getTopic(), table, fromTable, columns, primaryKeys,
@@ -163,8 +165,6 @@ public class DataSyncOperator extends AbstractOperator<DataSync> {
 	 * 
 	 * @param dataSync
 	 *            数据同步配置对象
-	 * @param fromDataSource
-	 *            来源数据源
 	 * @param toDataSource
 	 *            目标数据源
 	 * @param params
@@ -173,8 +173,8 @@ public class DataSyncOperator extends AbstractOperator<DataSync> {
 	 * @throws Exception
 	 *             发生异常
 	 */
-	private static Set<String> collation(DataSync dataSync, Map<String, String> fromDataSource,
-			Map<String, String> toDataSource, Map<String, Object> params) throws Exception {
+	private static Set<String> collation(DataSync dataSync, Map<String, String> toDataSource,
+			Map<String, Object> params) throws Exception {
 		List<Column> columns = dataSync.getColumns();
 		if (columns == null) {
 			dataSync.setColumns(columns = new ArrayList<Column>());
@@ -573,25 +573,18 @@ public class DataSyncOperator extends AbstractOperator<DataSync> {
 					.append(String.join(", ", actualPrimaryKeys)).append(") NOT ENFORCED");
 		}
 		sqlBuffer.append(") ").append("WITH (");
-		Map<String, String> actualDataSource = MapUtils.newHashMap(dataSource);
-		if (StringUtils.isBlank(fromConfig)) {
-			if (ConfigurationUtils.isKafka(actualDataSource)) {
-				actualDataSource.put(GROUP_ID_KEY, FlinkJobsContext.getProperty(GROUP_ID_PREFIX_KEY) + table);// 设置properties.group.id
+		if (StringUtils.isNotBlank(fromConfig)) {
+			dataSource.putAll(ConfigurationUtils.load(fromConfig));
+		}
+		if (ConfigurationUtils.isKafka(dataSource)) {
+			if (!dataSource.containsKey(GROUP_ID_KEY)) {
+				dataSource.put(GROUP_ID_KEY, FlinkJobsContext.getProperty(GROUP_ID_PREFIX_KEY) + table);// 设置properties.group.id
 			}
 			if (topic != null) {
-				actualDataSource.put(TOPIC_KEY, topic);
+				dataSource.put(TOPIC_KEY, topic);
 			}
-			SQLUtils.appendDataSource(sqlBuffer, actualDataSource, table);
-		} else {
-			actualDataSource.putAll(ConfigurationUtils.load(fromConfig));
-			if (!actualDataSource.containsKey(GROUP_ID_KEY) && ConfigurationUtils.isKafka(actualDataSource)) {
-				actualDataSource.put(GROUP_ID_KEY, FlinkJobsContext.getProperty(GROUP_ID_PREFIX_KEY) + table);// 设置properties.group.id
-			}
-			if (topic != null && !actualDataSource.containsKey(TOPIC_KEY)) {
-				actualDataSource.put(TOPIC_KEY, topic);
-			}
-			SQLUtils.appendDataSource(sqlBuffer, actualDataSource, table);
 		}
+		SQLUtils.appendDataSource(sqlBuffer, dataSource, table);
 		sqlBuffer.append(")");
 		return sqlBuffer.toString();
 	}
