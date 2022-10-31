@@ -2,5 +2,5 @@
 <flink-jobs xmlns="http://www.10mg.cn/schema/flink-jobs"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://www.10mg.cn/schema/flink-jobs http://www.10mg.cn/schema/flink-jobs.xsd"
-	jar="D:\Programs\flink-1.14.3\examples\streaming\TopSpeedWindowing.jar">
+	jar="D:\Programs\flink-1.16.0\examples\streaming\TopSpeedWindowing.jar">
 </flink-jobs>

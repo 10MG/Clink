@@ -43,12 +43,13 @@ public class StandaloneRestClusterClientTest {
 		RestClusterClient<StandaloneClusterId> restClusterClient = client.getClusterClient();
 		JobDetailsInfo jobDetailsInfo = restClusterClient.getJobDetails(jobId).get();
 		System.out.println("Job details info: " + JSON.toJSONString(jobDetailsInfo));
-		JobResult jobResult = restClusterClient.requestJobResult(jobId).get();
-		System.out.println("Job result: " + JSON.toJSONString(jobResult));
 		Collection<JobStatusMessage> jobs = restClusterClient.listJobs().get();
 		System.out.println("Jobs: " + JSON.toJSONString(jobs));
 
 		System.out.println(
 				"Flink job of jobId: " + jobId.toHexString() + " stopped, savepoint path: " + client.stop(jobId));// 停止flink-jobs作业
+
+		JobResult jobResult = restClusterClient.requestJobResult(jobId).get();
+		System.out.println("Job result: " + JSON.toJSONString(jobResult));
 	}
 }
