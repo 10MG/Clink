@@ -134,7 +134,7 @@ public class StandaloneRestClusterClient extends AbstractFlinkJobsClient<Standal
 		boolean submit = true;
 		if (flinkJobs.getServiceName() == null) {
 			List<Operate> operates = flinkJobs.getOperates();
-			if (operates != null) {
+			if (operates != null && operates.isEmpty()) {
 				submit = false;
 				for (int i = 0, size = operates.size(); i < size; i++) {
 					if (!localOperates.contains(operates.get(i).getType())) {
