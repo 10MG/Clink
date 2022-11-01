@@ -28,6 +28,12 @@ flink-jobs对Flink特定版本依赖较弱，已知在1.13+环境下运行良好
 1.  pom.xml添加依赖（Flink等其他相关依赖此处省略），${flink-jobs.version}为版本号，可定义属性或直接使用版本号替换
 
 ```
+<!-- https://mvnrepository.com/artifact/cn.tenmg/flink-jobs-clients -->
+<dependency>
+    <groupId>cn.tenmg</groupId>
+    <artifactId>flink-jobs-clients</artifactId>
+    <version>${flink-jobs.version}</version>
+</dependency>
 <!-- https://mvnrepository.com/artifact/cn.tenmg/flink-jobs-core -->
 <dependency>
     <groupId>cn.tenmg</groupId>
@@ -37,6 +43,8 @@ flink-jobs对Flink特定版本依赖较弱，已知在1.13+环境下运行良好
 ```
 
 2.  配置文件flink-jobs.properties
+
+flink-jobs.properties用于配置flink-jobs应用运行的数据源以及其他特性等。
 
 ```
 #Flink Table API配置
@@ -76,7 +84,21 @@ datasource.starrocks.sink.buffer-flush.interval-ms=10000
 datasource.starrocks.sink.max-retries=3
 ```
 
-2.  编写应用入口类
+3. 配置文件flink-jobs-clients.properties
+
+flink-jobs-clients.properties配置文件用于配置将（哪个JAR的）哪个类提交给哪个flink集群执行。
+
+```
+# RPC configuration
+jobmanager.rpc.address=192.168.100.11,192.168.100.12,192.168.100.13
+# The default jar that the flink-jobs-clients submits for execution, it is recommended but not required.
+flink.jobs.default.jar=/yourpath/your-flink-jobs-app-1.0.0.jar
+# The default class that the flink-jobs-clients submits for execution, it is not required. You can also specify the main class in jar
+#flink.jobs.default.class=yourpackage.App
+```
+
+
+4.  编写应用入口类
 
 ```
 public class App {
@@ -111,42 +133,58 @@ public class App {
 
 ```
 
-3.  编写Flink流批一体服务
+5. 运行、监控、取消和停止应用
+
+(1) 提交作业
+
+调用XMLConfigLoader的load方法加载XML配置文件并提交给客户端执行：
 
 ```
-public class HelloWorldService implements StreamService {
-
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = -6651233695630282701L;
-
-	@Override
-	public void run(StreamExecutionEnvironment env, Arguments arguments) throws Exception {
-                Properties kafkaProperties = new Properties();
-		kafkaProperties.put("bootstrap.servers", FlinkJobsContext.getProperty("datasource.kafka.properties.bootstrap.servers"));// 直接使用配置文件的配置
-		kafkaProperties.put("auto.offset.reset", "latest");
-		kafkaProperties.put("group.id", "flink-jobs");
-		DataStream<String> stream;
-		if (RuntimeExecutionMode.STREAMING.equals(arguments.getRuntimeMode())) {
-			stream = env.addSource(new FlinkKafkaConsumer<String>(Arrays.asList("topic1","topic2"),
-					new SimpleStringSchema(), kafkaProperties));
-		} else {
-			stream = env.fromElements("Hello, World!");
-		}
-		stream.print();
-	}
-
-}
+FlinkJobs flinkJobs = XMLConfigLoader.getInstance().load(ClassUtils.getDefaultClassLoader().getResourceAsStream("flink-jobs.xml"));
+StandaloneRestClusterClient client = new StandaloneRestClusterClient();
+JobID jobId = client.submit(flinkJobs);
+System.out.println("Flink job launched: " + jobId.toHexString());// 启动flink-jobs作业
 ```
 
-4.  到此，一个flink-jobs应用程序已完成，他可以通过各种方式运行。
+或
 
-- 在IDE环境中，可直接运行App类启动flink-jobs应用程序；
+```
+FlinkJobs flinkJobs = XMLConfigLoader.getInstance()
+	.load("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" + 
+		"<flink-jobs xmlns=\"http://www.10mg.cn/schema/flink-jobs\"\r\n" + 
+		"	xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\r\n" + 
+		"	xsi:schemaLocation=\"http://www.10mg.cn/schema/flink-jobs http://www.10mg.cn/schema/flink-jobs.xsd\"\r\n" + 
+		"	jar=\"/opt/flink-jobs/flink-jobs-quickstart-1.1.4.jar\" serviceName=\"HelloWorldService\">\r\n" + 
+       		"</flink-jobs>");
+StandaloneRestClusterClient client = new StandaloneRestClusterClient();
+JobID jobId = client.submit(flinkJobs);
+System.out.println("Flink job launched: " + jobId.toHexString());// 启动flink-jobs作业
+```
 
-- 也可打包后，通过命令行提交给flink集群执行（通常在pom.xml配置org.apache.maven.plugins.shade.resource.ManifestResourceTransformer的mainClass为App这个类，请注意是完整类名）：`flink run /yourpath/yourfile.jar "{\"serviceName\":\"yourServiceName\"}"`，更多运行参数详见[运行参数](https://gitee.com/tenmg/flink-jobs#%E8%BF%90%E8%A1%8C%E5%8F%82%E6%95%B0arguments)。
+(2) 监控状态
 
-- 此外，使用flink-jobs-clients可以通过Java API的方式启动flink-jobs应用程序，这样启动操作就可以轻松集成到其他系统中（例如Java Web程序）。
+
+```
+JobID jobId = JobID.fromHexString(hexString);
+JobStatus jobStatus = client.getJobStatus(jobId);// 获取作业状态
+System.out.println("Job status: " + jobStatus);
+```
+
+(3) 高级功能
+
+```
+//ClusterClient clusterClient = client.getClusterClient(customConf);// 使用自定义配置获取ClusterClient
+ClusterClient clusterClient = client.getClusterClient();
+// Use clusterClient to do something
+```
+
+(4) 停止作业
+
+
+```
+System.out.println("Flink job of jobId: " + jobId.toHexString() + " stopped, savepoint path: " + client.stop(jobId));// 停止flink-jobs作业
+	
+```
 
 # 快速入门
 
