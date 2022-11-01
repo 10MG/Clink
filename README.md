@@ -156,7 +156,453 @@ public class HelloWorldService implements StreamService {
 
 ## 配置手册
 
+### XML
+
+使用flink-jobs-clients可实现使用XML配置文件来管理flink-jobs任务，这样开发Flink SQL任务会显得非常简单；同时，用户自定义的flink-jobs服务也可以被更轻松得集成到其他系统中。另外，XML文件具有良好的可读性，并且在IDE环境下能够对配置进行自动提示，方便用户更高效地完成任务的配置。
+
+#### `<flink-jobs>`
+
+`<flink-jobs>`是flink-jobs任务XML配置文件的根节点，需注意必须配置正确的命名空间，通常结构如下：
+
+```
+<flink-jobs xmlns="http://www.10mg.cn/schema/flink-jobs"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.10mg.cn/schema/flink-jobs http://www.10mg.cn/schema/flink-jobs.xsd">
+</flink-jobs>
+```
+
+相关属性及说明：
+
+属性        | 类型                | 必需 | 说明
+------------|----------------------|----|--------
+jar         | `String`             | 否 | 运行的JAR包。可通过配置文件的`flink.jobs.default.jar`配置指定默认运行的JAR包。
+class       | `String`             | 否 | 运行的主类。可通过配置文件的`flink.jobs.default.class`配置指定默认运行的主类。
+serviceName | `String`             | 否 | 运行的服务名称。该名称由用户定义并实现根据服务名称获取服务的方法，[flink-jobs](https://gitee.com/tenmg/flink-jobs)则在运行时调用并确定运行的实际服务。在运行SQL任务时，通常通过flink-jobs内的其他标签（如`<execute-sql>`）指定操作，而无需指定serviceName。
+runtimeMode | `String`             | 否 | 运行模式。可选值："BATCH"/"STREAMING"/"AUTOMATIC"，相关含义详见[Flink](https://flink.apache.org)官方文档。
+
+##### `<configuration>`
+
+Flink作业的个性化配置，格式为`k1=v1[,k2=v3…]`。例如：`<configuration><![CDATA[pipeline.name=customJobName]]></configuration>`表示自定义Flink SQL作业的名称为`customJobName`。具体配置项详见[Flink官方文档](https://flink.apache.org/)。
+
+##### `<options>`
+
+运行选项配置，用于指定flink程序的运行选项。
+
+###### `<option>`
+
+特定运行选项配置。XSD文件提供了选项key值的枚举，能够在IDE环境下自动提示。
+
+![自动补全样例](AutomaticCompletionExample.png)
+
+属性  | 类型     | 必需 | 说明
+------|----------|----|--------
+key   | `String` | 是 | 选项键。
+value | `String` | 否 | 选项的值。使用标签内文本表示，如`<option>value</option>`或`<option><![CDATA[value]]></option>`。
+
+##### `<params>`
+
+参数查找表配置。通常可用于SQL中，也可以在[flink-jobs](https://gitee.com/tenmg/flink-jobs)应用程序自定义的服务中通过arguments参数获取。
+
+###### `<param>`
+
+特定参数配置。
+
+属性  | 类型     | 必需 | 说明
+------|----------|----|--------
+name  | `String` | 是 | 参数名。
+value | `String` | 否 | 参数值。使用标签内文本表示。
+
+##### `<bsh>`
+
+运行基于Beanshell的java代码的配置。
+
+属性   | 类型     | 必需 | 说明
+-------|----------|----|--------
+saveAs | `String` | 否 | 操作结果另存为一个新的变量的名称。变量的值是基于Beanshell的java代码的返回值（通过`return xxx;`表示）。
+when   | `String` | 否 | 操作的条件，当且仅当该条件满足时，才执行该操作。不指定时，默认表示条件成立。
+
+###### `<var>`
+
+基于Beanshell的java代码使用的变量声明配置。
+
+属性   | 类型  | 必需 | 说明
+------|--------|----|--------
+name  | `String` | 是 | Beanshell中使用的变量名称
+value | `String` | 否 | 变量对应的值的名称。默认与name相同。[flink-jobs](https://gitee.com/tenmg/flink-jobs)会从参数查找表中查找名称为value值的参数值，如果指定参数存在且不是null，则该值作为该参数的值；否则，使用value值作为该变量的值。
+
+###### `<java>`
+
+java代码。采用文本表示，如：`<java>java code</java>`或`<option><![CDATA[java code]]></option>`。注意：使用泛型时，不能使用尖括号声明泛型。例如，使用Map不能使用“Map<String , String> map = new HashMap<String , String>();”，但可以使用“Map map = new HashMap();”。
+
+##### `<execute-sql>`
+
+运行基于[DSL](https://gitee.com/tenmg/dsl)的SQL代码配置。
+
+属性       | 类型     | 必需 | 说明
+-----------|----------|----|--------
+saveAs     | `String` | 否 | 操作结果另存为一个新的变量的名称。变量的值是flink的`tableEnv.executeSql(statement);`的返回值。
+when       | `String` | 否 | 操作的条件，当且仅当该条件满足时，才执行该操作。不指定时，默认表示条件成立。
+dataSource | `String` | 否 | 使用的数据源名称。这里的数据源是在[flink-jobs](https://gitee.com/tenmg/flink-jobs)应用程序的配置文件中配置，并非在flink-jobs-clients应用程序的配置文件中配置。详见[flink-jobs数据源配置](https://gitee.com/tenmg/flink-jobs#%E6%95%B0%E6%8D%AE%E6%BA%90%E9%85%8D%E7%BD%AE)。
+catalog    | `String` | 否 | 执行SQL使用的Flink SQL的catalog名称。
+script     | `String` | 否 | 基于[DSL](https://gitee.com/tenmg/dsl)的SQL脚本。使用标签内文本表示，如：`<execute-sql>SQL code</execute-sql>`或`<execute-sql><![CDATA[SQL code]]></execute-sql>`。由于Flink SQL不支持DELETE、UPDATE语句，因此如果配置的SQL脚本是DELETE或者UPDATE语句，该语句将在程序main函数中采用JDBC执行。
+
+##### `<sql-query>`
+
+运行基于[DSL](https://gitee.com/tenmg/dsl)的SQL查询代码配置。
+
+属性       | 类型     | 必需 | 说明
+-----------|----------|----|--------
+saveAs     | `String` | 否 | 查询结果另存为临时表的表名及操作结果另存为一个新的变量的名称。变量的值是flink的`tableEnv.executeSql(statement);`的返回值。
+when       | `String` | 否 | 操作的条件，当且仅当该条件满足时，才执行该操作。不指定时，默认表示条件成立。
+catalog    | `String` | 否 | 执行SQL使用的Flink SQL的catalog名称。
+script     | `String` | 否 | 基于[DSL](https://gitee.com/tenmg/dsl)的SQL脚本。使用标签内文本表示，如：`<sql-query>SQL code</sql-query>`或`<sql-query><![CDATA[SQL code]]></sql-query>`。
+
+##### `<jdbc>`
+
+运行基于[DSL](https://gitee.com/tenmg/dsl)的JDBC SQL代码配置。目标JDBC SQL代码是在[flink-jobs](https://gitee.com/tenmg/flink-jobs)应用程序的main函数中运行的。
+
+属性       | 类型     | 必需 | 说明
+-----------|----------|----|--------
+saveAs     | `String` | 否 | 执行结果另存为一个新的变量的名称。变量的值是执行JDBC指定方法的返回值。
+when       | `String` | 否 | 操作的条件，当且仅当该条件满足时，才执行该操作。不指定时，默认表示条件成立。
+dataSource | `String` | 是 | 使用的数据源名称。这里的数据源是在flink-jobs应用程序的配置文件中配置，并非在flink-jobs-clients应用程序的配置文件中配置。详见[flink-jobs数据源配置](#%E6%95%B0%E6%8D%AE%E6%BA%90%E9%85%8D%E7%BD%AE)。
+method     | `String` | 否 | 调用的JDBC方法，支持"get"/"select"/"execute"/"executeUpdate"/"executeLargeUpdate"，默认是"executeUpdate"（1.4.0及之前版本默认值为"executeLargeUpdate"，由于很多数据库连接池或者JDBC驱动未实现该方法，因此1.4.1版本开始改为"executeUpdate"）。可在配置文件中使用`jdbc.default_method`配置项修改默认值。
+script     | `String` | 是 | 基于[DSL](https://gitee.com/tenmg/dsl)的SQL脚本。使用标签内文本表示。
+
+##### `<data-sync>`
+
+运行基于Flink SQL的流式任务实现数据同步。相关属性及说明如下：
+
+属性       | 类型      | 必需 | 说明
+-----------|-----------|----|--------
+saveAs     | `String`  | 否 | 执行结果另存为一个新的变量的名称。变量的值是执行`INSERT`语句返回的`org.apache.flink.table.api.TableResult`对象。一般不使用。
+when       | `String`  | 否 | 操作的条件，当且仅当该条件满足时，才执行该操作。不指定时，默认表示条件成立。
+from       | `String`  | 是 | 来源数据源名称。目前仅支持Kafka数据源。
+topic      | `String`  | 否 | Kafka主题。也可在fromConfig中配置`topic=xxx`。
+fromConfig | `String`  | 否 | 来源配置。例如：`properties.group.id=flink-jobs`。
+to         | `String`  | 是 | 目标数据源名称，目前仅支持JDBC数据源。
+toConfig   | `String`  | 是 | 目标配置。例如：`sink.buffer-flush.max-rows = 0`。
+table      | `String`  | 是 | 同步数据表名。
+primaryKey | `String`  | 否 | 主键，多个列名以“,”分隔。当开启智能模式时，会自动获取主键信息。
+timestamp  | `String`  | 否 | 时间戳列名，多个列名使用“,”分隔。设置这个值后，创建源表和目标表时会添加这些列，并在数据同步时写入这些列。一般在flink-jobs应用程序中使用配置文件统一指定，而不是每个同步任务单独指定。
+smart      | `Boolean` | 否 | 是否开启智能模式。不设置时，根据全局配置确定是否开启智能模式，全局默认配置为`data.sync.smart=true`。
+`<column>` | `Element` | 否 | 同步数据列。当开启智能模式时，会自动获取列信息。
+
+###### `<column>`
+
+属性     | 类型     | 必需 | 说明
+---------|----------|----|--------
+fromName | `String` | 是 | 来源列名。
+fromType | `String` | 否 | 来源数据类型。如果缺省，则如果开启智能模式会自动获取目标数据类型作为来源数据类型，如果关闭智能模式则必填。
+toName   | `String` | 否 | 目标列名。默认为来源列名。
+toType   | `String` | 否 | 目标列数据类型。如果缺省，则如果开启智能模式会自动获取，如果关闭智能模式则默认为来源列数据类型。
+strategy | `String` | 否 | 同步策略。可选值：both/from/to，both表示来源列和目标列均创建，from表示仅创建原来列，to表示仅创建目标列，默认为both。
+script   | `String` | 否 | 自定义脚本。通常是需要进行函数转换时使用。使用标签内文本表示。
+
+##### `<create-table>`
+
+根据指定的配置信息自动生成Fink SQL并创建一张表。这比手动拼写Flink SQL要高效很多。支持版本：1.3.0+，相关属性及说明如下：
+
+属性          | 类型     | 必需 | 说明
+--------------|----------|----|--------
+saveAs        | `String` | 否 | 操作结果另存为一个新的变量的名称。变量的值是flink的`tableEnv.executeSql(statement);`的返回值。
+when          | `String` | 否 | 操作的条件，当且仅当该条件满足时，才执行该操作。不指定时，默认表示条件成立。
+dataSource    | `String` | 是 | 使用的数据源名称。flink-jobs从该数据源读取元数据信息，并自动生成Flink SQL。
+tableName     | `String` | 是 | 创建表的表名。即`CREATE TABLE table_name ...`中的`table_name`。
+catalog       | `String` | 否 | 执行SQL使用的Flink SQL的catalog名称。
+bindTableName | `String` | 否 | 绑定的表名，即WITH子句的“table-name”，默认与tableName相同。
+primaryKey    | `String` | 否 | 主键，多个列名以“,”分隔。当开启智能模式时，会自动获取主键信息。
+smart         | `String` | 否 | 是否开启智能模式。不设置时，根据flink-jobs应用程序的全局配置确定是否开启智能模式，flink-jobs应用程序的全局默认配置为`data.sync.smart=true`。
+
+###### `<column>`
+
+列信息配置。开启智能模式时，一般不需要配置，flink-jobs会自动生成列及对应的数据类型。但也可以单独指定某些列的数据类型，不使用自动识别的类型。
+
+属性 | 类型     | 必需 | 说明
+-----|----------|----|--------
+name | `String` | 是 | 列名。
+type | `String` | 是 | 数据类型。使用标签内文本表示。
+
+#### XML配置示例
+
+为了更好的理解flink-jobs的XML配置文件，以下提供几种常见场景的XML配置文件示例：
+
+##### 运行普通flink程序
+
+```
+<?xml version="1.0" encoding="UTF-8"?>
+<flink-jobs xmlns="http://www.10mg.cn/schema/flink-jobs"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.10mg.cn/schema/flink-jobs http://www.10mg.cn/schema/flink-jobs.xsd"
+	jar="D:\Programs\flink-1.8.3\examples\batch\WordCount.jar">
+</flink-jobs>
+```
+
+##### 运行自定义服务
+
+以下为一个自定义服务任务XML配置文件：
+
+```
+<?xml version="1.0" encoding="UTF-8"?>
+<flink-jobs xmlns="http://www.10mg.cn/schema/flink-jobs"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.10mg.cn/schema/flink-jobs http://www.10mg.cn/schema/flink-jobs.xsd"
+	jar="/yourPath/yourJar.jar" serviceName="yourServiceName">
+</flink-jobs>
+```
+
+##### 运行批处理SQL
+
+以下为一个简单订单量统计SQL批处理任务XML配置文件：
+
+```
+<?xml version="1.0" encoding="UTF-8"?>
+<flink-jobs xmlns="http://www.10mg.cn/schema/flink-jobs"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.10mg.cn/schema/flink-jobs http://www.10mg.cn/schema/flink-jobs.xsd"
+	jar="/yourPath/yourJar.jar">
+	<!--任务运行参数，一些公共参数也可在调用Java API之前指定，例如系统时间等 -->
+	<params>
+		<param name="beginDate">2021-01-01</param>
+		<param name="endDate">2021-07-01</param>
+	</params>
+
+	<!-- 使用名为hivedb的数据源创建名为hive的catalog -->
+	<execute-sql dataSource="hivedb">
+		<![CDATA[
+			create catalog hive
+		]]>
+	</execute-sql>
+	<!--加载hive模块 -->
+	<execute-sql>
+		<![CDATA[
+			load module hive
+		]]>
+	</execute-sql>
+	<!--使用hive,core模块 -->
+	<execute-sql>
+		<![CDATA[
+			use modules hive,core
+		]]>
+	</execute-sql>
+	<!-- 使用名为pgdb的数据源创建表order_stats_daily（如果源表名和建表语句指定的表名不一致，可以通过 WITH ('table-name' 
+		= 'actrual_table_name') 来指定） -->
+	<execute-sql dataSource="pgdb">
+		<![CDATA[
+			CREATE TABLE order_stats_daily (
+			  stats_date DATE,
+			  `count` BIGINT,
+			  PRIMARY KEY (stats_date) NOT ENFORCED
+			) WITH ('sink.buffer-flush.max-rows' = '0')
+		]]>
+	</execute-sql>
+	<!-- 使用hive catalog查询，并将结果存为临时表tmp，tmp放在默认的default_catalog中 -->
+	<sql-query saveAs="tmp" catalog="hive">
+		<![CDATA[
+			select cast(to_date(o.business_date) as date) stats_date, count(*) `count` from odc_order_info_par o where o.business_date >= :beginDate and o.business_date < :endDate group by cast(to_date(o.business_date) as date)
+		]]>
+	</sql-query>
+	<!-- 删除原有数据order_stats_daily（FLINK SQL不支持DELETE，此处执行的是JDBC）-->
+	<execute-sql dataSource="pgdb">
+		<![CDATA[
+			delete from order_stats_daily where stats_date >= :beginDate and stats_date < :endDate
+		]]>
+	</execute-sql>
+	<!-- 数据插入。实际上Flink最终将执行Upsert语法 -->
+	<execute-sql>
+		<![CDATA[
+			INSERT INTO order_stats_daily(stats_date,`count`) SELECT stats_date, `count` FROM tmp
+		]]>
+	</execute-sql>
+</flink-jobs>
+```
+
+##### 运行流处理SQL
+
+以下为通过Debezium实现异构数据库同步任务XML配置文件：
+
+```
+<?xml version="1.0" encoding="UTF-8"?>
+<flink-jobs xmlns="http://www.10mg.cn/schema/flink-jobs"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.10mg.cn/schema/flink-jobs http://www.10mg.cn/schema/flink-jobs.xsd">
+	<!-- Flink内创建SOURCE数据库 -->
+	<!-- <execute-sql>
+		<![CDATA[
+		CREATE DATABASE SOURCE
+		]]>
+	</execute-sql> -->
+	<!-- 使用SOURCE数据库执行Flink SQL -->
+	<!-- <execute-sql>
+		<![CDATA[
+		USE SOURCE
+		]]>
+	</execute-sql> -->
+	<!-- 上述两步操作是非必须的，只是为了Flink自动生成的作业名称更容易识别 -->
+	<!-- 定义名为kafka数据源的订单明细表 -->
+	<execute-sql dataSource="kafka">
+		<![CDATA[
+		CREATE TABLE KAFKA_ORDER_DETAIL (
+		  DETAIL_ID STRING,
+		  ORDER_ID STRING,
+		  ITEM_ID STRING,
+		  ITEM_CODE STRING,
+		  ITEM_NAME STRING,
+		  ITEM_TYPE STRING,
+		  ITEM_SPEC STRING,
+		  ITEM_UNIT STRING,
+		  ITEM_PRICE DECIMAL(12, 2),
+		  ITEM_QUANTITY DECIMAL(12, 2),
+		  SALE_PRICE DECIMAL(12, 2),
+		  SALE_AMOUNT DECIMAL(12, 2),
+		  SALE_DISCOUNT DECIMAL(12, 2),
+		  SALE_MODE STRING,
+		  CURRENCY STRING,
+		  SUPPLY_TYPE STRING,
+		  SUPPLY_CODE STRING,
+		  REMARKS STRING,
+		  CREATE_BY STRING,
+		  CREATE_TIME BIGINT,
+		  UPDATE_BY STRING,
+		  UPDATE_TIME BIGINT,
+		  OIL_GUN STRING,
+		  EVENT_TIME TIMESTAMP(3) METADATA FROM 'value.source.timestamp' VIRTUAL,
+		  PRIMARY KEY (DETAIL_ID) NOT ENFORCED
+		) WITH ('topic' = 'kaorder1.kaorder.order_detail', 'properties.group.id' = 'flink-jobs_source_order_detail')
+		]]>
+	</execute-sql>
+	<!-- 定义名为source数据源的订单明细表 -->
+	<execute-sql dataSource="source">
+		<![CDATA[
+		CREATE TABLE ORDER_DETAIL (
+		  DETAIL_ID STRING,
+		  ORDER_ID STRING,
+		  ITEM_ID STRING,
+		  ITEM_CODE STRING,
+		  ITEM_NAME STRING,
+		  ITEM_TYPE STRING,
+		  ITEM_SPEC STRING,
+		  ITEM_UNIT STRING,
+		  ITEM_PRICE DECIMAL(12, 2),
+		  ITEM_QUANTITY DECIMAL(12, 2),
+		  SALE_PRICE DECIMAL(12, 2),
+		  SALE_AMOUNT DECIMAL(12, 2),
+		  SALE_DISCOUNT DECIMAL(12, 2),
+		  SALE_MODE STRING,
+		  CURRENCY STRING,
+		  SUPPLY_TYPE STRING,
+		  SUPPLY_CODE STRING,
+		  REMARKS STRING,
+		  CREATE_BY STRING,
+		  CREATE_TIME TIMESTAMP(3),
+		  UPDATE_BY STRING,
+		  UPDATE_TIME TIMESTAMP(3),
+		  OIL_GUN STRING,
+		  EVENT_TIME TIMESTAMP(3),
+		  PRIMARY KEY (DETAIL_ID) NOT ENFORCED
+		)
+		]]>
+	</execute-sql>
+	<!-- 将kafka订单明细数据插入到source数据库订单明细表中 -->
+	<execute-sql>
+		<![CDATA[
+		INSERT INTO ORDER_DETAIL(
+		  DETAIL_ID,
+		  ORDER_ID,
+		  ITEM_ID,
+		  ITEM_CODE,
+		  ITEM_NAME,
+		  ITEM_TYPE,
+		  ITEM_SPEC,
+		  ITEM_UNIT,
+		  ITEM_PRICE,
+		  ITEM_QUANTITY,
+		  SALE_PRICE,
+		  SALE_AMOUNT,
+		  SALE_DISCOUNT,
+		  SALE_MODE,
+		  CURRENCY,
+		  SUPPLY_TYPE,
+		  SUPPLY_CODE,
+		  REMARKS,
+		  CREATE_BY,
+		  CREATE_TIME,
+		  UPDATE_BY,
+		  UPDATE_TIME,
+		  OIL_GUN,
+		  EVENT_TIME
+		)
+		SELECT
+		  DETAIL_ID,
+		  ORDER_ID,
+		  ITEM_ID,
+		  ITEM_CODE,
+		  ITEM_NAME,
+		  ITEM_TYPE,
+		  ITEM_SPEC,
+		  ITEM_UNIT,
+		  ITEM_PRICE,
+		  ITEM_QUANTITY,
+		  SALE_PRICE,
+		  SALE_AMOUNT,
+		  SALE_DISCOUNT,
+		  SALE_MODE,
+		  CURRENCY,
+		  SUPPLY_TYPE,
+		  SUPPLY_CODE,
+		  REMARKS,
+		  CREATE_BY,
+		  TO_TIMESTAMP(FROM_UNIXTIME(CREATE_TIME/1000, 'yyyy-MM-dd HH:mm:ss')) CREATE_TIME,
+		  UPDATE_BY,
+		  TO_TIMESTAMP(FROM_UNIXTIME(CREATE_TIME/1000, 'yyyy-MM-dd HH:mm:ss')) UPDATE_TIME,
+		  OIL_GUN,
+		  EVENT_TIME
+		FROM KAFKA_ORDER_DETAIL
+		]]>
+	</execute-sql>
+</flink-jobs>
+```
+
+##### 运行数据同步任务
+
+以下为通过Debezium实现异构数据库同步任务XML配置文件：
+
+```
+<?xml version="1.0" encoding="UTF-8"?>
+<flink-jobs xmlns="http://www.10mg.cn/schema/flink-jobs"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.10mg.cn/schema/flink-jobs http://www.10mg.cn/schema/flink-jobs-1.1.2.xsd">
+	<data-sync table="od_order_info" to="data_skyline"
+		from="kafka" topic="testdb.testdb.od_order_info">
+		<!-- 在数据源和目标库表结构相同（字段名及类型均相同）的情况下，智能模式可自动从目标库获取表元数据信息，只要少量配就能完成数据同步。 -->
+		<!-- 在数据源和目标库表结构不同（字段名或类型不同）的情况，需要自定义列的差异信息，例如自定来源类型和转换函数： -->
+		<column fromName="UPDATE_TIME" fromType="BIGINT">TO_TIMESTAMP(FROM_UNIXTIME(UPDATE_TIME/1000, 'yyyy-MM-dd HH:mm:ss'))</column>
+		<!-- 另外，如果关闭智能模式，需要列出所有列的详细信息。 -->
+	</data-sync>
+</flink-jobs>
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ### JSON
+
 如果仅使用flink-jobs-core创建flink-jobs应用程序，运行参数需通过JSON格式的字符串（注意，如果是命令行运行，JSON格式字符串前后需加上双引号或单引号，JSON格式字符串内部的双引号或单引号则需要转义）或者一个.json文件提供，结构如下：
 
 ```
