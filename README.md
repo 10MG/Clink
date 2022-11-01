@@ -844,7 +844,7 @@ auto.datasource.identifier=database-name
 ```
 ## 数据源过滤器配置
 
-flink的连接器主要分为源连接器（Source connector）和汇连接器（Sink connector），他们分别需要的不同的数据源配置信息。flink-jobs为了方便用户，提供了两种内置数据源过滤器（源数据源过滤器：source和汇数据源过滤器：sink），结合过滤器，用户能够做到一个数据源一次配置多方、多次使用。其中`source.datasource.filter.*`开头的配置表示源数据源过滤器需要过滤的配置属性，配置键中的“*”表示连接器，配置值可以使用“*”号作为通配符。数据源过滤器的默认配置如下：
+flink的连接器主要分为源连接器（Source connector）和汇连接器（Sink connector），他们分别需要的不同的数据源配置信息。flink-jobs为了方便用户，提供了两种内置数据源过滤器（源数据源过滤器source和汇数据源过滤器sink），结合过滤器，用户能够做到一个数据源一次配置多方、多次使用。其中`source.datasource.filter.*`开头的配置表示源数据源过滤器需要过滤的配置属性，配置键中的“*”表示连接器，配置值可以使用“*”号作为通配符。数据源过滤器的默认配置如下：
 
 ```
 # Source datasource filter for kafka connector
