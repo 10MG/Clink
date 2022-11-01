@@ -1,4 +1,4 @@
-# flink-jobs
+# flink-jobs简介
 ![Logo](logo.png)
 <p align="left">
     <a href="https://mvnrepository.com/artifact/cn.tenmg/flink-jobs">
@@ -11,19 +11,17 @@
     </a>
 </p>
 
-## 介绍
-
 flink-jobs为基于Flink的Java应用程序提供快速集成的能力，可通过继承FlinkJobsRunner快速构建基于Java的Flink流批一体应用程序，实现异构数据库实时同步和ETL。flink-jobs提供了数据源管理模块，通过flink-jobs运行Flink SQL会变得极其简单。使用flink-jobs-clients可以实现基于Java API启动flink-jobs应用程序，还可以将flink任务实现通过XML配置文件来管理。一个典型的flink-jobs部署架构如下：
 
 ![典型的flink-jobs部署架构](%E5%85%B8%E5%9E%8B%E6%9E%B6%E6%9E%84.png)
 
 当然，如果您选择仅使用[Flink CDC](https://github.com/ververica/flink-cdc-connectors)，那么以上的Debezium和Kafka就不需要了。总体而言，flink-jobs是一个集成开发框架，它能够帮助用户更好地使用Flink及Flink的周边生态（包括但不限于[Flink CDC](https://github.com/ververica/flink-cdc-connectors)、[FlinkX](https://gitee.com/dtstack_dev_0/flinkx)），尤其是Flink SQL和[Flink CDC](https://github.com/ververica/flink-cdc-connectors)。
 
-## Flink版本
+# Flink版本
 
 flink-jobs对Flink特定版本依赖较弱，已知在1.13+环境下运行良好，用户可根据需要自行选择Flink的发行版本。
 
-## 起步
+# 起步
 
 以Maven项目为例
 
@@ -150,17 +148,17 @@ public class HelloWorldService implements StreamService {
 
 - 此外，使用flink-jobs-clients可以通过Java API的方式启动flink-jobs应用程序，这样启动操作就可以轻松集成到其他系统中（例如Java Web程序）。
 
-## 快速入门
+# 快速入门
 
 详见https://gitee.com/tenmg/flink-jobs-quickstart
 
-## 配置手册
+# 配置手册
 
-### XML
+## XML
 
 使用flink-jobs-clients可实现使用XML配置文件来管理flink-jobs任务，这样开发flink-jobs任务会显得非常简单；同时，用户自定义的flink-jobs服务也可以被更轻松得集成到其他系统中。另外，XML文件具有良好的可读性，并且在IDE环境下能够对配置进行自动提示，方便用户更高效地完成任务的配置。
 
-#### `<flink-jobs>`
+### `<flink-jobs>`
 
 `<flink-jobs>`是flink-jobs任务XML配置文件的根节点，需注意必须配置正确的命名空间，通常结构如下：
 
@@ -180,15 +178,15 @@ class       | `String`             | 否 | 运行的主类。可通过配置文�
 serviceName | `String`             | 否 | 运行的服务名称。该名称由用户定义并实现根据服务名称获取服务的方法，[flink-jobs](https://gitee.com/tenmg/flink-jobs)则在运行时调用并确定运行的实际服务。在运行SQL任务时，通常通过flink-jobs内的其他标签（如`<execute-sql>`）指定操作，而无需指定serviceName。
 runtimeMode | `String`             | 否 | 运行模式。可选值："BATCH"/"STREAMING"/"AUTOMATIC"，相关含义详见[Flink](https://flink.apache.org)官方文档。
 
-##### `<configuration>`
+#### `<configuration>`
 
 Flink作业的个性化配置，格式为`k1=v1[,k2=v3…]`。例如：`<configuration><![CDATA[pipeline.name=customJobName]]></configuration>`表示自定义Flink SQL作业的名称为`customJobName`。具体配置项详见[Flink官方文档](https://flink.apache.org/)。
 
-##### `<options>`
+#### `<options>`
 
 运行选项配置，用于指定flink程序的运行选项。
 
-###### `<option>`
+##### `<option>`
 
 特定运行选项配置。XSD文件提供了选项key值的枚举，能够在IDE环境下自动提示。
 
@@ -199,11 +197,11 @@ Flink作业的个性化配置，格式为`k1=v1[,k2=v3…]`。例如：`<configu
 key   | `String` | 是 | 选项键。
 value | `String` | 否 | 选项的值。使用标签内文本表示，如`<option>value</option>`或`<option><![CDATA[value]]></option>`。
 
-##### `<params>`
+#### `<params>`
 
 参数查找表配置。通常可用于SQL中，也可以在[flink-jobs](https://gitee.com/tenmg/flink-jobs)应用程序自定义的服务中通过arguments参数获取。
 
-###### `<param>`
+##### `<param>`
 
 特定参数配置。
 
@@ -212,7 +210,7 @@ value | `String` | 否 | 选项的值。使用标签内文本表示，如`<optio
 name  | `String` | 是 | 参数名。
 value | `String` | 否 | 参数值。使用标签内文本表示。
 
-##### `<bsh>`
+#### `<bsh>`
 
 运行基于Beanshell的java代码的配置。
 
@@ -221,7 +219,7 @@ value | `String` | 否 | 参数值。使用标签内文本表示。
 saveAs | `String` | 否 | 操作结果另存为一个新的变量的名称。变量的值是基于Beanshell的java代码的返回值（通过`return xxx;`表示）。
 when   | `String` | 否 | 操作的条件，当且仅当该条件满足时，才执行该操作。不指定时，默认表示条件成立。
 
-###### `<var>`
+##### `<var>`
 
 基于Beanshell的java代码使用的变量声明配置。
 
@@ -230,11 +228,11 @@ when   | `String` | 否 | 操作的条件，当且仅当该条件满足时，才
 name  | `String` | 是 | Beanshell中使用的变量名称
 value | `String` | 否 | 变量对应的值的名称。默认与name相同。[flink-jobs](https://gitee.com/tenmg/flink-jobs)会从参数查找表中查找名称为value值的参数值，如果指定参数存在且不是null，则该值作为该参数的值；否则，使用value值作为该变量的值。
 
-###### `<java>`
+##### `<java>`
 
 java代码。采用文本表示，如：`<java>java code</java>`或`<option><![CDATA[java code]]></option>`。注意：使用泛型时，不能使用尖括号声明泛型。例如，使用Map不能使用“Map<String , String> map = new HashMap<String , String>();”，但可以使用“Map map = new HashMap();”。
 
-##### `<execute-sql>`
+#### `<execute-sql>`
 
 运行基于[DSL](https://gitee.com/tenmg/dsl)的SQL代码配置。
 
@@ -246,7 +244,7 @@ dataSource | `String` | 否 | 使用的数据源名称。这里的数据源是�
 catalog    | `String` | 否 | 执行SQL使用的Flink SQL的catalog名称。
 script     | `String` | 否 | 基于[DSL](https://gitee.com/tenmg/dsl)的SQL脚本。使用标签内文本表示，如：`<execute-sql>SQL code</execute-sql>`或`<execute-sql><![CDATA[SQL code]]></execute-sql>`。由于Flink SQL不支持DELETE、UPDATE语句，因此如果配置的SQL脚本是DELETE或者UPDATE语句，该语句将在程序main函数中采用JDBC执行。
 
-##### `<sql-query>`
+#### `<sql-query>`
 
 运行基于[DSL](https://gitee.com/tenmg/dsl)的SQL查询代码配置。
 
@@ -257,7 +255,7 @@ when       | `String` | 否 | 操作的条件，当且仅当该条件满足时�
 catalog    | `String` | 否 | 执行SQL使用的Flink SQL的catalog名称。
 script     | `String` | 否 | 基于[DSL](https://gitee.com/tenmg/dsl)的SQL脚本。使用标签内文本表示，如：`<sql-query>SQL code</sql-query>`或`<sql-query><![CDATA[SQL code]]></sql-query>`。
 
-##### `<jdbc>`
+#### `<jdbc>`
 
 运行基于[DSL](https://gitee.com/tenmg/dsl)的JDBC SQL代码配置。目标JDBC SQL代码是在[flink-jobs](https://gitee.com/tenmg/flink-jobs)应用程序的main函数中运行的。
 
@@ -269,7 +267,7 @@ dataSource | `String` | 是 | 使用的数据源名称。这里的数据源是�
 method     | `String` | 否 | 调用的JDBC方法，支持"get"/"select"/"execute"/"executeUpdate"/"executeLargeUpdate"，默认是"executeUpdate"（1.4.0及之前版本默认值为"executeLargeUpdate"，由于很多数据库连接池或者JDBC驱动未实现该方法，因此1.4.1版本开始改为"executeUpdate"）。可在配置文件中使用`jdbc.default_method`配置项修改默认值。
 script     | `String` | 是 | 基于[DSL](https://gitee.com/tenmg/dsl)的SQL脚本。使用标签内文本表示。
 
-##### `<data-sync>`
+#### `<data-sync>`
 
 运行基于Flink SQL的流式任务实现数据同步。相关属性及说明如下：
 
@@ -288,7 +286,7 @@ timestamp  | `String`  | 否 | 时间戳列名，多个列名使用“,”分隔
 smart      | `Boolean` | 否 | 是否开启智能模式。不设置时，根据全局配置确定是否开启智能模式，全局默认配置为`data.sync.smart=true`。
 `<column>` | `Element` | 否 | 同步数据列。当开启智能模式时，会自动获取列信息。
 
-###### `<column>`
+##### `<column>`
 
 属性     | 类型     | 必需 | 说明
 ---------|----------|----|--------
@@ -299,7 +297,7 @@ toType   | `String` | 否 | 目标列数据类型。如果缺省，则如果开�
 strategy | `String` | 否 | 同步策略。可选值：both/from/to，both表示来源列和目标列均创建，from表示仅创建原来列，to表示仅创建目标列，默认为both。
 script   | `String` | 否 | 自定义脚本。通常是需要进行函数转换时使用。使用标签内文本表示。
 
-##### `<create-table>`
+#### `<create-table>`
 
 根据指定的配置信息自动生成Fink SQL并创建一张表。这比手动拼写Flink SQL要高效很多。支持版本：1.3.0+，相关属性及说明如下：
 
@@ -314,7 +312,7 @@ bindTableName | `String` | 否 | 绑定的表名，即WITH子句的“table-name
 primaryKey    | `String` | 否 | 主键，多个列名以“,”分隔。当开启智能模式时，会自动获取主键信息。
 smart         | `String` | 否 | 是否开启智能模式。不设置时，根据flink-jobs应用程序的全局配置确定是否开启智能模式，flink-jobs应用程序的全局默认配置为`data.sync.smart=true`。
 
-###### `<column>`
+##### `<column>`
 
 列信息配置。开启智能模式时，一般不需要配置，flink-jobs会自动生成列及对应的数据类型。但也可以单独指定某些列的数据类型，不使用自动识别的类型。
 
@@ -323,11 +321,11 @@ smart         | `String` | 否 | 是否开启智能模式。不设置时，根�
 name | `String` | 是 | 列名。
 type | `String` | 是 | 数据类型。使用标签内文本表示。
 
-#### XML配置示例
+### XML配置示例
 
 为了更好的理解flink-jobs的XML配置文件，以下提供几种常见场景的XML配置文件示例：
 
-##### 运行普通flink程序
+#### 运行普通flink程序
 
 ```
 <?xml version="1.0" encoding="UTF-8"?>
@@ -338,7 +336,7 @@ type | `String` | 是 | 数据类型。使用标签内文本表示。
 </flink-jobs>
 ```
 
-##### 运行自定义服务
+#### 运行自定义服务
 
 以下为一个自定义服务任务XML配置文件：
 
@@ -351,7 +349,7 @@ type | `String` | 是 | 数据类型。使用标签内文本表示。
 </flink-jobs>
 ```
 
-##### 运行批处理SQL
+#### 运行批处理SQL
 
 以下为一个简单订单量统计SQL批处理任务XML配置文件：
 
@@ -417,7 +415,7 @@ type | `String` | 是 | 数据类型。使用标签内文本表示。
 </flink-jobs>
 ```
 
-##### 运行流处理SQL
+#### 运行流处理SQL
 
 以下为通过Debezium实现异构数据库同步任务XML配置文件：
 
@@ -563,7 +561,7 @@ type | `String` | 是 | 数据类型。使用标签内文本表示。
 </flink-jobs>
 ```
 
-##### 运行数据同步任务
+#### 运行数据同步任务
 
 以下为通过Debezium实现异构数据库同步任务XML配置文件：
 
@@ -582,7 +580,7 @@ type | `String` | 是 | 数据类型。使用标签内文本表示。
 </flink-jobs>
 ```
 
-### JSON
+## JSON
 
 如果仅使用flink-jobs-core创建flink-jobs应用程序，运行参数需通过JSON格式的字符串（注意，如果是命令行运行，JSON格式字符串前后需加上双引号或单引号，JSON格式字符串内部的双引号或单引号则需要转义）或者一个.json文件提供，结构如下：
 
@@ -619,7 +617,7 @@ configuration | `String`             | 否 | Flink作业的个性化配置，格
 params        | `Map<String,Object>` | 否 | 参数查找表。通常可用于SQL中，也可以在自定义服务中通过arguments参数获取。
 operates      | `List<Operate>`      | 否 | 操作列表。目前支持[Bsh](#bsh)、[ExecuteSql](#executesql)、[SqlQuery](#sqlquery)，[Jdbc](#jdbc)、[DataSync](https://gitee.com/tenmg/flink-jobs#datasync)和[CreateTable](https://gitee.com/tenmg/flink-jobs#createtable) 6种类型操作。
 
-#### Bsh
+### Bsh
 
 Bsh操作的作用是运行基于Beanshell的java代码，支持版本：1.1.0+，相关属性及说明如下：
 
@@ -631,14 +629,14 @@ when   | `String`    | 否 | 操作的条件，当且仅当该条件满足时，
 vars   | `List<Var>` | 否 | 参数声明列表。
 java   | `String`    | 是 | java代码。注意：使用泛型时，不能使用尖括号声明泛型。例如，使用Map不能使用“Map<String , String> map = new HashMap<String , String>();”，但可以使用“Map map = new HashMap();”。
 
-##### Var
+#### Var
 
 属性   | 类型    | 必需 | 说明
 ------|----------|----|--------
 name  | `String` | 是 | Beanshell中使用的变量名称
 value | `String` | 否 | 变量对应的值的名称。默认与name相同。flink-jobs会从参数查找表中查找名称为value值的参数值，如果指定参数存在且不是null，则该值作为该参数的值；否则，使用value值作为该变量的值。
 
-#### ExecuteSql
+### ExecuteSql
 
 ExecuteSql操作的作用是运行基于[DSL](https://gitee.com/tenmg/dsl)的SQL代码，支持版本：1.1.0+，相关属性及说明如下：
 
@@ -653,7 +651,7 @@ cn.tenmg.flink.jobs.datasource.DataSourceFilter接口）。
 catalog          | `String` | 否 | 执行SQL使用的Flink SQL的catalog名称。
 script           | `String` | 是 | 基于[DSL](https://gitee.com/tenmg/dsl)的SQL脚本。由于Flink SQL不支持DELETE、UPDATE语句，因此如果配置的SQL脚本是DELETE或者UPDATE语句，该语句将在程序main函数中采用JDBC执行。
 
-#### SqlQuery
+### SqlQuery
 
 SqlQuery操作的作用是运行基于[DSL](https://gitee.com/tenmg/dsl)的SQL查询代码，支持版本：1.1.0+，相关属性及说明如下：
 
@@ -664,7 +662,7 @@ when       | `String` | 否 | 操作的条件，当且仅当该条件满足时�
 catalog    | `String` | 否 | 执行SQL使用的Flink SQL的catalog名称。
 script     | `String` | 是 | 基于[DSL](https://gitee.com/tenmg/dsl)的SQL脚本。
 
-#### Jdbc
+### Jdbc
 
 Jdbc操作的作用是运行基于[DSL](https://gitee.com/tenmg/dsl)的JDBC SQL代码，支持版本：1.1.1+，相关属性及说明如下：
 
@@ -679,7 +677,7 @@ script     | `String` | 是 | 基于[DSL](https://gitee.com/tenmg/dsl)的SQL脚�
 
 目标JDBC SQL代码是在flink-jobs应用程序的main函数中运行的。
 
-#### DataSync
+### DataSync
 
 DataSync操作的作用是运行基于Flink SQL的流式任务实现数据同步，其原理是根据配置信息自动生成并执行Flink SQL。支持版本：1.1.2+，相关属性及说明如下：
 
@@ -702,7 +700,7 @@ smart      | `Boolean`      | 否 | 是否开启智能模式。不设置时，�
  _注意：1.3.0 版本开始 `data.sync.smart` 配置已被废弃，请使用 `flink.jobs.smart` 替代，默认值仍为 `true` 。 `data.sync.smart` 已在 1.4.0 版本开始不再兼容。_ 
 
 
-##### Column
+#### column
 
 属性     | 类型     | 必需 | 说明
 ---------|----------|----|--------
@@ -713,11 +711,11 @@ toType   | `String` | 否 | 目标列数据类型。如果缺省，则如果开�
 strategy | `String` | 否 | 同步策略。可选值：both/from/to，both表示来源列和目标列均创建，from表示仅创建原来列，to表示仅创建目标列，默认为both。
 script   | `String` | 否 | 自定义脚本。通常是需要进行函数转换时使用。
 
-##### 相关配置
+#### 相关配置
 
 可以增加数据同步的相关配置，详见配置文件的[数据同步配置](#%E6%95%B0%E6%8D%AE%E5%90%8C%E6%AD%A5%E9%85%8D%E7%BD%AE)。
 
-#### CreateTable
+### CreateTable
 
 CreateTable操作的作用根据指定的配置信息自动生成Fink SQL并创建一张表。这比手动拼写Flink SQL要高效很多。支持版本：1.3.0+，相关属性及说明如下：
 
@@ -735,7 +733,7 @@ bindTableName    | `String` | 否 | 绑定的表名，即WITH子句的“table-n
 primaryKey       | `String` | 否 | 主键，多个列名以“,”分隔。当开启智能模式时，会自动获取主键信息。
 smart            | `String` | 否 | 是否开启智能模式。不设置时，根据flink-jobs应用程序的全局配置确定是否开启智能模式，flink-jobs应用程序的全局默认配置为`flink.jobs.smart=true`。
 
-###### Column
+##### Column
 
 列信息配置。开启智能模式时，一般不需要配置，flink-jobs会自动生成列及对应的数据类型。但也可以单独指定某些列的数据类型，不使用自动识别的类型。
 
@@ -745,13 +743,13 @@ name | `String` | 是 | 列名。
 type | `String` | 是 | 数据类型。
 
 
-## 配置文件
+# 配置文件
 
 默认的配置文件为flink-jobs.properties（注意：需在classpath下），可通过flink-jobs-context-loader.properties配置文件的`config.location`修改配置文件路径和名称。配置项的值允许通过占位符`${}`引用，例如`key=${anotherKey}`。
 
-### 数据源配置
+## 数据源配置
 
-#### 普通数据源
+### 普通数据源
 
 每个数据源有一个唯一的命名，普通数据源配置以“datasource”为前缀，以“.”作为分隔符，格式为`datasource.${name}.${key}=${value}`。其中，第一和第二个“.”符号之间的是数据源名称，第二个“.”符号之后和“=”之前的是该数据源具体的配置项，“=”之后的是该配置项的值。数据源的配置项与[Flink](https://flink.apache.org)保持一致，具体配置项详见[Flink官方文档](https://flink.apache.org)。以下给出部分常用数据源配置示例：
 
@@ -820,7 +818,7 @@ datasource.starrocks.connector=starrocks
 datasource.starrocks.database-name=your_db
 ```
 
-#### 自动数据源
+### 自动数据源
 
 通常来说，在构建数据仓库（或者数据湖）时，会创建多个数据库目录（schema或catalog）。我们希望在做ETL导入时，只配置一次数仓的数据源（这时不指定具体的数据库目录），然后通过数据源名称来自动确定我们需要导入的目录。自动数据源就是实现这个功能，以避免开发者反复配置数据源。flink-jobs工作时，会优先从普通数据源配置中获取数据源信息，如果没有找到指定名称的普通数据源，则会根据自动数据源的配置，自动生成一个数据源。例如：
 
@@ -841,7 +839,7 @@ auto.datasource.connector=starrocks
 auto.datasource.identifier=database-name
 ```
 
-### Table API & SQL
+## Table API & SQL
 
 [Flink](http://)的Table API & SQL配置除了在Flink配置文件中指定之外，也可以在flink-jobs的配置文件中指定。例如：
 
@@ -849,13 +847,13 @@ auto.datasource.identifier=database-name
 
 注意：如果是在flink-jobs的配置文件中配置这些参数，当执行自定义Java服务时，只有通过`FlinkJobsContext.getOrCreateStreamTableEnvironment()`或`FlinkJobsContext.getOrCreateStreamTableEnvironment(env)`方法获取的`StreamTableEnvironment`执行Table API & SQL，这些配置才会生效。
 
-### 智能模式配置
+## 智能模式配置
 
-#### flink.jobs.smart
+### flink.jobs.smart
 
 是否开启智能模式，默认为`true`, 1.3.0 版本开始支持。开启智能模式的潜台词是指，自动通过已实现的元数据获取器（也可自行扩展）获取元数据以生成并执行Flink SQL。支持智能模式的有数据同步（`DataSync`）和创建表（`CreateTable`）。
 
-#### metadata.getter.*
+### metadata.getter.*
 
 1.3.2 版本开始支持（之前版本为`data.sync.metadata.getter.*`），用户可以根据需要实现`cn.tenmg.flink.jobs.metadata.MetaDataGetter`接口并通过该配置项来扩展元数据获取器，也可以使用自实现的元数据获取器来替换原有的元数据获取器。默认配置为：
 
@@ -864,7 +862,7 @@ metadata.getter.jdbc=cn.tenmg.flink.jobs.metadata.getter.JDBCMetaDataGetter
 metadata.getter.starrocks=cn.tenmg.flink.jobs.metadata.getter.StarrocksMetaDataGetter
 ```
 
-#### metadata.starrocks.unique_key_as_primary_key
+### metadata.starrocks.unique_key_as_primary_key
 
 是否将获取的StarRocks更新模型的`UNIQUE KEY`列作为主键`PRIMARY KEY`，1.3.2 版本开始支持。默认值为：
 
@@ -875,7 +873,7 @@ metadata.starrocks.unique_key_as_primary_key=true
 
 由于只有带主键`PRIMARY KEY`的Flink SQL任务支持安全停止（`stopWithSavepoint`），因此将更新模型的`UNIQUE KEY`作为主键`PRIMARY KEY`是非常有意义的。它意味对于StarRocks更新模型（`UNIQUE KEY`）表使用自动生成的末端表（Sink Table）会带有主键（`PRIMARY KEY`），因此对应的同步（或写入）任务可以被安全停止。
 
-#### metadata.starrocks.catalog_as_schema
+### metadata.starrocks.catalog_as_schema
 
 Starrocks 对 JDBC 适配有问题。`catalog`和`schema`对调了（`catalog`应为`null`，但它实际上是`schema`的值）。因此，这个配置允许用户选择是否使用`catalog`作为`schema`作为元数据的查询条件，以便正确获取元数据。该配置从 1.3.3 版本开始支持，它的默认值为：
 
@@ -891,27 +889,27 @@ String catalog = con.getCatalog(), schema = con.getSchema();
 // 如果通过JDBC连接StarRocks，并运行上述代码，我们会发现获取的catalog的值实际上应为schema，而schema则应该是catalog。
 ```
 
-### 数据同步配置
+## 数据同步配置
 
-#### data.sync.smart
+### data.sync.smart
 
 是否开启数据同步的智能模式，默认为`true`。开启智能模式的潜台词是指，自动通过已实现的元数据获取器（也可自行扩展）获取同步的目标库的元数据以生成Flink SQL的源表（Source Table）、目标表（Slink Table）和相应的插入语句（`INSERT INTO … SELECT … FROM …`）。
 
  _注意：1.3.0 版本开始 `data.sync.smart` 配置已被废弃，请使用 `flink.jobs.smart` 替代，默认值仍为 `true` 。 `data.sync.smart` 已在 1.4.0 版本开始不再兼容。_ 
 
-#### data.sync.from_table_prefix
+### data.sync.from_table_prefix
 
 源表（Source Table）表名的前缀，默认为`SOURCE_`。该前缀和目标表（Slink Table）的表名拼接起来即为源表的表名。
 
-#### data.sync.group_id_prefix
+### data.sync.group_id_prefix
 
 数据同步时消费消息队列（Kafka）的`groupid`的前缀，默认为`flink-jobs-data-sync.`。该前缀和目标表（Slink Table）的表名拼接起来构成消费消息队列（Kafka）的`groupid`，但用户在任务中指定`properties.group.id`的除外。
 
-#### data.sync.metadata.getter.*
+### data.sync.metadata.getter.*
 
  _注意：1.3.2 版本开始 `data.sync.metadata.getter.*` 配置已被废弃，请使用 `metadata.getter.*` 替代。_ 
 
-#### data.sync.columns.convert
+### data.sync.columns.convert
 
 1.1.3 版本开始支持`data.sync.columns.convert`，用于配置数据同步的SELECT子句的列转换函数，可使用`#columnName`占位符表示当前列名，flink-jobs会在运行时将转换函数作为一个SQL片段插入到`INSERT INTO …… SELECT …… FROM ……`语句中。
 
@@ -939,39 +937,39 @@ data.sync.columns.convert=BIGINT,TIMESTAMP:TO_TIMESTAMP(FROM_UNIXTIME(#columnNam
 
 示例2则在示例1的基础之上，增加了INT类型日期的自动转换配置（使用Debezium时，通常会把日期转换成`INT`类型，因此同步时需要重新转换为`DATE`类型）。
 
-#### data.sync.timestamp.case_sensitive
+### data.sync.timestamp.case_sensitive
 
 1.1.4 版本开始支持`data.sync.timestamp.case_sensitive`，用于配置数据同步的时间戳列名的大小写敏感性，他是flink-jobs在识别时间戳列时的策略配置。由于Flink SQL通常是大小写敏感的，因此该值默认为`true`，用户可以根据需要在配置文件中调整配置。大小写敏感的情况下，有关时间戳的列名必须按照实际建表的列名完全匹配，否则无法识别；大小写不敏感，则在匹配时间戳列时对列名忽略大小写。
 
-#### data.sync.timestamp.from_type
+### data.sync.timestamp.from_type
 
 1.1.4 版本开始支持`data.sync.timestamp.from_type`，用于配置数据同步的来源时间戳列的默认类型，默认值为`TIMESTAMP(3) METADATA FROM 'value.ingestion-timestamp' VIRTUAL`，这是Flink SQL所支持的几种变更数据捕获（CDC）工具（Debezium/Canal/Maxwell）都支持的。
 
-#### data.sync.timestamp.to_type
+### data.sync.timestamp.to_type
 
 1.1.4 版本开始支持`data.sync.timestamp.to_type`，用于配置数据同步的目标时间戳列的默认类型，默认值为`TIMESTAMP(3)`，与`data.sync.timestamp.from_type`的默认值具有对应关系。
 
-#### data.sync.*.from_type
+### data.sync.*.from_type
 
 1.1.4 版本开始支持`data.sync.*.from_type`，其中`*`需要替换为具体的列名，用于配置数据同步增加的特定时间戳列的来源类型，如果没有配置则使用`data.sync.timestamp.from_type`的值。典型的值为`TIMESTAMP(3) METADATA FROM 'value.ingestion-timestamp' VIRTUAL`或`TIMESTAMP(3) METADATA FROM 'value.source.timestamp' VIRTUAL`（目前仅Debezium支持），可根据具体情况确定。
 
-#### data.sync.*.to_type
+### data.sync.*.to_type
 
 1.1.4 版本开始支持`data.sync.*.to_type`，其中`*`需要替换为具体的列名，用于配置数据同步增加的特定时间戳列的目标类型，如果没有配置则使用`data.sync.timestamp.to_type`的值。典型的值为`TIMESTAMP(3)`，具体精度可根据数据源的精度确定。
 
-#### data.sync.*.strategy
+### data.sync.*.strategy
 
 1.1.4 版本开始支持`data.sync.*.strategy`，其中`*`需要替换为具体的列名，用于配置数据同步特定时间戳列的同步策略，可选值：`both/from/to`，both表示来源列和目标列均创建，from表示仅创建原来列，to表示仅创建目标列, 默认为both。
 
-#### data.sync.*.script
+### data.sync.*.script
 
 1.1.4 版本开始支持`data.sync.*.script`，其中`*`需要替换为具体的列名，用于配置数据同步特定时间戳列的自定义脚本（`SELECT`子句的片段），通常是一个函数或等效表达，例如`NOW()`或`CURRENT_TIMESTAMP`。结合`data.sync.*.strategy=to`使用，可实现写入处理时间的效果。
 
-#### 类型映射
+### 类型映射
 
 可以增加数据同步的类型映射配置，详见[类型映射配置](#%E7%B1%BB%E5%9E%8B%E6%98%A0%E5%B0%84%E9%85%8D%E7%BD%AE)。
 
-#### 配置示例
+### 配置示例
 
 以下是一个使用Debezium实现数据同步的典型数据同步配置示例，不仅完成了时间格式和时区的转换，还完成了时间戳的自动写入（智能模式下，时间戳是否写入取决于目标表中对应列是否存在）：
 
@@ -990,23 +988,23 @@ data.sync.ETL_TIMESTAMP.script=NOW()
 #INGESTION_TIMESTAMP列类型使用默认配置，这里无需指定
 ```
 
-### 类型映射配置
+## 类型映射配置
 
 类型映射配置用于配置JDBC数据类型到Flink SQL数据类型的映射关系，尽管flink-jobs的默认配置可以使得Flink SQL对所有Flink SQL支持的JDBC的数据库能够正常运行。但是，我们依然留了用户自定义配置的余地，甚至可以针对不同类型的目标数据库配置不同的映射关系。
 
-#### flink.sql.type.default
+### flink.sql.type.default
 
 默认类型，默认值为`STRING`。当找不到特定目标数据库的类型映射关系时，使用该值作为Flink SQL建表语句的数据类型。
 
-#### flink.sql.type.with_precision
+### flink.sql.type.with_precision
 
 含精度的Flink SQL数据类型，使用大写表示，多个类型使用“,”分隔，默认值为`DECIMAL,NUMERIC`。
 
-#### flink.sql.type.with_size
+### flink.sql.type.with_size
 
 含长度的Flink SQL数据类型，使用大写表示，多个类型使用“,”分隔，默认值为`TIME,TIMESTAMP`。
 
-#### flink.sql.type.*.size_offset
+### flink.sql.type.*.size_offset
 
 某一含长度的Flink SQL数据类型的长度偏移量，用于将JDBC获取到的`COLUMN_SIZE`转换为Flink SQL数据类型的长度。计算方法为`COLUMN_SIZE-size_offset`。其中*表示某一类型的Flink SQL数据类型，使用大写表示。默认值为：
 
@@ -1017,7 +1015,7 @@ flink.sql.type.TIME.size_offset=9
 flink.sql.type.TIMESTAMP.size_offset=20
 ```
 
-#### flink.sql.type.*.*
+### flink.sql.type.*.*
 
 某一类型的JDBC目标数据库的JDBC数据类型到Flink SQL数据类型的映射关系配置。其中第一个*表示某一JDBC目标数据库的类型，第二个*表示某一JDBC数据类型，配置的值是对应的Flink SQL数据类型。默认值为：
 
@@ -1026,7 +1024,7 @@ flink.sql.type.TIMESTAMP.size_offset=20
 flink.sql.type.starrocks.java.sql.Types.OTHER=DECIMAL
 ```
 
-#### java.sql.Types.*
+### java.sql.Types.*
 
 某一JDBC数据类型到Flink SQL数据类型的映射关系配置。默认值为：
 
@@ -1119,11 +1117,11 @@ java.sql.Types.CLOB=CLOB
 java.sql.Types.NCLOB=CLOB
 java.sql.Types.STRUCT=STRUCT
 ```
-### 关键词配置
+## 关键词配置
 
 关键词在Flink SQL中不允许直接使用，必须经过包装处理。关键词配置会告诉flink-jobs应该对哪些词进行包装处理，以避免运行时出错。关键词配置有两个：`flink.sql.reserved.keywords`和`flink.sql.custom.keywords`，其中`flink.sql.reserved.keywords`指定了Flink官网明确给出的关键词，`flink.sql.custom.keywords`则通常作为用户自定义的关键词配置。**目前仅`DataSync`支持自动包装关键词** 。
 
-#### flink.sql.reserved.keywords
+### flink.sql.reserved.keywords
 
 flink-jobs内置关键词配置，建议用户不要覆盖。默认值为：
 
@@ -1131,7 +1129,7 @@ flink-jobs内置关键词配置，建议用户不要覆盖。默认值为：
 A, ABS, ABSOLUTE, ACTION, ADA, ADD, ADMIN, AFTER, ALL, ALLOCATE, ALLOW, ALTER, ALWAYS, AND, ANY, ARE, ARRAY, AS, ASC, ASENSITIVE, ASSERTION, ASSIGNMENT, ASYMMETRIC, AT, ATOMIC, ATTRIBUTE, ATTRIBUTES, AUTHORIZATION, AVG, BEFORE, BEGIN, BERNOULLI, BETWEEN, BIGINT, BINARY, BIT, BLOB, BOOLEAN, BOTH, BREADTH, BY, BYTES, C, CALL, CALLED, CARDINALITY, CASCADE, CASCADED, CASE, CAST, CATALOG, CATALOG_NAME, CEIL, CEILING, CENTURY, CHAIN, CHAR, CHARACTER, CHARACTERISTICS, CHARACTERS, CHARACTER_LENGTH, CHARACTER_SET_CATALOG, CHARACTER_SET_NAME, CHARACTER_SET_SCHEMA, CHAR_LENGTH, CHECK, CLASS_ORIGIN, CLOB, CLOSE, COALESCE, COBOL, COLLATE, COLLATION, COLLATION_CATALOG, COLLATION_NAME, COLLATION_SCHEMA, COLLECT, COLUMN, COLUMN_NAME, COMMAND_FUNCTION, COMMAND_FUNCTION_CODE, COMMIT, COMMITTED, CONDITION, CONDITION_NUMBER, CONNECT, CONNECTION, CONNECTION_NAME, CONSTRAINT, CONSTRAINTS, CONSTRAINT_CATALOG, CONSTRAINT_NAME, CONSTRAINT_SCHEMA, CONSTRUCTOR, CONTAINS, CONTINUE, CONVERT, CORR, CORRESPONDING, COUNT, COVAR_POP, COVAR_SAMP, CREATE, CROSS, CUBE, CUME_DIST, CURRENT, CURRENT_CATALOG, CURRENT_DATE, CURRENT_DEFAULT_TRANSFORM_GROUP, CURRENT_PATH, CURRENT_ROLE, CURRENT_SCHEMA, CURRENT_TIME, CURRENT_TIMESTAMP, CURRENT_TRANSFORM_GROUP_FOR_TYPE, CURRENT_USER, CURSOR, CURSOR_NAME, CYCLE, DATA, DATABASE, DATE, DATETIME_INTERVAL_CODE, DATETIME_INTERVAL_PRECISION, DAY, DEALLOCATE, DEC, DECADE, DECIMAL, DECLARE, DEFAULT, DEFAULTS, DEFERRABLE, DEFERRED, DEFINED, DEFINER, DEGREE, DELETE, DENSE_RANK, DEPTH, DEREF, DERIVED, DESC, DESCRIBE, DESCRIPTION, DESCRIPTOR, DETERMINISTIC, DIAGNOSTICS, DISALLOW, DISCONNECT, DISPATCH, DISTINCT, DOMAIN, DOUBLE, DOW, DOY, DROP, DYNAMIC, DYNAMIC_FUNCTION, DYNAMIC_FUNCTION_CODE, EACH, ELEMENT, ELSE, END, END-EXEC, EPOCH, EQUALS, ESCAPE, EVERY, EXCEPT, EXCEPTION, EXCLUDE, EXCLUDING, EXEC, EXECUTE, EXISTS, EXP, EXPLAIN, EXTEND, EXTERNAL, EXTRACT, FALSE, FETCH, FILTER, FINAL, FIRST, FIRST_VALUE, FLOAT, FLOOR, FOLLOWING, FOR, FOREIGN, FORTRAN, FOUND, FRAC_SECOND, FREE, FROM, FULL, FUNCTION, FUSION, G, GENERAL, GENERATED, GET, GLOBAL, GO, GOTO, GRANT, GRANTED, GROUP, GROUPING, HAVING, HIERARCHY, HOLD, HOUR, IDENTITY, IMMEDIATE, IMPLEMENTATION, IMPORT, IN, INCLUDING, INCREMENT, INDICATOR, INITIALLY, INNER, INOUT, INPUT, INSENSITIVE, INSERT, INSTANCE, INSTANTIABLE, INT, INTEGER, INTERSECT, INTERSECTION, INTERVAL, INTO, INVOKER, IS, ISOLATION, JAVA, JOIN, K, KEY, KEY_MEMBER, KEY_TYPE, LABEL, LANGUAGE, LARGE, LAST, LAST_VALUE, LATERAL, LEADING, LEFT, LENGTH, LEVEL, LIBRARY, LIKE, LIMIT, LN, LOCAL, LOCALTIME, LOCALTIMESTAMP, LOCATOR, LOWER, M, MAP, MATCH, MATCHED, MAX, MAXVALUE, MEMBER, MERGE, MESSAGE_LENGTH, MESSAGE_OCTET_LENGTH, MESSAGE_TEXT, METHOD, MICROSECOND, MILLENNIUM, MIN, MINUTE, MINVALUE, MOD, MODIFIES, MODULE, MODULES, MONTH, MORE, MULTISET, MUMPS, NAME, NAMES, NATIONAL, NATURAL, NCHAR, NCLOB, NESTING, NEW, NEXT, NO, NONE, NORMALIZE, NORMALIZED, NOT, NULL, NULLABLE, NULLIF, NULLS, NUMBER, NUMERIC, OBJECT, OCTETS, OCTET_LENGTH, OF, OFFSET, OLD, ON, ONLY, OPEN, OPTION, OPTIONS, OR, ORDER, ORDERING, ORDINALITY, OTHERS, OUT, OUTER, OUTPUT, OVER, OVERLAPS, OVERLAY, OVERRIDING, PAD, PARAMETER, PARAMETER_MODE, PARAMETER_NAME, PARAMETER_ORDINAL_POSITION, PARAMETER_SPECIFIC_CATALOG, PARAMETER_SPECIFIC_NAME, PARAMETER_SPECIFIC_SCHEMA, PARTIAL, PARTITION, PASCAL, PASSTHROUGH, PATH, PERCENTILE_CONT, PERCENTILE_DISC, PERCENT_RANK, PLACING, PLAN, PLI, POSITION, POWER, PRECEDING, PRECISION, PREPARE, PRESERVE, PRIMARY, PRIOR, PRIVILEGES, PROCEDURE, PUBLIC, QUARTER, RANGE, RANK, RAW, READ, READS, REAL, RECURSIVE, REF, REFERENCES, REFERENCING, REGR_AVGX, REGR_AVGY, REGR_COUNT, REGR_INTERCEPT, REGR_R2, REGR_SLOPE, REGR_SXX, REGR_SXY, REGR_SYY, RELATIVE, RELEASE, REPEATABLE, RESET, RESTART, RESTRICT, RESULT, RETURN, RETURNED_CARDINALITY, RETURNED_LENGTH, RETURNED_OCTET_LENGTH, RETURNED_SQLSTATE, RETURNS, REVOKE, RIGHT, ROLE, ROLLBACK, ROLLUP, ROUTINE, ROUTINE_CATALOG, ROUTINE_NAME, ROUTINE_SCHEMA, ROW, ROWS, ROW_COUNT, ROW_NUMBER, SAVEPOINT, SCALE, SCHEMA, SCHEMA_NAME, SCOPE, SCOPE_CATALOGS, SCOPE_NAME, SCOPE_SCHEMA, SCROLL, SEARCH, SECOND, SECTION, SECURITY, SELECT, SELF, SENSITIVE, SEQUENCE, SERIALIZABLE, SERVER, SERVER_NAME, SESSION, SESSION_USER, SET, SETS, SIMILAR, SIMPLE, SIZE, SMALLINT, SOME, SOURCE, SPACE, SPECIFIC, SPECIFICTYPE, SPECIFIC_NAME, SQL, SQLEXCEPTION, SQLSTATE, SQLWARNING, SQL_TSI_DAY, SQL_TSI_FRAC_SECOND, SQL_TSI_HOUR, SQL_TSI_MICROSECOND, SQL_TSI_MINUTE, SQL_TSI_MONTH, SQL_TSI_QUARTER, SQL_TSI_SECOND, SQL_TSI_WEEK, SQL_TSI_YEAR, SQRT, START, STATE, STATEMENT, STATIC, STDDEV_POP, STDDEV_SAMP, STREAM, STRING, STRUCTURE, STYLE, SUBCLASS_ORIGIN, SUBMULTISET, SUBSTITUTE, SUBSTRING, SUM, SYMMETRIC, SYSTEM, SYSTEM_USER, TABLE, TABLESAMPLE, TABLE_NAME, TEMPORARY, THEN, TIES, TIME, TIMESTAMP, TIMESTAMPADD, TIMESTAMPDIFF, TIMEZONE_HOUR, TIMEZONE_MINUTE, TINYINT, TO, TOP_LEVEL_COUNT, TRAILING, TRANSACTION, TRANSACTIONS_ACTIVE, TRANSACTIONS_COMMITTED, TRANSACTIONS_ROLLED_BACK, TRANSFORM, TRANSFORMS, TRANSLATE, TRANSLATION, TREAT, TRIGGER, TRIGGER_CATALOG, TRIGGER_NAME, TRIGGER_SCHEMA, TRIM, TRUE, TYPE, UESCAPE, UNBOUNDED, UNCOMMITTED, UNDER, UNION, UNIQUE, UNKNOWN, UNNAMED, UNNEST, UPDATE, UPPER, UPSERT, USAGE, USER, USER_DEFINED_TYPE_CATALOG, USER_DEFINED_TYPE_CODE, USER_DEFINED_TYPE_NAME, USER_DEFINED_TYPE_SCHEMA, USING, VALUE, VALUES, VARBINARY, VARCHAR, VARYING, VAR_POP, VAR_SAMP, VERSION, VIEW, WEEK, WHEN, WHENEVER, WHERE, WIDTH_BUCKET, WINDOW, WITH, WITHIN, WITHOUT, WORK, WRAPPER, WRITE, XML, YEAR, ZONE
 ```
 
-#### flink.sql.custom.keywords
+### flink.sql.custom.keywords
 
 用户自定义关键词，主要是考虑到Flink版本升级过程中关键词有可能会增加，或者Flink官网未给出但实际上是关键词的情况下，用户可以通过自定义关键词来解决问题。例如：
 
@@ -1139,17 +1137,17 @@ A, ABS, ABSOLUTE, ACTION, ADA, ADD, ADMIN, AFTER, ALL, ALLOCATE, ALLOW, ALTER, A
 # Flink SQL关键字配置
 flink.sql.custom.keywords=PERIOD
 ```
-#### sql.reserved.keywords
+### sql.reserved.keywords
 
 1.2.2 及以前版本的配置，1.2.3 版本开始已改为`flink.sql.reserved.keywords`，后续的 1.2 版本仍然会保持兼容，但强烈建议改为`flink.sql.reserved.keywords`。
 
-#### sql.custom.keywords
+### sql.custom.keywords
 
 1.2.2 及以前版本的配置，1.2.3 版本开始已改为`flink.sql.custom.keywords`，后续的 1.2 版本仍然会保持兼容，但强烈建议改为`flink.sql.custom.keywords`。
 
-### JDBC配置
+## JDBC配置
 
-#### jdbc.*.driver
+### jdbc.*.driver
 
 JDBC数据库连接池默认驱动类配置，其中“*”可以是任意支持的数据库产品名称。默认值为：
 
@@ -1161,13 +1159,13 @@ jdbc.oracle.driver=oracle.jdbc.OracleDriver
 jdbc.sqlserver.driver=com.microsoft.sqlserver.jdbc.SQLServerDriver
 ```
 
-#### jdbc.default_method
+### jdbc.default_method
 
 在不指定`method`属性时，执行的默认JDBC方法名称。
 
-### 其他配置
+## 其他配置
 
-#### flink.sql.smart.table-name
+### flink.sql.smart.table-name
 
 `flink.sql.smart.table-name`是flink-jobs运行Flink SQL时，当发现使用了特定连接器创建表时，若用户没有在SQL的WITH子句中指定`table-name`，则会根据建表语句自动生成并指定`table-name`。该配置支持使用“*”做前缀或者后缀通配符。默认值为：
 
@@ -1176,11 +1174,11 @@ jdbc.sqlserver.driver=com.microsoft.sqlserver.jdbc.SQLServerDriver
 flink.sql.smart.table-name=jdbc,starrocks,hbase*
 ```
 
-## DSL
+# DSL
 
 [DSL](https://gitee.com/tenmg/dsl)的全称是动态脚本语言(Dynamic Script Language)，它使用特殊字符`#[]`标记脚本片段，片段内使用若干个参数，一起构成动态片段（支持嵌套使用）。当使用flink-jobs运行Flink SQL时，判断实际传入参数值是否为空（`null`）决定是否保留该片段（同时自动去除`#[]`），形成最终可执行的脚本提交执行。使用[DSL](https://gitee.com/tenmg/dsl)可以有效避免程序员手动拼接繁杂的SQL，使得程序员能从繁杂的业务逻辑中解脱出来。
 
-### 简单例子
+## 简单例子
 
 假设有如下动态查询语句：
 
@@ -1244,29 +1242,29 @@ WHERE EMAIL IS NOT NULL
 ```
 等等。
 
-### 参数
+## 参数
 
-#### 普通参数
+### 普通参数
 
 使用`:`加参数名表示普通参数，例如，:staffName。
 
-#### 嵌入式参数
+### 嵌入式参数
 
 使用`#`加参数名表示（例如，#staffName）嵌入式参数，嵌入式参数会被以字符串的形式嵌入到脚本中。1.1.3 版本开始支持嵌入式参数，即对应dsl版本为 1.2.2，单独升级dsl也可以支持。
 
-#### 动态参数
+### 动态参数
 
 动态参数是指，根据具体情况确定是否在动态脚本中生效的参数，动态参数是动态片段的组成部分。动态参数既可以是普通参数，也可以嵌入式参数。
 
-#### 静态参数
+### 静态参数
 
 静态参数是相对动态参数而言的，它永远会在动态脚本中生效。在动态片段之外使用的参数就是静态参数。静态参数既可以是普通参数，也可以嵌入式参数。
 
-#### 参数访问符
+### 参数访问符
 
 参数访问符包括两种，即`.`和`[]`, 使用`Map`传参时，优先获取键相等的值，只有键不存在时才会将键降级拆分一一访问对象，直到找到参数并返回，或未找到返回`null`。其中`.`用来访问对象的属性，例如`:staff.name`、`#staff.age`；`[]`用来访问数组、集合的元素，例如`:array[0]`、`#map[key]`。理论上，支持任意级嵌套使用，例如`:list[0][1].name`、`#map[key][1].staff.name`。1.1.3 版本开始支持参数访问符，即对应dsl版本为 1.2.2，单独升级dsl也可以支持。
 
-### 进一步了解
+## 进一步了解
 
 [DSL](https://gitee.com/tenmg/dsl)中的动态片段可以是任意使用特殊字符`#[]`标记且包含参数的片段，它可以应用于各种SQL语句中，包括但不限于`CREATE`、`DROP`、`SELECT`、`INSERT`、`UPDATE`、`DELETE`。更多有关[DSL](https://gitee.com/tenmg/dsl)的介绍，详见[https://gitee.com/tenmg/dsl](https://gitee.com/tenmg/dsl)
 
@@ -1277,7 +1275,7 @@ WHERE EMAIL IS NOT NULL
 3.  提交代码
 4.  新建 Pull Request
 
-## 相关链接
+# 相关链接
 
 flink-json-plus开源地址：https://gitee.com/tenmg/flink-json-plus
 
