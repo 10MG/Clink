@@ -6,6 +6,13 @@ import java.util.concurrent.CompletableFuture;
 import org.apache.flink.api.common.JobID;
 import org.apache.flink.client.program.ClusterClient;
 
+/**
+ * flink-jobs客户端工具类
+ * 
+ * @author June wjzhao@aliyun.com
+ * 
+ * @since 1.3.0
+ */
 public abstract class FlinkJobsClientsUtils {
 
 	private static Class<?> SavepointFormatType;
