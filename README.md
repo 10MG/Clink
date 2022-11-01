@@ -154,8 +154,10 @@ public class HelloWorldService implements StreamService {
 
 详见https://gitee.com/tenmg/flink-jobs-quickstart
 
-## 运行参数（arguments）
-flink-jobs应用程序的运行参数通过JSON格式的字符串（注意，如果是命令行运行，JSON格式字符串前后需加上双引号或单引号，JSON格式字符串内部的双引号或单引号则需要转义）或者一个.json文件提供，结构如下：
+## 配置手册
+
+### JSON
+如果仅使用flink-jobs-core创建flink-jobs应用程序，运行参数需通过JSON格式的字符串（注意，如果是命令行运行，JSON格式字符串前后需加上双引号或单引号，JSON格式字符串内部的双引号或单引号则需要转义）或者一个.json文件提供，结构如下：
 
 ```
 {
@@ -188,9 +190,9 @@ serviceName   | `String`             | 否 | 运行的服务名称。该名称�
 runtimeMode   | `String`             | 否 | 运行模式。可选值："BATCH"/"STREAMING"/"AUTOMATIC"，相关含义详见[Flink](https://flink.apache.org)官方文档。
 configuration | `String`             | 否 | Flink作业的个性化配置，格式为`k1=v1[,k2=v3…]`。例如：`pipeline.name=customJobName`表示自定义Flink SQL作业的名称为`customJobName`。具体配置项详见[Flink](https://flink.apache.org)官方文档。
 params        | `Map<String,Object>` | 否 | 参数查找表。通常可用于SQL中，也可以在自定义服务中通过arguments参数获取。
-operates      | `List<Operate>`      | 否 | 操作列表。目前支持类型为[Bsh](#bsh%E6%93%8D%E4%BD%9C)、[ExecuteSql](#executesql%E6%93%8D%E4%BD%9C)、[SqlQuery](#sqlquery%E6%93%8D%E4%BD%9C)，[Jdbc](#jdbc%E6%93%8D%E4%BD%9C)、[DataSync](https://gitee.com/tenmg/flink-jobs#datasync%E6%93%8D%E4%BD%9C)和[CreateTable](https://gitee.com/tenmg/flink-jobs#createtable%E6%93%8D%E4%BD%9C) 6种类型操作。
+operates      | `List<Operate>`      | 否 | 操作列表。目前支持[Bsh](#bsh)、[ExecuteSql](#executesql)、[SqlQuery](#sqlquery)，[Jdbc](#jdbc)、[DataSync](https://gitee.com/tenmg/flink-jobs#datasync)和[CreateTable](https://gitee.com/tenmg/flink-jobs#createtable) 6种类型操作。
 
-### Bsh操作
+#### Bsh
 
 Bsh操作的作用是运行基于Beanshell的java代码，支持版本：1.1.0+，相关属性及说明如下：
 
@@ -202,27 +204,29 @@ when   | `String`    | 否 | 操作的条件，当且仅当该条件满足时，
 vars   | `List<Var>` | 否 | 参数声明列表。
 java   | `String`    | 是 | java代码。注意：使用泛型时，不能使用尖括号声明泛型。例如，使用Map不能使用“Map<String , String> map = new HashMap<String , String>();”，但可以使用“Map map = new HashMap();”。
 
-#### Var
+##### Var
 
 属性   | 类型    | 必需 | 说明
 ------|----------|----|--------
 name  | `String` | 是 | Beanshell中使用的变量名称
 value | `String` | 否 | 变量对应的值的名称。默认与name相同。flink-jobs会从参数查找表中查找名称为value值的参数值，如果指定参数存在且不是null，则该值作为该参数的值；否则，使用value值作为该变量的值。
 
-### ExecuteSql操作
+#### ExecuteSql
 
 ExecuteSql操作的作用是运行基于[DSL](https://gitee.com/tenmg/dsl)的SQL代码，支持版本：1.1.0+，相关属性及说明如下：
 
-属性       | 类型     | 必需 | 说明
------------|----------|----|--------
-type       | `String` | 是 | 操作类型。这里是"ExecuteSql"。
-saveAs     | `String` | 否 | 操作结果另存为一个新的变量的名称。变量的值是flink的`tableEnv.executeSql(statement);`的返回值。
-when       | `String` | 否 | 操作的条件，当且仅当该条件满足时，才执行该操作。不指定时，默认表示条件成立。
-dataSource | `String` | 否 | 使用的数据源名称。
-catalog    | `String` | 否 | 执行SQL使用的Flink SQL的catalog名称。
-script     | `String` | 是 | 基于[DSL](https://gitee.com/tenmg/dsl)的SQL脚本。由于Flink SQL不支持DELETE、UPDATE语句，因此如果配置的SQL脚本是DELETE或者UPDATE语句，该语句将在程序main函数中采用JDBC执行。
+属性             | 类型     | 必需 | 说明
+-----------------|----------|----|--------
+type             | `String` | 是 | 操作类型。这里是"ExecuteSql"。
+saveAs           | `String` | 否 | 操作结果另存为一个新的变量的名称。变量的值是flink的`tableEnv.executeSql(statement);`的返回值。
+when             | `String` | 否 | 操作的条件，当且仅当该条件满足时，才执行该操作。不指定时，默认表示条件成立。
+dataSource       | `String` | 否 | 使用的数据源名称。
+dataSourceFilter | `String` | 否 | 使用的数据源过滤器。内置两种数据源过滤器（source/sink），如果内置过滤器无法满足使用要求，也可使用自定义类名（该类需实现
+cn.tenmg.flink.jobs.datasource.DataSourceFilter接口）。
+catalog          | `String` | 否 | 执行SQL使用的Flink SQL的catalog名称。
+script           | `String` | 是 | 基于[DSL](https://gitee.com/tenmg/dsl)的SQL脚本。由于Flink SQL不支持DELETE、UPDATE语句，因此如果配置的SQL脚本是DELETE或者UPDATE语句，该语句将在程序main函数中采用JDBC执行。
 
-### SqlQuery操作
+#### SqlQuery
 
 SqlQuery操作的作用是运行基于[DSL](https://gitee.com/tenmg/dsl)的SQL查询代码，支持版本：1.1.0+，相关属性及说明如下：
 
@@ -233,7 +237,7 @@ when       | `String` | 否 | 操作的条件，当且仅当该条件满足时�
 catalog    | `String` | 否 | 执行SQL使用的Flink SQL的catalog名称。
 script     | `String` | 是 | 基于[DSL](https://gitee.com/tenmg/dsl)的SQL脚本。
 
-### Jdbc操作
+#### Jdbc
 
 Jdbc操作的作用是运行基于[DSL](https://gitee.com/tenmg/dsl)的JDBC SQL代码，支持版本：1.1.1+，相关属性及说明如下：
 
@@ -248,7 +252,7 @@ script     | `String` | 是 | 基于[DSL](https://gitee.com/tenmg/dsl)的SQL脚�
 
 目标JDBC SQL代码是在flink-jobs应用程序的main函数中运行的。
 
-### DataSync操作
+#### DataSync
 
 DataSync操作的作用是运行基于Flink SQL的流式任务实现数据同步，其原理是根据配置信息自动生成并执行Flink SQL。支持版本：1.1.2+，相关属性及说明如下：
 
@@ -271,7 +275,7 @@ smart      | `Boolean`      | 否 | 是否开启智能模式。不设置时，�
  _注意：1.3.0 版本开始 `data.sync.smart` 配置已被废弃，请使用 `flink.jobs.smart` 替代，默认值仍为 `true` 。 `data.sync.smart` 已在 1.4.0 版本开始不再兼容。_ 
 
 
-#### Column
+##### Column
 
 属性     | 类型     | 必需 | 说明
 ---------|----------|----|--------
@@ -282,7 +286,7 @@ toType   | `String` | 否 | 目标列数据类型。如果缺省，则如果开�
 strategy | `String` | 否 | 同步策略。可选值：both/from/to，both表示来源列和目标列均创建，from表示仅创建原来列，to表示仅创建目标列，默认为both。
 script   | `String` | 否 | 自定义脚本。通常是需要进行函数转换时使用。
 
-#### 相关配置
+##### 相关配置
 
 可以增加数据同步的相关配置，详见配置文件的[数据同步配置](#%E6%95%B0%E6%8D%AE%E5%90%8C%E6%AD%A5%E9%85%8D%E7%BD%AE)。
 
@@ -290,19 +294,21 @@ script   | `String` | 否 | 自定义脚本。通常是需要进行函数转换�
 
 CreateTable操作的作用根据指定的配置信息自动生成Fink SQL并创建一张表。这比手动拼写Flink SQL要高效很多。支持版本：1.3.0+，相关属性及说明如下：
 
-属性          | 类型     | 必需 | 说明
---------------|----------|----|--------
-type          | `String` | 是 | 操作类型。这里是"CreateTable"。
-saveAs        | `String` | 否 | 操作结果另存为一个新的变量的名称。变量的值是flink的`tableEnv.executeSql(statement);`的返回值。
-when          | `String` | 否 | 操作的条件，当且仅当该条件满足时，才执行该操作。不指定时，默认表示条件成立。
-dataSource    | `String` | 是 | 使用的数据源名称。flink-jobs从该数据源读取元数据信息，并自动生成Flink SQL。
-tableName     | `String` | 是 | 创建表的表名。即`CREATE TABLE table_name ...`中的`table_name`。
-catalog       | `String` | 否 | 执行SQL使用的Flink SQL的catalog名称。
-bindTableName | `String` | 否 | 绑定的表名，即WITH子句的“table-name”，默认与tableName相同。
-primaryKey    | `String` | 否 | 主键，多个列名以“,”分隔。当开启智能模式时，会自动获取主键信息。
-smart         | `String` | 否 | 是否开启智能模式。不设置时，根据flink-jobs应用程序的全局配置确定是否开启智能模式，flink-jobs应用程序的全局默认配置为`flink.jobs.smart=true`。
+属性             | 类型     | 必需 | 说明
+-----------------|----------|----|--------
+type             | `String` | 是 | 操作类型。这里是"CreateTable"。
+saveAs           | `String` | 否 | 操作结果另存为一个新的变量的名称。变量的值是flink的`tableEnv.executeSql(statement);`的返回值。
+when             | `String` | 否 | 操作的条件，当且仅当该条件满足时，才执行该操作。不指定时，默认表示条件成立。
+dataSource       | `String` | 是 | 使用的数据源名称。flink-jobs从该数据源读取元数据信息，并自动生成Flink SQL。
+dataSourceFilter | `String` | 否 | 使用的数据源过滤器。内置两种数据源过滤器（source/sink），如果内置过滤器无法满足使用要求，也可使用自定义类名（该类需实现
+cn.tenmg.flink.jobs.datasource.DataSourceFilter接口）。
+tableName        | `String` | 是 | 创建表的表名。即`CREATE TABLE table_name ...`中的`table_name`。
+catalog          | `String` | 否 | 执行SQL使用的Flink SQL的catalog名称。
+bindTableName    | `String` | 否 | 绑定的表名，即WITH子句的“table-name”，默认与tableName相同。
+primaryKey       | `String` | 否 | 主键，多个列名以“,”分隔。当开启智能模式时，会自动获取主键信息。
+smart            | `String` | 否 | 是否开启智能模式。不设置时，根据flink-jobs应用程序的全局配置确定是否开启智能模式，flink-jobs应用程序的全局默认配置为`flink.jobs.smart=true`。
 
-#### Column
+##### Column
 
 列信息配置。开启智能模式时，一般不需要配置，flink-jobs会自动生成列及对应的数据类型。但也可以单独指定某些列的数据类型，不使用自动识别的类型。
 
