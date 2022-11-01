@@ -6,8 +6,6 @@ import java.util.concurrent.CompletableFuture;
 import org.apache.flink.api.common.JobID;
 import org.apache.flink.client.program.ClusterClient;
 
-import cn.tenmg.flink.jobs.clients.context.FlinkJobsClientsContext;
-
 public abstract class FlinkJobsClientsUtils {
 
 	private static Class<?> SavepointFormatType;
@@ -20,8 +18,13 @@ public abstract class FlinkJobsClientsUtils {
 		}
 	}
 
-	@SuppressWarnings("unchecked")
 	public static CompletableFuture<String> stop(ClusterClient<?> client, JobID jobId) throws Exception {
+		return stop(client, jobId, null);
+	}
+
+	@SuppressWarnings("unchecked")
+	public static CompletableFuture<String> stop(ClusterClient<?> client, JobID jobId, String savepointsDir)
+			throws Exception {
 		Method methods[] = client.getClass().getMethods(), method = null;
 		for (int i = 0; i < methods.length; i++) {
 			method = methods[i];
@@ -31,16 +34,14 @@ public abstract class FlinkJobsClientsUtils {
 		}
 		if (method != null && "stopWithSavepoint".equals(method.getName())) {
 			if (method.getParameterTypes().length == 3) {
-				return (CompletableFuture<String>) method.invoke(client, jobId, false,
-						FlinkJobsClientsContext.getProperty("state.savepoints.dir"));
+				return (CompletableFuture<String>) method.invoke(client, jobId, false, savepointsDir);
 			} else {
-				return (CompletableFuture<String>) method.invoke(client, jobId, false,
-						FlinkJobsClientsContext.getProperty("state.savepoints.dir"),
+				return (CompletableFuture<String>) method.invoke(client, jobId, false, savepointsDir,
 						SavepointFormatType.getEnumConstants()[0]);
 			}
 		} else {
 			throw new IllegalAccessException(
-					"This method does not support your version of Flink yet, please change the supported version");
+					"This method does not support your version of Flink yet, please change to the supported version");
 		}
 	}
 

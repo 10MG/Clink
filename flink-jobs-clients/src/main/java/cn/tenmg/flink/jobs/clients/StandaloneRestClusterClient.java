@@ -42,7 +42,7 @@ import cn.tenmg.flink.jobs.config.model.Operate;
  * 
  * @since 1.2.0
  */
-public class StandaloneRestClusterClient extends AbstractFlinkJobsClient<StandaloneClusterId> {
+public class StandaloneRestClusterClient extends AbstractFlinkJobsClient<RestClusterClient<StandaloneClusterId>> {
 
 	private static Logger log = LoggerFactory.getLogger(StandaloneRestClusterClient.class);
 
@@ -91,12 +91,26 @@ public class StandaloneRestClusterClient extends AbstractFlinkJobsClient<Standal
 		}
 	};
 
-	private static final Actuator<String, JobID> stopJobActuator = new Actuator<String, JobID>() {
+	private static final Actuator<String, JobStopParams> stopJobActuator = new Actuator<String, JobStopParams>() {
 		@Override
-		public String execute(RestClusterClient<StandaloneClusterId> client, JobID jobId) throws Exception {
-			return FlinkJobsClientsUtils.stop(client, jobId).get();
+		public String execute(RestClusterClient<StandaloneClusterId> client, JobStopParams jobStopParams)
+				throws Exception {
+			return FlinkJobsClientsUtils.stop(client, jobStopParams.jobId, jobStopParams.savepointsDir).get();
 		}
 	};
+
+	private static class JobStopParams {
+
+		private JobID jobId;
+
+		private String savepointsDir;
+
+		public JobStopParams(JobID jobId, String savepointsDir) {
+			super();
+			this.jobId = jobId;
+			this.savepointsDir = savepointsDir;
+		}
+	}
 
 	@Override
 	public JobID submit(FlinkJobs flinkJobs) throws Exception {
@@ -197,7 +211,8 @@ public class StandaloneRestClusterClient extends AbstractFlinkJobsClient<Standal
 
 	@Override
 	public String stop(JobID jobId) throws Exception {
-		return retry(stopJobActuator, jobId, getConfiguration(), null);
+		return retry(stopJobActuator, new JobStopParams(jobId, properties.getProperty("state.savepoints.dir")),
+				getConfiguration(), null);
 	}
 
 	@Override

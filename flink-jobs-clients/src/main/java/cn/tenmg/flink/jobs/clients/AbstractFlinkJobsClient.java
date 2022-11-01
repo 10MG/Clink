@@ -6,6 +6,7 @@ import java.util.Properties;
 import java.util.Queue;
 import java.util.Set;
 
+import org.apache.flink.client.program.ClusterClient;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.configuration.ConfigurationUtils;
 import org.apache.flink.configuration.JobManagerOptions;
@@ -26,8 +27,11 @@ import cn.tenmg.flink.jobs.config.model.FlinkJobs;
  * @author June wjzhao@aliyun.com
  * 
  * @since 1.2.0
+ *
+ * @param <T>
+ *            flink集群客户端的类型
  */
-public abstract class AbstractFlinkJobsClient<T> implements FlinkJobsClient<T> {
+public abstract class AbstractFlinkJobsClient<T extends ClusterClient<?>> implements FlinkJobsClient<T> {
 
 	protected static final String FLINK_JOBS_DEFAULT_JAR_KEY = "flink.jobs.default.jar",
 			FLINK_JOBS_DEFAULT_CLASS_KEY = "flink.jobs.default.class";
@@ -43,14 +47,17 @@ public abstract class AbstractFlinkJobsClient<T> implements FlinkJobsClient<T> {
 	protected final Queue<Configuration> configurations = new LinkedList<Configuration>();
 
 	public AbstractFlinkJobsClient() {
+		super();
 		init("flink-jobs-clients.properties");
 	}
 
 	public AbstractFlinkJobsClient(String pathInClassPath) {
+		super();
 		init(pathInClassPath);
 	}
 
 	public AbstractFlinkJobsClient(Properties properties) {
+		super();
 		init(properties);
 	}
 

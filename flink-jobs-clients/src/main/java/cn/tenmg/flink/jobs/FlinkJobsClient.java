@@ -19,7 +19,7 @@ import cn.tenmg.flink.jobs.config.model.FlinkJobs;
  * 
  * @since 1.2.0
  */
-public interface FlinkJobsClient<T> {
+public interface FlinkJobsClient<T extends ClusterClient<?>> {
 
 	/**
 	 * 提交flink-jobs应用程序
@@ -92,7 +92,7 @@ public interface FlinkJobsClient<T> {
 	 * @throws Exception
 	 *             发生异常
 	 */
-	ClusterClient<T> getClusterClient() throws Exception;
+	T getClusterClient() throws Exception;
 
 	/**
 	 * 使用自定义配置获取flink集群REST客户端
@@ -103,6 +103,6 @@ public interface FlinkJobsClient<T> {
 	 * @throws Exception
 	 *             发生异常
 	 */
-	ClusterClient<T> getClusterClient(Properties customConf) throws Exception;
+	T getClusterClient(Properties customConf) throws Exception;
 
 }
