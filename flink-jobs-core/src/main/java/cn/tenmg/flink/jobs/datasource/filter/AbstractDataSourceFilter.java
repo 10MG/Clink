@@ -34,13 +34,10 @@ public abstract class AbstractDataSourceFilter implements DataSourceFilter {
 			property = getVersionIgnoreProperty(keyPrefix, connector);
 		}
 		if (StringUtils.isNotBlank(property)) {
-			String key, properties[] = property.split(PROPERTIES_SPLITOR);
-			Entry<String, String> entry;
+			String properties[] = property.split(PROPERTIES_SPLITOR);
 			for (Iterator<Entry<String, String>> it = dataSource.entrySet().iterator(); it.hasNext();) {
-				entry = it.next();
-				key = entry.getKey();
-				if (MatchUtils.matchesAny(properties, key)) {
-					dataSource.remove(key);
+				if (MatchUtils.matchesAny(properties, it.next().getKey())) {
+					it.remove();
 				}
 			}
 		}
