@@ -158,7 +158,7 @@ public class HelloWorldService implements StreamService {
 
 ### XML
 
-使用flink-jobs-clients可实现使用XML配置文件来管理flink-jobs任务，这样开发Flink SQL任务会显得非常简单；同时，用户自定义的flink-jobs服务也可以被更轻松得集成到其他系统中。另外，XML文件具有良好的可读性，并且在IDE环境下能够对配置进行自动提示，方便用户更高效地完成任务的配置。
+使用flink-jobs-clients可实现使用XML配置文件来管理flink-jobs任务，这样开发flink-jobs任务会显得非常简单；同时，用户自定义的flink-jobs服务也可以被更轻松得集成到其他系统中。另外，XML文件具有良好的可读性，并且在IDE环境下能够对配置进行自动提示，方便用户更高效地完成任务的配置。
 
 #### `<flink-jobs>`
 
