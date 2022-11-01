@@ -290,7 +290,7 @@ script   | `String` | 否 | 自定义脚本。通常是需要进行函数转换�
 
 可以增加数据同步的相关配置，详见配置文件的[数据同步配置](#%E6%95%B0%E6%8D%AE%E5%90%8C%E6%AD%A5%E9%85%8D%E7%BD%AE)。
 
-### CreateTable操作
+#### CreateTable操作
 
 CreateTable操作的作用根据指定的配置信息自动生成Fink SQL并创建一张表。这比手动拼写Flink SQL要高效很多。支持版本：1.3.0+，相关属性及说明如下：
 
@@ -308,7 +308,7 @@ bindTableName    | `String` | 否 | 绑定的表名，即WITH子句的“table-n
 primaryKey       | `String` | 否 | 主键，多个列名以“,”分隔。当开启智能模式时，会自动获取主键信息。
 smart            | `String` | 否 | 是否开启智能模式。不设置时，根据flink-jobs应用程序的全局配置确定是否开启智能模式，flink-jobs应用程序的全局默认配置为`flink.jobs.smart=true`。
 
-##### Column
+###### Column
 
 列信息配置。开启智能模式时，一般不需要配置，flink-jobs会自动生成列及对应的数据类型。但也可以单独指定某些列的数据类型，不使用自动识别的类型。
 
