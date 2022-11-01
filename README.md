@@ -236,13 +236,15 @@ java代码。采用文本表示，如：`<java>java code</java>`或`<option><![C
 
 运行基于[DSL](https://gitee.com/tenmg/dsl)的SQL代码配置。
 
-属性       | 类型     | 必需 | 说明
------------|----------|----|--------
-saveAs     | `String` | 否 | 操作结果另存为一个新的变量的名称。变量的值是flink的`tableEnv.executeSql(statement);`的返回值。
-when       | `String` | 否 | 操作的条件，当且仅当该条件满足时，才执行该操作。不指定时，默认表示条件成立。
-dataSource | `String` | 否 | 使用的数据源名称。这里的数据源是在[flink-jobs](https://gitee.com/tenmg/flink-jobs)应用程序的配置文件中配置，并非在flink-jobs-clients应用程序的配置文件中配置。详见[flink-jobs数据源配置](https://gitee.com/tenmg/flink-jobs#%E6%95%B0%E6%8D%AE%E6%BA%90%E9%85%8D%E7%BD%AE)。
-catalog    | `String` | 否 | 执行SQL使用的Flink SQL的catalog名称。
-script     | `String` | 否 | 基于[DSL](https://gitee.com/tenmg/dsl)的SQL脚本。使用标签内文本表示，如：`<execute-sql>SQL code</execute-sql>`或`<execute-sql><![CDATA[SQL code]]></execute-sql>`。由于Flink SQL不支持DELETE、UPDATE语句，因此如果配置的SQL脚本是DELETE或者UPDATE语句，该语句将在程序main函数中采用JDBC执行。
+属性             | 类型     | 必需 | 说明
+-----------------|----------|----|--------
+saveAs           | `String` | 否 | 操作结果另存为一个新的变量的名称。变量的值是flink的`tableEnv.executeSql(statement);`的返回值。
+when             | `String` | 否 | 操作的条件，当且仅当该条件满足时，才执行该操作。不指定时，默认表示条件成立。
+dataSource       | `String` | 否 | 使用的数据源名称。这里的数据源是在[flink-jobs](https://gitee.com/tenmg/flink-jobs)应用程序的配置文件中配置，并非在flink-jobs-clients应用程序的配置文件中配置。详见[flink-jobs数据源配置](https://gitee.com/tenmg/flink-jobs#%E6%95%B0%E6%8D%AE%E6%BA%90%E9%85%8D%E7%BD%AE)。
+dataSourceFilter | `String` | 否 | 使用的数据源过滤器。内置两种数据源过滤器（source/sink），如果内置过滤器无法满足使用要求，也可使用自定义类名（该类需实现
+cn.tenmg.flink.jobs.datasource.DataSourceFilter接口）。
+catalog          | `String` | 否 | 执行SQL使用的Flink SQL的catalog名称。
+script           | `String` | 否 | 基于[DSL](https://gitee.com/tenmg/dsl)的SQL脚本。使用标签内文本表示，如：`<execute-sql>SQL code</execute-sql>`或`<execute-sql><![CDATA[SQL code]]></execute-sql>`。由于Flink SQL不支持DELETE、UPDATE语句，因此如果配置的SQL脚本是DELETE或者UPDATE语句，该语句将在程序main函数中采用JDBC执行。
 
 #### `<sql-query>`
 
@@ -301,16 +303,18 @@ script   | `String` | 否 | 自定义脚本。通常是需要进行函数转换�
 
 根据指定的配置信息自动生成Fink SQL并创建一张表。这比手动拼写Flink SQL要高效很多。支持版本：1.3.0+，相关属性及说明如下：
 
-属性          | 类型     | 必需 | 说明
---------------|----------|----|--------
-saveAs        | `String` | 否 | 操作结果另存为一个新的变量的名称。变量的值是flink的`tableEnv.executeSql(statement);`的返回值。
-when          | `String` | 否 | 操作的条件，当且仅当该条件满足时，才执行该操作。不指定时，默认表示条件成立。
-dataSource    | `String` | 是 | 使用的数据源名称。flink-jobs从该数据源读取元数据信息，并自动生成Flink SQL。
-tableName     | `String` | 是 | 创建表的表名。即`CREATE TABLE table_name ...`中的`table_name`。
-catalog       | `String` | 否 | 执行SQL使用的Flink SQL的catalog名称。
-bindTableName | `String` | 否 | 绑定的表名，即WITH子句的“table-name”，默认与tableName相同。
-primaryKey    | `String` | 否 | 主键，多个列名以“,”分隔。当开启智能模式时，会自动获取主键信息。
-smart         | `String` | 否 | 是否开启智能模式。不设置时，根据flink-jobs应用程序的全局配置确定是否开启智能模式，flink-jobs应用程序的全局默认配置为`data.sync.smart=true`。
+属性             | 类型     | 必需 | 说明
+------------------|----------|----|--------
+saveAs           | `String` | 否 | 操作结果另存为一个新的变量的名称。变量的值是flink的`tableEnv.executeSql(statement);`的返回值。
+when             | `String` | 否 | 操作的条件，当且仅当该条件满足时，才执行该操作。不指定时，默认表示条件成立。
+dataSource       | `String` | 是 | 使用的数据源名称。flink-jobs从该数据源读取元数据信息，并自动生成Flink SQL。
+dataSourceFilter | `String` | 否 | 使用的数据源过滤器。内置两种数据源过滤器（source/sink），如果内置过滤器无法满足使用要求，也可使用自定义类名（该类需实现
+cn.tenmg.flink.jobs.datasource.DataSourceFilter接口）。
+tableName        | `String` | 是 | 创建表的表名。即`CREATE TABLE table_name ...`中的`table_name`。
+catalog          | `String` | 否 | 执行SQL使用的Flink SQL的catalog名称。
+bindTableName    | `String` | 否 | 绑定的表名，即WITH子句的“table-name”，默认与tableName相同。
+primaryKey       | `String` | 否 | 主键，多个列名以“,”分隔。当开启智能模式时，会自动获取主键信息。
+smart            | `String` | 否 | 是否开启智能模式。不设置时，根据flink-jobs应用程序的全局配置确定是否开启智能模式，flink-jobs应用程序的全局默认配置为`data.sync.smart=true`。
 
 ##### `<column>`
 
@@ -837,6 +841,43 @@ auto.datasource.sink.buffer-flush.interval-ms=${starrocks.sink.buffer-flush.inte
 auto.datasource.sink.max-retries=${starrocks.sink.max-retries}
 auto.datasource.connector=starrocks
 auto.datasource.identifier=database-name
+```
+## 数据源过滤器配置
+
+flink的连接器主要分为源连接器（Source connector）和汇连接器（Sink connector），他们分别需要的不同的数据源配置信息。flink-jobs为了方便用户，提供了两种内置数据源过滤器（源数据源过滤器：source和汇数据源过滤器：sink），结合过滤器，用户能够做到一个数据源一次配置多方、多次使用。其中`source.datasource.filter.*`开头的配置表示源数据源过滤器需要过滤的配置属性，配置键中的“*”表示连接器，配置值可以使用“*”号作为通配符。数据源过滤器的默认配置如下：
+
+```
+# Source datasource filter for kafka connector
+source.datasource.filter.kafka=sink.*
+# Sink datasource filter for kafka connector
+sink.datasource.filter.kafka=topic-pattern,scan.*
+# Source datasource filter for upsert-kafka connector
+source.datasource.filter.upsert-kafka=sink.*
+# Source datasource filter for firehose connector
+source.datasource.filter.firehose=sink.*
+# Source datasource filter for kinesis connector
+source.datasource.filter.kinesis=sink.*
+# Sink datasource filter for kinesis connector
+sink.datasource.filter.kinesis=scan.*
+# Source datasource filter for jdbc connector
+source.datasource.filter.jdbc=sink.*
+# Sink datasource filter for jdbc connector
+sink.datasource.filter.jdbc=scan.*,lookup.*
+# Source datasource filter for elasticsearch connector
+source.datasource.filter.elasticsearch=sink.*
+# Sink datasource filter for filesystem connector
+sink.datasource.filter.filesystem=source.*
+# Source datasource filter for filesystem connector
+source.datasource.filter.filesystem=sink.*,auto-compaction,compaction.file-size,partition.*
+# Sink datasource filter for hbase connector
+sink.datasource.filter.hbase=lookup.*
+# Source datasource filter for hbase connector
+source.datasource.filter.hbase=sink.*
+# Sink datasource filter for starrocks connector
+sink.datasource.filter.starrocks=scan-url,scan.*
+# Source datasource filter for starrocks connector
+source.datasource.filter.starrocks=load-url,sink.*
+
 ```
 
 ## Table API & SQL
