@@ -290,7 +290,7 @@ script   | `String` | 否 | 自定义脚本。通常是需要进行函数转换�
 
 可以增加数据同步的相关配置，详见配置文件的[数据同步配置](#%E6%95%B0%E6%8D%AE%E5%90%8C%E6%AD%A5%E9%85%8D%E7%BD%AE)。
 
-#### CreateTable操作
+#### CreateTable
 
 CreateTable操作的作用根据指定的配置信息自动生成Fink SQL并创建一张表。这比手动拼写Flink SQL要高效很多。支持版本：1.3.0+，相关属性及说明如下：
 
