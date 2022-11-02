@@ -5,7 +5,7 @@ import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import cn.tenmg.flink.jobs.model.Arguments;
 
 /**
- * 模块化flink-jobs应用入口虚基类。可用于封装的模块化的flink应用
+ * 支持服务的flink-jobs运行程序。可用于封装的模块化的flink应用
  * 
  * @author June wjzhao@aliyun.com
  * 
@@ -20,7 +20,7 @@ public abstract class FlinkJobsRunner extends BasicFlinkJobsRunner {
 	 *            服务名称
 	 * @return 返回处理服务
 	 */
-	protected abstract StreamService getStreamService(String serviceName);
+	protected abstract StreamService getStreamService(String serviceName) throws Exception;
 
 	@Override
 	protected void run(StreamExecutionEnvironment env, Arguments arguments) throws Exception {
