@@ -21,7 +21,7 @@ flink-jobs为基于Flink的Java应用程序提供快速集成的能力，可通�
 
 flink-jobs对Flink特定版本依赖较弱，已知在1.13+环境下运行良好，用户可根据需要自行选择Flink的发行版本。
 
-# 起步
+# 开始使用
 
 以Maven项目为例
 
