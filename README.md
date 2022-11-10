@@ -90,7 +90,7 @@ flink-jobs-clients.properties配置文件用于配置将（哪个JAR的）哪个
 
 ```
 # RPC configuration
-jobmanager.rpc.address=192.168.100.11,192.168.100.12,192.168.100.13
+jobmanager.rpc.servers=192.168.100.11,192.168.100.12,192.168.100.13
 # The default jar that the flink-jobs-clients submits for execution, it is not required.
 # flink.jobs.default.jar=/yourpath/your-flink-jobs-app-1.0.0.jar
 # The default class that the flink-jobs-clients submits for execution, it is not required. You can also specify the main class in jar
