@@ -138,12 +138,12 @@ public class DataSyncOperator extends AbstractOperator<DataSync> {
 		List<Column> columns = dataSync.getColumns();
 
 		String sql = fromCreateTableSQL(fromDataSource, dataSync.getTopic(), table, fromTable, columns, primaryKeys,
-				fromConfig);
+				fromConfig, params);
 		if (log.isInfoEnabled()) {
 			log.info("Create source table by Flink SQL: " + SQLUtils.hiddePassword(sql));
 			tableEnv.executeSql(sql);
 
-			sql = toCreateTableSQL(toDataSource, table, columns, primaryKeys, dataSync.getToConfig());
+			sql = toCreateTableSQL(toDataSource, table, columns, primaryKeys, dataSync.getToConfig(), params);
 			log.info("Create sink table by Flink SQL: " + SQLUtils.hiddePassword(sql));
 			tableEnv.executeSql(sql);
 
@@ -152,7 +152,7 @@ public class DataSyncOperator extends AbstractOperator<DataSync> {
 		} else {
 			tableEnv.executeSql(sql);
 
-			sql = toCreateTableSQL(toDataSource, table, columns, primaryKeys, dataSync.getToConfig());
+			sql = toCreateTableSQL(toDataSource, table, columns, primaryKeys, dataSync.getToConfig(), params);
 			tableEnv.executeSql(sql);
 
 			sql = insertSQL(table, fromTable, columns, params);
@@ -541,7 +541,8 @@ public class DataSyncOperator extends AbstractOperator<DataSync> {
 	}
 
 	private static String fromCreateTableSQL(Map<String, String> dataSource, String topic, String table,
-			String fromTable, List<Column> columns, Set<String> primaryKeys, String fromConfig) throws IOException {
+			String fromTable, List<Column> columns, Set<String> primaryKeys, String fromConfig,
+			Map<String, Object> params) throws IOException {
 		Set<String> actualPrimaryKeys = newSet(primaryKeys);
 		StringBuffer sqlBuffer = new StringBuffer();
 		sqlBuffer.append("CREATE TABLE ").append(SQLUtils.wrapIfReservedKeywords(fromTable)).append("(");
@@ -574,7 +575,7 @@ public class DataSyncOperator extends AbstractOperator<DataSync> {
 		}
 		sqlBuffer.append(") ").append("WITH (");
 		if (StringUtils.isNotBlank(fromConfig)) {
-			dataSource.putAll(ConfigurationUtils.load(fromConfig));
+			dataSource.putAll(ConfigurationUtils.load(SQLUtils.toSQL(DSLUtils.parse(fromConfig, params))));
 		}
 		if (ConfigurationUtils.isKafka(dataSource)) {
 			if (!dataSource.containsKey(GROUP_ID_KEY)) {
@@ -590,7 +591,7 @@ public class DataSyncOperator extends AbstractOperator<DataSync> {
 	}
 
 	private static String toCreateTableSQL(Map<String, String> dataSource, String table, List<Column> columns,
-			Set<String> primaryKeys, String toConfig) throws IOException {
+			Set<String> primaryKeys, String toConfig, Map<String, Object> params) throws IOException {
 		Set<String> actualPrimaryKeys = newSet(primaryKeys);
 		StringBuffer sqlBuffer = new StringBuffer();
 		sqlBuffer.append("CREATE TABLE ").append(SQLUtils.wrapIfReservedKeywords(table)).append("(");
@@ -628,7 +629,9 @@ public class DataSyncOperator extends AbstractOperator<DataSync> {
 			SQLUtils.appendDataSource(sqlBuffer, dataSource, table);
 		} else {
 			SQLUtils.appendDataSource(sqlBuffer,
-					HashMapKit.init(dataSource).put(ConfigurationUtils.load(toConfig)).get(), table);
+					HashMapKit.init(dataSource)
+							.put(ConfigurationUtils.load(SQLUtils.toSQL(DSLUtils.parse(toConfig, params)))).get(),
+					table);
 		}
 		sqlBuffer.append(")");
 		return sqlBuffer.toString();
