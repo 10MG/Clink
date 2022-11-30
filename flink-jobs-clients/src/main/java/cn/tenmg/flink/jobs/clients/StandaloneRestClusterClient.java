@@ -1,12 +1,11 @@
 package cn.tenmg.flink.jobs.clients;
 
-import java.io.IOException;
-import java.io.StringReader;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -43,6 +42,22 @@ import cn.tenmg.flink.jobs.config.model.Operate;
  * @since 1.2.0
  */
 public class StandaloneRestClusterClient extends AbstractFlinkJobsClient<RestClusterClient<StandaloneClusterId>> {
+
+	private static final char SINGLE_QUOTATION_MARK = '\'', BACKSLASH = '\\', BLANK_SPACE = '\u0020', VALUE_BEGIN = '=';
+
+	private static final Set<Character> VALUE_END = new HashSet<Character>() {
+
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 6149301286530143148L;
+
+		{
+			add(',');
+			add('\r');
+			add('\n');
+		}
+	};
 
 	private static Logger log = LoggerFactory.getLogger(StandaloneRestClusterClient.class);
 
@@ -136,7 +151,8 @@ public class StandaloneRestClusterClient extends AbstractFlinkJobsClient<RestClu
 			}
 		}
 
-		Configuration configuration = getConfiguration();
+		Properties customConf = load(flinkJobs.getConfiguration());
+		Configuration configuration = getConfiguration(customConf);
 		Builder builder = PackagedProgram.newBuilder().setConfiguration(configuration)
 				.setEntryPointClassName(getEntryPointClassName(flinkJobs)).setJarFile(getJar(flinkJobs))
 				.setUserClassPaths(toURLs(classpaths)).setSavepointRestoreSettings(savepointRestoreSettings);
@@ -165,7 +181,6 @@ public class StandaloneRestClusterClient extends AbstractFlinkJobsClient<RestClu
 				JobGraph jobGraph = PackagedProgramUtils.createJobGraph(packagedProgram, configuration,
 						Integer.parseInt(parallelism),
 						Boolean.valueOf(properties.getProperty("suppress.output", "false")));
-				Properties customConf = toProperties(flinkJobs.getConfiguration());
 				return retry(submitJobActuator, jobGraph, configuration, customConf);
 			} else {
 				final ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
@@ -222,27 +237,26 @@ public class StandaloneRestClusterClient extends AbstractFlinkJobsClient<RestClu
 
 	@Override
 	public RestClusterClient<StandaloneClusterId> getClusterClient(Properties customConf) throws Exception {
-		return getRestClusterClient(getConfiguration(), customConf);
+		return newRestClusterClient(getConfiguration(customConf));
 	}
 
 	private <R, T> R retry(Actuator<R, T> actuator, T params, Configuration configuration, Properties customConf)
 			throws Exception {
 		for (int i = 1, size = configurations.size(); i < size; i++) {
 			try {
-				return tryOnce(actuator, params, configuration, customConf);
+				return tryOnce(actuator, params, configuration);
 			} catch (Exception e) {
 				log.warn("The " + i + "th attempt failed, trying the " + (i + 1) + "th times");
 			}
-
+			configuration = getConfiguration(customConf);
 		}
-		return tryOnce(actuator, params, configuration, customConf);// Try for the last time
+		return tryOnce(actuator, params, configuration);// Try for the last time
 	}
 
-	private <R, T> R tryOnce(Actuator<R, T> actuator, T params, Configuration configuration, Properties customConf)
-			throws Exception {
+	private <R, T> R tryOnce(Actuator<R, T> actuator, T params, Configuration configuration) throws Exception {
 		RestClusterClient<StandaloneClusterId> client = null;
 		try {
-			client = getRestClusterClient(configuration, customConf);
+			client = newRestClusterClient(configuration);
 			return actuator.execute(client, params);
 		} finally {
 			if (client != null) {
@@ -262,13 +276,13 @@ public class StandaloneRestClusterClient extends AbstractFlinkJobsClient<RestClu
 		return configuration;
 	}
 
-	private RestClusterClient<StandaloneClusterId> getRestClusterClient(Configuration configuration,
-			Properties customConf) throws Exception {
+	private Configuration getConfiguration(Properties customConf) {
+		Configuration configuration = getConfiguration();
 		if (customConf != null) {
 			configuration = configuration.clone();
 			configuration.addAll(ConfigurationUtils.createConfiguration(customConf));
 		}
-		return newRestClusterClient(configuration);
+		return configuration;
 	}
 
 	private RestClusterClient<StandaloneClusterId> newRestClusterClient(Configuration configuration) throws Exception {
@@ -293,13 +307,120 @@ public class StandaloneRestClusterClient extends AbstractFlinkJobsClient<RestClu
 		}
 	}
 
-	private static Properties toProperties(String configuration) throws IOException {
-		Properties properties = null;
-		if (configuration != null) {
-			properties = new Properties();
-			properties.load(new StringReader(configuration));
+	/**
+	 * 加载字符串配置
+	 * 
+	 * @param config
+	 *            字符串配置
+	 * @return 返回配置查找表
+	 */
+	public static Properties load(String config) {
+		if (config == null) {
+			return null;
+		} else {
+			Properties properties = new Properties();
+			config = config.trim();
+			int len = config.length(), i = 0, backslashes = 0;
+			char a = BLANK_SPACE, b = BLANK_SPACE;
+			boolean /* 是否在字符串区域 */ isString = false, isKey = true;
+			StringBuilder key = new StringBuilder(), value = new StringBuilder();
+			while (i < len) {
+				char c = config.charAt(i);
+				if (isString) {
+					if (c == BACKSLASH) {
+						backslashes++;
+					} else {
+						if (isStringEnd(a, b, c, backslashes)) {// 字符串区域结束
+							isString = false;
+						}
+						backslashes = 0;
+					}
+					if (isKey) {
+						key.append(c);
+					} else {
+						value.append(c);
+					}
+				} else {
+					if (c == SINGLE_QUOTATION_MARK) {// 字符串区域开始
+						isString = true;
+						if (isKey) {
+							key.append(c);
+						} else {
+							value.append(c);
+						}
+					} else if (isKey) {
+						if (c == VALUE_BEGIN) {
+							isKey = false;
+						} else {
+							key.append(c);
+						}
+					} else {
+						if (VALUE_END.contains(c)) {
+							isKey = true;
+							put(properties, key, value);
+							key.setLength(0);
+							value.setLength(0);
+							a = b;
+							b = c;
+							i++;
+							for (; i < len; i++) {
+								c = config.charAt(i);
+								if (c > BLANK_SPACE) {
+									break;
+								}
+								a = b;
+								b = c;
+							}
+							continue;
+						} else {
+							value.append(c);
+						}
+					}
+				}
+				a = b;
+				b = c;
+				i++;
+			}
+			if (key.length() > 0) {
+				put(properties, key, value);
+			}
+			return properties;
 		}
-		return properties;
+	}
+
+	/**
+	 * 
+	 * 根据指定的三个前后相邻字符a、b和c及当前字符c之前的连续反斜杠数量，判断其是否为命名参数脚本字符串区的结束位置
+	 * 
+	 * @param a
+	 *            前第二个字符a
+	 * @param b
+	 *            前一个字符b
+	 * @param c
+	 *            当前字符c
+	 * @param backslashes
+	 *            当前字符c之前的连续反斜杠数量
+	 * @return 是动态脚本字符串区域结束位置返回true，否则返回false
+	 */
+	public static boolean isStringEnd(char a, char b, char c, int backslashes) {
+		if (c == SINGLE_QUOTATION_MARK) {
+			if (b == BACKSLASH) {
+				return backslashes % 2 == 0;
+			} else {
+				return true;
+			}
+		} else {
+			return false;
+		}
+	}
+
+	private static void put(Properties properties, StringBuilder key, StringBuilder value) {
+		String k = key.toString().trim(), v = value.toString().trim();
+		int last = k.length() - 1;
+		if (k.charAt(0) == SINGLE_QUOTATION_MARK && k.charAt(last) == SINGLE_QUOTATION_MARK) {
+			k = k.substring(1, last);
+		}
+		properties.put(k, v);
 	}
 
 }

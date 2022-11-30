@@ -10,6 +10,7 @@ import org.apache.flink.client.program.ClusterClient;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.configuration.ConfigurationUtils;
 import org.apache.flink.configuration.JobManagerOptions;
+import org.apache.flink.configuration.RestOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -75,9 +76,24 @@ public abstract class AbstractFlinkJobsClient<T extends ClusterClient<?>> implem
 		this.properties = properties;
 		Configuration configuration = ConfigurationUtils.createConfiguration(properties);
 		String rpcServers = properties.getProperty("jobmanager.rpc.servers");
-		if (isBlank(rpcServers)) {
+		String address = properties.getProperty("rest.addresses", properties.getProperty("rest.address"));
+		if (!isBlank(address)) {// 新的方式
+			Configuration config;
+			String addresses[] = address.split(","), addr[];
+			for (int i = 0; i < addresses.length; i++) {
+				config = configuration.clone();
+				addr = addresses[i].split(":", 2);
+				config.set(RestOptions.ADDRESS, addr[0].trim());
+				if (addr.length > 1) {
+					config.set(RestOptions.PORT, Integer.parseInt(addr[1].trim()));
+				} else if (!config.contains(RestOptions.PORT)) {
+					config.set(RestOptions.PORT, 8081);
+				}
+				this.configurations.add(config);
+			}
+		} else if (isBlank(rpcServers)) {
 			this.configurations.add(configuration);
-		} else {
+		} else {// 兼容fallback
 			Configuration config;
 			String servers[] = rpcServers.split(","), server[];
 			for (int i = 0; i < servers.length; i++) {

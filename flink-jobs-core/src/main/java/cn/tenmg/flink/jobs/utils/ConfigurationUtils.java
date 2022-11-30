@@ -1,7 +1,9 @@
 package cn.tenmg.flink.jobs.utils;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import cn.tenmg.dsl.utils.DSLUtils;
 
@@ -16,7 +18,20 @@ public abstract class ConfigurationUtils {
 
 	public static final String EMPTY_STRING = "";
 
-	private static final char VALUE_BEGIN = '=', VALUE_END = ',';
+	private static final char VALUE_BEGIN = '=';
+
+	private static final Set<Character> VALUE_END = new HashSet<Character>() {
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 3151893719267729294L;
+
+		{
+			add(',');
+			add('\r');
+			add('\n');
+		}
+	};
 
 	/**
 	 * 加载字符串配置
@@ -66,7 +81,7 @@ public abstract class ConfigurationUtils {
 							key.append(c);
 						}
 					} else {
-						if (c == VALUE_END) {
+						if (VALUE_END.contains(c)) {
 							isKey = true;
 							put(map, key, value);
 							key.setLength(0);

@@ -8,7 +8,7 @@ import cn.tenmg.flink.jobs.StreamService;
  * 
  * @author June wjzhao@aliyun.com
  * 
- * @since 1.6.0
+ * @since 1.5.2
  */
 public class SimpleFlinkJobsRunner extends FlinkJobsRunner {
 
