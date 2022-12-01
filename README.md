@@ -89,19 +89,24 @@ datasource.starrocks.sink.max-retries=3
 flink-jobs-clients.properties配置文件用于配置将（哪个JAR的）哪个类提交给哪个flink集群执行。
 
 ```
-# RPC configuration
-jobmanager.rpc.servers=192.168.100.11,192.168.100.12,192.168.100.13
-# The default jar that the flink-jobs-clients submits for execution, it is not required.
-# flink.jobs.default.jar=/yourpath/your-flink-jobs-app-1.0.0.jar
+# REST configuration
+# rest.addresses use "," to separate different addresses
+rest.addresses=192.168.100.11,192.168.100.12,192.168.100.13
+# Or rest.address is also allowed
+# rest.address=192.168.100.11,192.168.100.12,192.168.100.13
+# Retry only once (default is 20) to avoid too long retry time after some nodes are hung
+rest.retry.max-attempts=1
+
 # The default class that the flink-jobs-clients submits for execution, it is not required. You can also specify the main class in jar
-flink.jobs.default.class=yourpackage.App
+# The cn.tenmg.flink.jobs.FlinkJobsPortal class is provided since version 1.5.2, or you can implement and configure your own class
+flink.jobs.default.class=cn.tenmg.flink.jobs.FlinkJobsPortal
 ```
 
 
-4.  编写应用入口类
+4.  编写应用入口类（此步骤非必须，1.5.2版本开始可直接使用`cn.tenmg.flink.jobs.FlinkJobsPortal`）
 
 ```
-public class App {
+public class FlinkJobsPortal {
 
 	/**
 	 * 服务基础包名
