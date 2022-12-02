@@ -99,7 +99,8 @@ rest.retry.max-attempts=1
 
 # The default class that the flink-jobs-clients submits for execution, it is not required. You can also specify the main class in jar
 # The cn.tenmg.flink.jobs.FlinkJobsPortal class is provided since version 1.5.2, or you can implement and configure your own class
-flink.jobs.default.class=cn.tenmg.flink.jobs.FlinkJobsPortal
+# The default value is cn.tenmg.flink.jobs.FlinkJobsPortal since version 1.5.4
+#flink.jobs.default.class=cn.tenmg.flink.jobs.FlinkJobsPortal
 ```
 
 
