@@ -32,7 +32,7 @@ public abstract class AbstractJDBCMetaDataGetter implements MetaDataGetter {
 			RIGTH_BRACKET = ")", TYPE_PREFFIX = "flink.sql.type" + FlinkJobsContext.CONFIG_SPLITER,
 			DEFAULT_TYPE = FlinkJobsContext.getProperty(TYPE_PREFFIX + "default"),
 			SIZE_OFFSET_SUFFIX = FlinkJobsContext.CONFIG_SPLITER + "size_offset";
-	
+
 	private static final Map<Integer, String> SQL_TYPES = HashMapKit
 			.init(java.sql.Types.VARCHAR, "java.sql.Types.VARCHAR").put(java.sql.Types.CHAR, "java.sql.Types.CHAR")
 			.put(java.sql.Types.NVARCHAR, "java.sql.Types.NVARCHAR").put(java.sql.Types.NCHAR, "java.sql.Types.NCHAR")
@@ -68,7 +68,9 @@ public abstract class AbstractJDBCMetaDataGetter implements MetaDataGetter {
 	 *            数据源
 	 * @return 返回数据库连接
 	 */
-	abstract Connection getConnection(Map<String, String> dataSource) throws Exception;
+	protected Connection getConnection(Map<String, String> dataSource) throws Exception {
+		return JDBCUtils.getConnection(dataSource);
+	}
 
 	/**
 	 * 获取数据表的主键列名集
@@ -85,15 +87,8 @@ public abstract class AbstractJDBCMetaDataGetter implements MetaDataGetter {
 	 * @throws SQLException
 	 *             执行发生SQL异常
 	 */
-	protected Set<String> getPrimaryKeys(Connection con, String catalog, String schema, String tableName)
-			throws SQLException {
-		ResultSet primaryKeysSet = con.getMetaData().getPrimaryKeys(catalog, schema, tableName);
-		Set<String> primaryKeys = new HashSet<String>();
-		while (primaryKeysSet.next()) {
-			primaryKeys.add(primaryKeysSet.getString(COLUMN_NAME));
-		}
-		return primaryKeys;
-	}
+	abstract Set<String> getPrimaryKeys(Connection con, String catalog, String schema, String tableName)
+			throws SQLException;
 
 	@Override
 	public TableMetaData getTableMetaData(Map<String, String> dataSource, String tableName) throws Exception {

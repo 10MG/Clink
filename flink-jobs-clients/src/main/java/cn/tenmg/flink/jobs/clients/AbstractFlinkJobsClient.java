@@ -138,7 +138,9 @@ public abstract class AbstractFlinkJobsClient<T extends ClusterClient<?>> implem
 	protected String getEntryPointClassName(FlinkJobs flinkJobs) {
 		String mainClass = flinkJobs.getMainClass();
 		if (mainClass == null) {
-			mainClass = properties.getProperty(FLINK_JOBS_DEFAULT_CLASS_KEY);
+			if (flinkJobs.getJar() == null) {
+				mainClass = properties.getProperty(FLINK_JOBS_DEFAULT_CLASS_KEY, "cn.tenmg.flink.jobs.FlinkJobsPortal");
+			}
 		}
 		return mainClass;
 	}

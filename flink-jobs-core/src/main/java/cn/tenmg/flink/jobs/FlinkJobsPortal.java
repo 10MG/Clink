@@ -12,7 +12,7 @@ import cn.tenmg.flink.jobs.runner.SimpleFlinkJobsRunner;
  */
 public class FlinkJobsPortal {
 
-	public static void main(String[] args) throws Exception {
+	public static void main(String... args) throws Exception {
 		SimpleFlinkJobsRunner.getInstance().run(args);
 	}
 

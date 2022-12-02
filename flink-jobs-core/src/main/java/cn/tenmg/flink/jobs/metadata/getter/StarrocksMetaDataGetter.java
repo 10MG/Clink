@@ -1,15 +1,12 @@
 package cn.tenmg.flink.jobs.metadata.getter;
 
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 
-import cn.tenmg.dsl.utils.StringUtils;
 import cn.tenmg.flink.jobs.context.FlinkJobsContext;
 import cn.tenmg.flink.jobs.utils.JDBCUtils;
 
@@ -25,20 +22,6 @@ public class StarrocksMetaDataGetter extends AbstractJDBCMetaDataGetter {
 	private static final boolean UK_AS_PK = Boolean
 			.valueOf(FlinkJobsContext.getProperty("metadata.starrocks.unique_key_as_primary_key")),
 			CAL_AS_SCM = Boolean.valueOf(FlinkJobsContext.getProperty("metadata.starrocks.catalog_as_schema"));
-
-	@Override
-	Connection getConnection(Map<String, String> dataSource) throws Exception {
-		String driver = dataSource.get("driver"), url = dataSource.get("jdbc-url"),
-				database = dataSource.get("database-name");
-		if (StringUtils.isBlank(driver)) {
-			driver = FlinkJobsContext.getDefaultJDBCDriver(JDBCUtils.getProduct(url));
-		}
-		if (StringUtils.isNotBlank(database)) {
-			url += "/" + database;
-		}
-		Class.forName(driver);
-		return DriverManager.getConnection(url, dataSource.get("username"), dataSource.get("password"));
-	}
 
 	@Override
 	protected Set<String> getPrimaryKeys(Connection con, String catalog, String schema, String tableName)

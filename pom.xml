@@ -6,7 +6,7 @@
 	<description>Flink流批一体数据处理快速集成开发框架</description>
 	<groupId>cn.tenmg</groupId>
 	<artifactId>flink-jobs</artifactId>
-	<version>1.5.3</version>
+	<version>1.5.4</version>
 	<packaging>pom</packaging>
 
 	<modules>
@@ -71,9 +71,9 @@
 		<encoding>UTF-8</encoding>
 		<flink.version>1.16.0</flink.version>
 		<scala.binary.version>2.12</scala.binary.version>
-		<slf4j-api.version>2.0.3</slf4j-api.version>
+		<slf4j-api.version>2.0.5</slf4j-api.version>
 		<log4j.version>2.19.0</log4j.version>
-		<fastjson.version>2.0.17</fastjson.version>
+		<fastjson.version>2.0.20</fastjson.version>
 	</properties>
 
 	<build>

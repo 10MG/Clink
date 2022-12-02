@@ -1,9 +1,10 @@
 package cn.tenmg.flink.jobs.metadata.getter;
 
 import java.sql.Connection;
-import java.util.Map;
-
-import cn.tenmg.flink.jobs.utils.JDBCUtils;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * JDBC元数据获取器
@@ -15,8 +16,14 @@ import cn.tenmg.flink.jobs.utils.JDBCUtils;
 public class JDBCMetaDataGetter extends AbstractJDBCMetaDataGetter {
 
 	@Override
-	Connection getConnection(Map<String, String> dataSource) throws Exception {
-		return JDBCUtils.getConnection(dataSource);
+	Set<String> getPrimaryKeys(Connection con, String catalog, String schema, String tableName)
+			throws SQLException {
+		ResultSet primaryKeysSet = con.getMetaData().getPrimaryKeys(catalog, schema, tableName);
+		Set<String> primaryKeys = new HashSet<String>();
+		while (primaryKeysSet.next()) {
+			primaryKeys.add(primaryKeysSet.getString(COLUMN_NAME));
+		}
+		return primaryKeys;
 	}
 
 }
