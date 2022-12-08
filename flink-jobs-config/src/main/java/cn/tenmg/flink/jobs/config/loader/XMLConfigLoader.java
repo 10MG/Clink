@@ -92,11 +92,7 @@ public class XMLConfigLoader implements ConfigLoader {
 
 	private Unmarshaller newUnmarshaller() throws JAXBException {
 		if (context == null) {
-			synchronized (context) {
-				if (context == null) {
-					context = JAXBContext.newInstance(FlinkJobs.class);
-				}
-			}
+			context = JAXBContext.newInstance(FlinkJobs.class);
 		}
 		return context.createUnmarshaller();
 	}

@@ -162,7 +162,7 @@ public class StandaloneRestClusterClient extends AbstractFlinkJobsClient<RestClu
 			builder.setArguments(arguments);
 		}
 		boolean submit = true;
-		if (flinkJobs.getServiceName() == null) {
+		if (isBlank(flinkJobs.getServiceName())) {
 			List<Operate> operates = flinkJobs.getOperates();
 			if (operates != null && !operates.isEmpty()) {
 				submit = false;
@@ -290,7 +290,7 @@ public class StandaloneRestClusterClient extends AbstractFlinkJobsClient<RestClu
 	}
 
 	private static List<URL> toURLs(String classpaths) throws MalformedURLException {
-		if (classpaths == null || "".equals(classpaths.trim())) {
+		if (isBlank(classpaths)) {
 			return Collections.emptyList();
 		} else {
 			String[] paths;
@@ -310,8 +310,7 @@ public class StandaloneRestClusterClient extends AbstractFlinkJobsClient<RestClu
 	/**
 	 * 加载字符串配置
 	 * 
-	 * @param config
-	 *            字符串配置
+	 * @param config 字符串配置
 	 * @return 返回配置查找表
 	 */
 	public static Properties load(String config) {
@@ -392,14 +391,10 @@ public class StandaloneRestClusterClient extends AbstractFlinkJobsClient<RestClu
 	 * 
 	 * 根据指定的三个前后相邻字符a、b和c及当前字符c之前的连续反斜杠数量，判断其是否为命名参数脚本字符串区的结束位置
 	 * 
-	 * @param a
-	 *            前第二个字符a
-	 * @param b
-	 *            前一个字符b
-	 * @param c
-	 *            当前字符c
-	 * @param backslashes
-	 *            当前字符c之前的连续反斜杠数量
+	 * @param a           前第二个字符a
+	 * @param b           前一个字符b
+	 * @param c           当前字符c
+	 * @param backslashes 当前字符c之前的连续反斜杠数量
 	 * @return 是动态脚本字符串区域结束位置返回true，否则返回false
 	 */
 	public static boolean isStringEnd(char a, char b, char c, int backslashes) {

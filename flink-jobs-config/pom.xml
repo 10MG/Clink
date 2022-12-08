@@ -4,7 +4,7 @@
 	<parent>
 		<groupId>cn.tenmg</groupId>
 		<artifactId>flink-jobs</artifactId>
-		<version>1.5.4</version>
+		<version>1.5.5</version>
 	</parent>
 
 	<modelVersion>4.0.0</modelVersion>
@@ -20,6 +20,20 @@
 			<artifactId>jaxb-api</artifactId>
 			<version>2.3.1</version>
 		</dependency>
-	</dependencies>
 
+		<!-- https://mvnrepository.com/artifact/org.junit.jupiter/junit-jupiter -->
+		<dependency>
+			<groupId>org.junit.jupiter</groupId>
+			<artifactId>junit-jupiter</artifactId>
+			<version>5.8.2</version>
+			<scope>test</scope>
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/org.junit.platform/junit-platform-launcher -->
+		<dependency>
+			<groupId>org.junit.platform</groupId>
+			<artifactId>junit-platform-launcher</artifactId>
+			<version>1.8.2</version>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
 </project>

@@ -29,8 +29,7 @@ import cn.tenmg.flink.jobs.config.model.FlinkJobs;
  * 
  * @since 1.2.0
  *
- * @param <T>
- *            flink集群客户端的类型
+ * @param <T> flink集群客户端的类型
  */
 public abstract class AbstractFlinkJobsClient<T extends ClusterClient<?>> implements FlinkJobsClient<T> {
 
@@ -113,16 +112,12 @@ public abstract class AbstractFlinkJobsClient<T extends ClusterClient<?>> implem
 	/**
 	 * 获取运行的JAR。如果flink-jobs配置对象没有配置运行的JAR则返回配置文件中配置的默认JAR，如果均没有，则返回<code>null</code>
 	 * 
-	 * @param flinkJobs
-	 *            flink-jobs配置对象
+	 * @param flinkJobs flink-jobs配置对象
 	 * @return 返回运行的JAR
 	 */
 	protected File getJar(FlinkJobs flinkJobs) {
-		String jar = flinkJobs.getJar();
-		if (jar == null) {
-			jar = properties.getProperty(FLINK_JOBS_DEFAULT_JAR_KEY);
-		}
-		if (jar == null) {
+		String jar = getJarPath(flinkJobs);
+		if (isBlank(jar)) {
 			return null;
 		}
 		return new File(jar);
@@ -131,16 +126,13 @@ public abstract class AbstractFlinkJobsClient<T extends ClusterClient<?>> implem
 	/**
 	 * 获取入口类名
 	 * 
-	 * @param flinkJobs
-	 *            flink-jobs配置对象
+	 * @param flinkJobs flink-jobs配置对象
 	 * @return 返回入口类名
 	 */
 	protected String getEntryPointClassName(FlinkJobs flinkJobs) {
 		String mainClass = flinkJobs.getMainClass();
-		if (mainClass == null) {
-			if (flinkJobs.getJar() == null) {
-				mainClass = properties.getProperty(FLINK_JOBS_DEFAULT_CLASS_KEY, "cn.tenmg.flink.jobs.FlinkJobsPortal");
-			}
+		if (isBlank(mainClass) && isBlank(getJarPath(flinkJobs))) {
+			mainClass = properties.getProperty(FLINK_JOBS_DEFAULT_CLASS_KEY, "cn.tenmg.flink.jobs.FlinkJobsPortal");
 		}
 		return mainClass;
 	}
@@ -148,8 +140,7 @@ public abstract class AbstractFlinkJobsClient<T extends ClusterClient<?>> implem
 	/**
 	 * 获取flink程序运行参数
 	 * 
-	 * @param flinkJobs
-	 *            flink-jobs配置对象
+	 * @param flinkJobs flink-jobs配置对象
 	 * @return 返回运行
 	 */
 	protected static String getArguments(FlinkJobs flinkJobs) {
@@ -167,23 +158,35 @@ public abstract class AbstractFlinkJobsClient<T extends ClusterClient<?>> implem
 	/**
 	 * 判断运行参数是否为空
 	 * 
-	 * @param arguments
-	 *            运行参数
+	 * @param arguments 运行参数
 	 * @return true/false
 	 */
 	protected static Boolean isEmptyArguments(String arguments) {
-		return arguments == null || "{}".equals(arguments) || "".equals(arguments.trim());
+		return isBlank(arguments) || "{}".equals(arguments);
+	}
+
+	/**
+	 * 获取运行的JAR文件位置
+	 * 
+	 * @param flinkJobs flink-jobs配置对象
+	 * @return 运行的JAR文件位置
+	 */
+	protected String getJarPath(FlinkJobs flinkJobs) {
+		String jar = flinkJobs.getJar();
+		if (isBlank(jar)) {
+			jar = properties.getProperty(FLINK_JOBS_DEFAULT_JAR_KEY);
+		}
+		return jar;
 	}
 
 	/**
 	 * 判断指定字符串是否为空（<code>null</code>）、空字符串（<code>""</code>）或者仅含空格的字符串
 	 * 
-	 * @param string
-	 *            指定字符串
+	 * @param string 指定字符串
 	 * @return 指定字符串为空（<code>null</code>）、空字符串（<code>""</code>）或者仅含空格的字符串返回
 	 *         <code>true</code>，否则返回<code>false</code>
 	 */
-	private static boolean isBlank(String string) {
+	protected static boolean isBlank(String string) {
 		int len;
 		if (string == null || (len = string.length()) == 0) {
 			return true;
