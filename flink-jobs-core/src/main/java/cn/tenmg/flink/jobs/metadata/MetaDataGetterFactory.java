@@ -18,7 +18,7 @@ public abstract class MetaDataGetterFactory {
 
 	private static final String METADATA_GETTER_KEY_PREFIX = "metadata.getter" + FlinkJobsContext.CONFIG_SPLITER;
 
-	private static volatile Map<String, MetaDataGetter> COLUMNS_GETTERS = new HashMap<String, MetaDataGetter>();
+	private static volatile Map<String, MetaDataGetter> META_DATA_GETTERS = new HashMap<String, MetaDataGetter>();
 
 	/**
 	 * 根据使用的数据源获取元数据获取器实例
@@ -29,11 +29,11 @@ public abstract class MetaDataGetterFactory {
 	 */
 	public static MetaDataGetter getMetaDataGetter(Map<String, String> dataSource) {
 		String connector = dataSource.get("connector");
-		MetaDataGetter columnsGetter = COLUMNS_GETTERS.get(connector);
-		if (columnsGetter == null) {
-			synchronized (COLUMNS_GETTERS) {
-				columnsGetter = COLUMNS_GETTERS.get(connector);
-				if (columnsGetter == null) {
+		MetaDataGetter metaDataGetter = META_DATA_GETTERS.get(connector);
+		if (metaDataGetter == null) {
+			synchronized (META_DATA_GETTERS) {
+				metaDataGetter = META_DATA_GETTERS.get(connector);
+				if (metaDataGetter == null) {
 					String key = METADATA_GETTER_KEY_PREFIX + connector, className = FlinkJobsContext.getProperty(key);
 					if (className == null) {
 						throw new IllegalArgumentException("MetaDataGetter for connector '" + connector
@@ -46,7 +46,7 @@ public abstract class MetaDataGetterFactory {
 								"The configuration of key '" + key + "' must be not blank");
 					} else {
 						try {
-							columnsGetter = (MetaDataGetter) Class.forName(className).newInstance();
+							metaDataGetter = (MetaDataGetter) Class.forName(className).newInstance();
 						} catch (InstantiationException | IllegalAccessException e) {
 							throw new IllegalArgumentException(
 									"Cannot instantiate MetaDataGetter for connector '" + connector + "'", e);
@@ -55,10 +55,10 @@ public abstract class MetaDataGetterFactory {
 									"Wrong MetaDataGetter configuration for connector " + connector + "'", e);
 						}
 					}
-					COLUMNS_GETTERS.put(connector, columnsGetter);
+					META_DATA_GETTERS.put(connector, metaDataGetter);
 				}
 			}
 		}
-		return columnsGetter;
+		return metaDataGetter;
 	}
 }
