@@ -1220,11 +1220,11 @@ flink.sql.custom.keywords=PERIOD
 ```
 ### sql.reserved.keywords
 
-1.2.2 及以前版本的配置，1.2.3 版本开始已改为`flink.sql.reserved.keywords`，后续的 1.2 版本仍然会保持兼容，但强烈建议改为`flink.sql.reserved.keywords`。
+1.2.2 及以前版本的配置，1.2.3 版本开始已改为`flink.sql.reserved.keywords`，1.3 版本开始已不再兼容。
 
 ### sql.custom.keywords
 
-1.2.2 及以前版本的配置，1.2.3 版本开始已改为`flink.sql.custom.keywords`，后续的 1.2 版本仍然会保持兼容，但强烈建议改为`flink.sql.custom.keywords`。
+1.2.2 及以前版本的配置，1.2.3 版本开始已改为`flink.sql.custom.keywords`，1.3 版本开始已不再兼容。
 
 ## JDBC配置
 
