@@ -234,7 +234,7 @@ Flink作业的个性化配置，格式为`k1=v1[,k2=v3…]`。例如：`<configu
 
 特定运行选项配置。XSD文件提供了选项key值的枚举，能够在IDE环境下自动提示。
 
-![自动补全样例](AutomaticCompletionExample.png)
+![自动补全样例](flink-jobs-clients/AutomaticCompletionExample.png)
 
 属性  | 类型     | 必需 | 说明
 ------|----------|----|--------
