@@ -1358,6 +1358,8 @@ WHERE EMAIL IS NOT NULL
 
 # 相关链接
 
+flink-cdc-log-connectors 开源地址：https://gitee.com/tenmg/flink-cdc-log-connectors
+
 flink-json-plus开源地址：https://gitee.com/tenmg/flink-json-plus
 
 DSL开源地址：https://gitee.com/tenmg/dsl
