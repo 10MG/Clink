@@ -224,7 +224,7 @@ runtimeMode | `String`             | 否 | 运行模式。可选值："BATCH"/"S
 
 #### `<configuration>`
 
-Flink作业的个性化配置，格式为`k1=v1[,k2=v3…]`。例如：`<configuration><![CDATA[pipeline.name=customJobName]]></configuration>`表示自定义Flink SQL作业的名称为`customJobName`。具体配置项详见[Flink官方文档](https://flink.apache.org/)。
+Flink作业的个性化配置，可以使用“,”或者换行符分隔多个不同配置，例如`k1=v1[,k2=v3…]`。具体配置项需参考Flink官方文档，例如：`<configuration><![CDATA[pipeline.name=customJobName]]></configuration>`表示自定义Flink SQL作业的名称为`customJobName`。具体配置项详见[Flink官方文档](https://flink.apache.org/)。
 
 #### `<options>`
 
@@ -1096,9 +1096,9 @@ flink.sql.type.TIME.size_offset=9
 flink.sql.type.TIMESTAMP.size_offset=20
 ```
 
-### flink.sql.type.*.*
+### `flink.sql.type.*.*`
 
-某一类型的JDBC目标数据库的JDBC数据类型到Flink SQL数据类型的映射关系配置。其中第一个*表示某一JDBC目标数据库的类型，第二个*表示某一JDBC数据类型，配置的值是对应的Flink SQL数据类型。默认值为：
+某一类型的JDBC目标数据库的JDBC数据类型到Flink SQL数据类型的映射关系配置。其中第一个`*`表示某一JDBC目标数据库的类型，第二个`*`表示某一JDBC数据类型，配置的值是对应的Flink SQL数据类型。默认值为：
 
 ```
 # Starrocks JDBC type java.sql.Types.OTHER to Flink SQL type DECIMAL
