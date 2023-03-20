@@ -224,7 +224,7 @@ runtimeMode | `String`             | 否 | 运行模式。可选值："BATCH"/"S
 
 #### `<configuration>`
 
-Flink作业的个性化配置，格式为`k1=v1[,k2=v3…]`。例如：`<configuration><![CDATA[pipeline.name=customJobName]]></configuration>`表示自定义Flink SQL作业的名称为`customJobName`。具体配置项详见[Flink官方文档](https://flink.apache.org/)。
+Flink作业的个性化配置，可以使用“,”或者换行符分隔多个不同配置，例如`k1=v1[,k2=v3…]`。具体配置项需参考Flink官方文档，例如：`<configuration><![CDATA[pipeline.name=customJobName]]></configuration>`表示自定义Flink SQL作业的名称为`customJobName`。具体配置项详见[Flink官方文档](https://flink.apache.org/)。
 
 #### `<options>`
 
@@ -234,7 +234,7 @@ Flink作业的个性化配置，格式为`k1=v1[,k2=v3…]`。例如：`<configu
 
 特定运行选项配置。XSD文件提供了选项key值的枚举，能够在IDE环境下自动提示。
 
-![自动补全样例](AutomaticCompletionExample.png)
+![自动补全样例](flink-jobs-clients/AutomaticCompletionExample.png)
 
 属性  | 类型     | 必需 | 说明
 ------|----------|----|--------
@@ -884,7 +884,7 @@ auto.datasource.identifier=database-name
 ```
 ## 数据源过滤器配置
 
-flink的连接器主要分为源连接器（Source connector）和汇连接器（Sink connector），他们分别需要的不同的数据源配置信息。flink-jobs为了方便用户，提供了两种内置数据源过滤器（源数据源过滤器source和汇数据源过滤器sink），结合过滤器，用户能够做到一个数据源一次配置多方、多次使用。其中`source.datasource.filter.*`开头的配置表示源数据源过滤器需要过滤的配置属性，配置键中的“*”表示连接器，配置值可以使用“*”号作为通配符。数据源过滤器的默认配置如下：
+flink的连接器主要分为源连接器（Source connector）和汇连接器（Sink connector），他们分别需要的不同的数据源配置信息。flink-jobs为了方便用户，提供了两种内置数据源过滤器（源数据源过滤器source和汇数据源过滤器sink），结合过滤器，用户能够做到一个数据源一次配置多方、多次使用。其中`source.datasource.filter.*`开头的配置表示源数据源过滤器需要过滤的配置属性，配置键中的`*`表示连接器，配置值可以使用“*”号作为通配符。数据源过滤器的默认配置如下：
 
 ```
 # Source datasource filter for kafka connector
@@ -1096,9 +1096,9 @@ flink.sql.type.TIME.size_offset=9
 flink.sql.type.TIMESTAMP.size_offset=20
 ```
 
-### flink.sql.type.*.*
+### `flink.sql.type.*.*`
 
-某一类型的JDBC目标数据库的JDBC数据类型到Flink SQL数据类型的映射关系配置。其中第一个*表示某一JDBC目标数据库的类型，第二个*表示某一JDBC数据类型，配置的值是对应的Flink SQL数据类型。默认值为：
+某一类型的JDBC目标数据库的JDBC数据类型到Flink SQL数据类型的映射关系配置。其中第一个`*`表示某一JDBC目标数据库的类型，第二个`*`表示某一JDBC数据类型，配置的值是对应的Flink SQL数据类型。默认值为：
 
 ```
 # Starrocks JDBC type java.sql.Types.OTHER to Flink SQL type DECIMAL
@@ -1220,11 +1220,11 @@ flink.sql.custom.keywords=PERIOD
 ```
 ### sql.reserved.keywords
 
-1.2.2 及以前版本的配置，1.2.3 版本开始已改为`flink.sql.reserved.keywords`，后续的 1.2 版本仍然会保持兼容，但强烈建议改为`flink.sql.reserved.keywords`。
+1.2.2 及以前版本的配置，1.2.3 版本开始已改为`flink.sql.reserved.keywords`，1.3 版本开始已不再兼容。
 
 ### sql.custom.keywords
 
-1.2.2 及以前版本的配置，1.2.3 版本开始已改为`flink.sql.custom.keywords`，后续的 1.2 版本仍然会保持兼容，但强烈建议改为`flink.sql.custom.keywords`。
+1.2.2 及以前版本的配置，1.2.3 版本开始已改为`flink.sql.custom.keywords`，1.3 版本开始已不再兼容。
 
 ## JDBC配置
 
@@ -1357,6 +1357,8 @@ WHERE EMAIL IS NOT NULL
 4.  新建 Pull Request
 
 # 相关链接
+
+flink-cdc-log-connectors 开源地址：https://gitee.com/tenmg/flink-cdc-log-connectors
 
 flink-json-plus开源地址：https://gitee.com/tenmg/flink-json-plus
 

@@ -1,5 +1,12 @@
 # flink-jobs-clients
 
+<p align="left">
+    <a href="https://mvnrepository.com/artifact/cn.tenmg/flink-jobs-clients">
+        <img alt="maven" src="https://img.shields.io/maven-central/v/cn.tenmg/flink-jobs-clients.svg?style=flat-square">
+    </a>
+    <a target="_blank" href="LICENSE"><img src="https://img.shields.io/:license-Apache%202.0-blue.svg"></a>
+</p>
+
 ## 介绍
 flink-jobs-clients是[flink-jobs](https://gitee.com/tenmg/flink-jobs)应用程序客户端类库，可用于启动、监控和停止flink-jobs或普通flink作业，通过flink-jobs-clients可将flink快速集成到现有基于Java实现的系统中，还可以通过XML格式的配置文件玩转Flink SQL。一个典型的flink-jobs-clients部署架构如下：
 
