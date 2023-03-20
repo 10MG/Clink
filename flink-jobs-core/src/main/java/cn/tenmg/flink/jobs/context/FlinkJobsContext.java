@@ -14,11 +14,11 @@ import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import cn.tenmg.dsl.utils.MapUtils;
+import cn.tenmg.dsl.utils.PlaceHolderUtils;
 import cn.tenmg.dsl.utils.PropertiesLoaderUtils;
 import cn.tenmg.flink.jobs.exception.DataSourceNotFoundException;
-import cn.tenmg.flink.jobs.kit.HashMapKit;
 import cn.tenmg.flink.jobs.utils.ConfigurationUtils;
-import cn.tenmg.flink.jobs.utils.PlaceHolderUtils;
 
 /**
  * flink-jobs上下文
@@ -78,21 +78,16 @@ public abstract class FlinkJobsContext {
 	private static Properties defaultProperties, configProperties;
 
 	static {
-		try {
-			defaultProperties = PropertiesLoaderUtils.loadFromClassPath(DEFAULT_STRATEGIES_PATH);
-		} catch (Exception e) {
-			log.warn(DEFAULT_STRATEGIES_PATH + " not found in the classpath.", e);
-			defaultProperties = new Properties();
-		}
+		defaultProperties = PropertiesLoaderUtils.loadIgnoreException(DEFAULT_STRATEGIES_PATH);
 		String contextFile = defaultProperties.getProperty(CONTEXT_LOCATION_KEY, "flink-jobs-context.properties");
 		try {
-			defaultProperties.putAll(PropertiesLoaderUtils.loadFromClassPath(contextFile));
+			PropertiesLoaderUtils.load(defaultProperties, contextFile);
 		} catch (Exception e) {
-			log.warn(contextFile + " not found in the classpath.", e);
+			log.warn("An exception occurred while loading ".concat(contextFile), e);
 		}
 		String configurationFile = getConfigurationFile();
 		try {
-			configProperties = PropertiesLoaderUtils.loadFromClassPath(configurationFile);
+			configProperties = PropertiesLoaderUtils.load(configurationFile);
 			Entry<Object, Object> entry;
 			Object value;
 			for (Iterator<Entry<Object, Object>> it = configProperties.entrySet().iterator(); it.hasNext();) {
@@ -334,7 +329,7 @@ public abstract class FlinkJobsContext {
 						+ " not found, Please check the configuration file " + getConfigurationFile());
 			} else {
 				log.info("Generate a DataSource named " + name + " automatically");
-				dataSource = HashMapKit.init(autoDatasource).put(autoDatasource.get(IDENTIFIER), name).get();
+				dataSource = MapUtils.toHashMapBuilder(autoDatasource).build(autoDatasource.get(IDENTIFIER), name);
 				dataSource.remove(IDENTIFIER);
 			}
 		}

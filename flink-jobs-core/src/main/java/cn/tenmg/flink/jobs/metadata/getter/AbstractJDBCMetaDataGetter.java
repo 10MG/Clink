@@ -10,10 +10,9 @@ import java.util.Map;
 import java.util.Set;
 
 import cn.tenmg.dsl.utils.DSLUtils;
+import cn.tenmg.dsl.utils.MapUtils;
 import cn.tenmg.dsl.utils.StringUtils;
 import cn.tenmg.flink.jobs.context.FlinkJobsContext;
-import cn.tenmg.flink.jobs.kit.HashMapKit;
-import cn.tenmg.flink.jobs.kit.ParamsKit;
 import cn.tenmg.flink.jobs.metadata.MetaDataGetter;
 import cn.tenmg.flink.jobs.utils.JDBCUtils;
 
@@ -33,9 +32,10 @@ public abstract class AbstractJDBCMetaDataGetter implements MetaDataGetter {
 			DEFAULT_TYPE = FlinkJobsContext.getProperty(TYPE_PREFFIX + "default"),
 			SIZE_OFFSET_SUFFIX = FlinkJobsContext.CONFIG_SPLITER + "size_offset";
 
-	private static final Map<Integer, String> SQL_TYPES = HashMapKit
-			.init(java.sql.Types.VARCHAR, "java.sql.Types.VARCHAR").put(java.sql.Types.CHAR, "java.sql.Types.CHAR")
-			.put(java.sql.Types.NVARCHAR, "java.sql.Types.NVARCHAR").put(java.sql.Types.NCHAR, "java.sql.Types.NCHAR")
+	private static final Map<Integer, String> SQL_TYPES = MapUtils
+			.newHashMapBuilder(java.sql.Types.VARCHAR, "java.sql.Types.VARCHAR")
+			.put(java.sql.Types.CHAR, "java.sql.Types.CHAR").put(java.sql.Types.NVARCHAR, "java.sql.Types.NVARCHAR")
+			.put(java.sql.Types.NCHAR, "java.sql.Types.NCHAR")
 			.put(java.sql.Types.LONGNVARCHAR, "java.sql.Types.LONGNVARCHAR")
 			.put(java.sql.Types.LONGVARCHAR, "java.sql.Types.LONGVARCHAR")
 			.put(java.sql.Types.BIGINT, "java.sql.Types.BIGINT").put(java.sql.Types.BOOLEAN, "java.sql.Types.BOOLEAN")
@@ -54,8 +54,7 @@ public abstract class AbstractJDBCMetaDataGetter implements MetaDataGetter {
 			.put(java.sql.Types.VARBINARY, "java.sql.Types.VARBINARY").put(java.sql.Types.REF, "java.sql.Types.REF")
 			.put(java.sql.Types.DATALINK, "java.sql.Types.DATALINK").put(java.sql.Types.ARRAY, "java.sql.Types.ARRAY")
 			.put(java.sql.Types.BLOB, "java.sql.Types.BLOB").put(java.sql.Types.CLOB, "java.sql.Types.CLOB")
-			.put(java.sql.Types.NCLOB, "java.sql.Types.NCLOB").put(java.sql.Types.STRUCT, "java.sql.Types.STRUCT")
-			.get();
+			.put(java.sql.Types.NCLOB, "java.sql.Types.NCLOB").build(java.sql.Types.STRUCT, "java.sql.Types.STRUCT");
 
 	private static Set<String> WITH_PRECISION = asSafeSet(
 			FlinkJobsContext.getProperty("flink.sql.type.with_precision")),
@@ -159,7 +158,7 @@ public abstract class AbstractJDBCMetaDataGetter implements MetaDataGetter {
 		if (possibleType.endsWith(RIGTH_BRACKET)) {
 			return DSLUtils
 					.parse(possibleType,
-							ParamsKit.init().put("columnSize", columnSize).put("decimalDigits", decimalDigits).get())
+							MapUtils.newHashMapBuilder("columnSize", columnSize).build("decimalDigits", decimalDigits))
 					.getScript();
 		} else {
 			if (WITH_PRECISION.contains(possibleType)) {// 类型含精度

@@ -8,7 +8,7 @@ import javax.swing.Spring;
  * @author June wjzhao@aliyun.com
  * @see Spring
  * 
- * @since 1.5.5
+ * @since 1.5.6
  */
 public abstract class ClassUtils {
 	/**

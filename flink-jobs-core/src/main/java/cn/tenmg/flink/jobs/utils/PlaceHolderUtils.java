@@ -7,16 +7,17 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import cn.tenmg.dsl.utils.DSLUtils;
-import cn.tenmg.dsl.utils.ParamsUtils;
+import cn.tenmg.dsl.utils.ObjectUtils;
 import cn.tenmg.dsl.utils.StringUtils;
 
 /**
- * 占位符工具类
+ * 占位符工具类。已废弃，请使用 {@code cn.tenmg.dsl.utils.PlaceHolderUtils} 替换
  * 
  * @author June wjzhao@aliyun.com
  * 
  * @since 1.1.1
  */
+@Deprecated
 public abstract class PlaceHolderUtils {
 
 	private static final Pattern paramPattern = Pattern.compile("\\$\\{[^}]+\\}");
@@ -76,7 +77,7 @@ public abstract class PlaceHolderUtils {
 			boolean encode = false;
 			while (m.find()) {
 				name = m.group();
-				value = ParamsUtils.getParam(params, name.substring(2, name.length() - 1));
+				value = ObjectUtils.getValueIgnoreException(params, name.substring(2, name.length() - 1));
 				if (value == null) {
 					m.appendReplacement(sb, "");
 				} else {

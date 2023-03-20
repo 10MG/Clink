@@ -21,11 +21,10 @@ import org.slf4j.LoggerFactory;
 
 import cn.tenmg.dsl.NamedScript;
 import cn.tenmg.dsl.utils.DSLUtils;
+import cn.tenmg.dsl.utils.MapUtils;
 import cn.tenmg.dsl.utils.StringUtils;
 import cn.tenmg.flink.jobs.context.FlinkJobsContext;
 import cn.tenmg.flink.jobs.exception.IllegalConfigurationException;
-import cn.tenmg.flink.jobs.kit.HashMapKit;
-import cn.tenmg.flink.jobs.kit.ParamsKit;
 import cn.tenmg.flink.jobs.metadata.MetaDataGetter;
 import cn.tenmg.flink.jobs.metadata.MetaDataGetter.TableMetaData;
 import cn.tenmg.flink.jobs.metadata.MetaDataGetterFactory;
@@ -628,10 +627,8 @@ public class DataSyncOperator extends AbstractOperator<DataSync> {
 		if (StringUtils.isBlank(toConfig)) {
 			SQLUtils.appendDataSource(sqlBuffer, dataSource, table);
 		} else {
-			SQLUtils.appendDataSource(sqlBuffer,
-					HashMapKit.init(dataSource)
-							.put(ConfigurationUtils.load(SQLUtils.toSQL(DSLUtils.parse(toConfig, params)))).get(),
-					table);
+			SQLUtils.appendDataSource(sqlBuffer, MapUtils.toHashMapBuilder(dataSource)
+					.build(ConfigurationUtils.load(SQLUtils.toSQL(DSLUtils.parse(toConfig, params)))), table);
 		}
 		sqlBuffer.append(")");
 		return sqlBuffer.toString();
@@ -682,7 +679,7 @@ public class DataSyncOperator extends AbstractOperator<DataSync> {
 
 	// 将同步的列转换为SELECT语句的其中一个片段
 	private static String toScript(String dsl, String columnName, Map<String, Object> params) {
-		NamedScript namedScript = DSLUtils.parse(dsl, ParamsKit.init(params).put(COLUMN_NAME, columnName).get());
+		NamedScript namedScript = DSLUtils.parse(dsl, MapUtils.toHashMapBuilder(params).build(COLUMN_NAME, columnName));
 		return DSLUtils.toScript(namedScript.getScript(), namedScript.getParams(), FlinkSQLParamsParser.getInstance())
 				.getValue();
 	}

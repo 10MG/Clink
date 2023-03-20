@@ -4,7 +4,7 @@ import java.sql.Time;
 import java.sql.Timestamp;
 
 import cn.tenmg.dsl.parser.PlaintextParamsParser;
-import cn.tenmg.flink.jobs.utils.DateUtils;
+import cn.tenmg.dsl.utils.DateUtils;
 
 /**
  * FlinkSQL参数解析器

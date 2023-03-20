@@ -11,6 +11,8 @@ import java.util.regex.Pattern;
 
 import cn.tenmg.dsl.NamedScript;
 import cn.tenmg.dsl.utils.DSLUtils;
+import cn.tenmg.dsl.utils.MapUtils;
+import cn.tenmg.dsl.utils.MatchUtils;
 import cn.tenmg.dsl.utils.StringUtils;
 import cn.tenmg.flink.jobs.context.FlinkJobsContext;
 import cn.tenmg.flink.jobs.parser.FlinkSQLParamsParser;
@@ -190,7 +192,7 @@ public abstract class SQLUtils {
 				sqlBuffer.append(end);
 			} else {
 				Map<String, String> config = ConfigurationUtils.load(value),
-						actualDataSource = MapUtils.newHashMap(dataSource);
+						actualDataSource = MapUtils.toHashMap(dataSource);
 				MapUtils.removeAll(actualDataSource, config.keySet());
 				matcher.appendReplacement(sqlBuffer, start);
 				StringBuilder blank = new StringBuilder();

@@ -5,12 +5,13 @@ import java.lang.reflect.Modifier;
 import java.util.Map;
 
 /**
- * 属性工具类
+ * 属性工具类。已废弃
  * 
  * @author June wjzhao@aliyun.com
  * 
  * @since 1.0.0
  */
+@Deprecated
 public abstract class FieldUtils {
 
 	public static final void parseFields(Map<String, Integer> feildNames, Map<Integer, Field> fieldMap,

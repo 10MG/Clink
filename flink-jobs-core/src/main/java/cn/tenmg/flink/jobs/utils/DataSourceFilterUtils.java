@@ -5,6 +5,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.ServiceLoader;
 
+import cn.tenmg.dsl.utils.MapUtils;
 import cn.tenmg.dsl.utils.StringUtils;
 import cn.tenmg.flink.jobs.datasource.DataSourceFilter;
 import cn.tenmg.flink.jobs.exception.IllegalConfigurationException;
@@ -62,7 +63,7 @@ public abstract class DataSourceFilterUtils {
 		if (StringUtils.isBlank(name)) {
 			return dataSource;
 		}
-		HashMap<String, String> newDataSource = MapUtils.newHashMap(dataSource);
+		HashMap<String, String> newDataSource = MapUtils.toHashMap(dataSource);
 		getDataSourceFilter(name).doFilter(newDataSource);
 		return newDataSource;
 

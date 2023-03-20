@@ -32,7 +32,7 @@ public class StandaloneRestClusterClientTest {
 				.load(ClassUtils.getDefaultClassLoader().getResourceAsStream("WordCount.xml"));
 		JobID jobId = client.submit(flinkJobs);
 		System.out.println("Flink job launched: " + jobId.toHexString());// 启动flink-jobs作业
-		Thread.sleep(80000);
+		Thread.sleep(8000);
 
 		// JobID jobId = JobID.fromHexString(hexString);
 		JobStatus jobStatus = client.getJobStatus(jobId);// 获取作业状态

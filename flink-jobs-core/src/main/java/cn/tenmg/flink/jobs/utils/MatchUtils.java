@@ -4,13 +4,14 @@ import java.util.Collection;
 import java.util.Iterator;
 
 /**
- * 通配符匹配工具类
+ * 通配符匹配工具类。已废弃，请使用 {@code cn.tenmg.dsl.utils.MatchUtils} 替换
  * 
  * @author June wjzhao@aliyun.com
  * 
  * @since 1.5.0
  *
  */
+@Deprecated
 public abstract class MatchUtils {
 
 	private MatchUtils() {

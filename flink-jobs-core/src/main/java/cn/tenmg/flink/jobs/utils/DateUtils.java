@@ -5,12 +5,13 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 /**
- * 日期工具类
+ * 日期工具类。已废弃，请使用 {@code cn.tenmg.dsl.utils.DateUtils} 替换
  * 
  * @author June wjzhao@aliyun.com
  * 
  * @since 1.1.0
  */
+@Deprecated
 public abstract class DateUtils {
 	/**
 	 * 根据模板将制定对象格式化为日期字符串

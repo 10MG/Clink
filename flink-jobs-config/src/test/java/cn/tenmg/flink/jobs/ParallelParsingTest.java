@@ -20,7 +20,7 @@ import cn.tenmg.flink.jobs.utils.ClassUtils;
  * 并行解析测试
  * 
  * @author June wjzhao@aliyun.com
- * @since 1.5.5
+ * @since 1.5.6
  */
 public class ParallelParsingTest {
 

@@ -6,12 +6,13 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * 查找表工具类
+ * 查找表工具类。已废弃，请使用 {@code cn.tenmg.dsl.utils.MapUtils} 替换
  * 
  * @author June wjzhao@aliyun.com
  * 
  * @since 1.1.2
  */
+@Deprecated
 public abstract class MapUtils {
 
 	/**

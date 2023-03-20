@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * HashMap配套工具
+ * HashMap配套工具。已废弃，请使用 {@code cn.tenmg.dsl.utils.MapUtils} 替换
  * 
  * @param <K>
  *            键的类型
@@ -15,6 +15,7 @@ import java.util.Map;
  * 
  * @since 1.1.3
  */
+@Deprecated
 public class HashMapKit<K, V> {
 
 	private HashMap<K, V> hashMap = new HashMap<K, V>();
