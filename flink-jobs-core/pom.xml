@@ -13,6 +13,12 @@
 	<artifactId>flink-jobs-core</artifactId>
 	<packaging>jar</packaging>
 
+	<properties>
+		<dsl.version>1.3.3</dsl.version>
+		<bsh.version>2.0b6</bsh.version>
+		<mysql-connector-j.version>8.0.32</mysql-connector-j.version>
+	</properties>
+
 	<dependencies>
 		<!-- https://mvnrepository.com/artifact/com.alibaba/fastjson -->
 		<dependency>
@@ -24,7 +30,7 @@
 		<dependency>
 			<groupId>cn.tenmg</groupId>
 			<artifactId>dsl</artifactId>
-			<version>1.3.2</version>
+			<version>${dsl.version}</version>
 		</dependency>
 
 		<!-- https://mvnrepository.com/artifact/org.slf4j/slf4j-api -->
@@ -56,7 +62,7 @@
 		<dependency>
 			<groupId>org.apache-extras.beanshell</groupId>
 			<artifactId>bsh</artifactId>
-			<version>2.0b6</version>
+			<version>${bsh.version}</version>
 			<optional>true</optional>
 		</dependency>
 
@@ -93,7 +99,7 @@
 		<dependency>
 			<groupId>com.mysql</groupId>
 			<artifactId>mysql-connector-j</artifactId>
-			<version>8.0.31</version>
+			<version>${mysql-connector-j.version}</version>
 			<scope>test</scope>
 		</dependency>
 
