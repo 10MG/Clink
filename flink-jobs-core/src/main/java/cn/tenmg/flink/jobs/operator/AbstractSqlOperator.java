@@ -14,7 +14,7 @@ import cn.tenmg.flink.jobs.model.SqlQuery;
 import cn.tenmg.flink.jobs.utils.StreamTableEnvironmentUtils;
 
 /**
- * 虚SQL操作执行器
+ * 抽象SQL操作执行器
  * 
  * @author June wjzhao@aliyun.com
  *

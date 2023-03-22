@@ -17,7 +17,7 @@ import cn.tenmg.flink.jobs.model.Operate;
 
 /**
  * 
- * 虚操作执行器
+ * 抽象操作执行器
  * 
  * @author June wjzhao@aliyun.com
  *

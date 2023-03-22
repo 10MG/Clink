@@ -3,13 +3,13 @@ package cn.tenmg.flink.jobs.model;
 import java.io.Serializable;
 
 /**
- * 操作配置虚基类
+ * 操作配置
  * 
  * @author June wjzhao@aliyun.com
  * 
  * @since 1.1.0
  */
-public class Operate implements Serializable {
+public abstract class Operate implements Serializable {
 
 	/**
 	 * 

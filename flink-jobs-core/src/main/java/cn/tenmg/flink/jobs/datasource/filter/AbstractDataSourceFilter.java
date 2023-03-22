@@ -10,7 +10,7 @@ import cn.tenmg.flink.jobs.context.FlinkJobsContext;
 import cn.tenmg.flink.jobs.datasource.DataSourceFilter;
 
 /**
- * 数据源过滤器虚基类
+ * 抽象数据源过滤器
  * 
  * @author June wjzhao@aliyun.com
  * 
