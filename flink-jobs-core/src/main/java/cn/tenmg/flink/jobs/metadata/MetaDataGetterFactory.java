@@ -39,8 +39,7 @@ public abstract class MetaDataGetterFactory {
 						throw new IllegalArgumentException("MetaDataGetter for connector '" + connector
 								+ "' is not supported, Please consider manually implementing the interface "
 								+ MetaDataGetter.class.getName() + " and specifying the configuration key '" + key
-								+ "' to your own class name in the configuration file "
-								+ FlinkJobsContext.getConfigurationFile());
+								+ "' to your own class name in the configuration");
 					} else if (StringUtils.isBlank(className)) {
 						throw new IllegalConfigurationException(
 								"The configuration of key '" + key + "' must be not blank");

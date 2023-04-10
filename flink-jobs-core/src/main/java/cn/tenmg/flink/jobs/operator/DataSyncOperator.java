@@ -213,9 +213,8 @@ public class DataSyncOperator extends AbstractOperator<DataSync> {
 		} else if (columns.isEmpty()) {// 没有用户自定义列
 			throw new IllegalArgumentException(
 					"At least one column must be configured in manual mode, or set the configuration '"
-							+ FlinkJobsContext.SMART_MODE_CONFIG_KEY + "=true' at "
-							+ FlinkJobsContext.getConfigurationFile()
-							+ " to enable automatic column acquisition in smart mode");
+							+ FlinkJobsContext.SMART_MODE_CONFIG_KEY
+							+ "=true' to enable automatic column acquisition in smart mode");
 		} else {// 全部是用户自定义列
 			collationCustom(columns, params, timestampMap);
 		}

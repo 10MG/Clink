@@ -15,9 +15,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import cn.tenmg.dsl.utils.MapUtils;
-import cn.tenmg.dsl.utils.PlaceHolderUtils;
 import cn.tenmg.dsl.utils.PropertiesLoaderUtils;
+import cn.tenmg.flink.jobs.configuration.ConfigurationLoader;
 import cn.tenmg.flink.jobs.exception.DataSourceNotFoundException;
+import cn.tenmg.flink.jobs.exception.IllegalConfigurationException;
 import cn.tenmg.flink.jobs.utils.ConfigurationUtils;
 
 /**
@@ -66,75 +67,78 @@ public abstract class FlinkJobsContext {
 	private static final Map<String, String> tableExecConfigs = new HashMap<String, String>();
 
 	private static final String DEFAULT_STRATEGIES_PATH = "flink-jobs-context-loader.properties",
-			CONFIG_LOCATION_KEY = "config.location", CONTEXT_LOCATION_KEY = "context.location",
-			DATASOURCE_PREFIX = "datasource" + CONFIG_SPLITER,
+			CONTEXT_LOCATION_KEY = "flink.jobs.context", DEFAULT_CONTEXT_LOCATION = "flink-jobs-context.properties",
+			CONFIG_LOCATION_KEY = "config.location", DATASOURCE_PREFIX = "datasource" + CONFIG_SPLITER,
 			AUTO_DATASOURCE_PREFIX = "auto" + CONFIG_SPLITER + DATASOURCE_PREFIX,
-			DATASOURCE_REGEX = "^" + DATASOURCE_PREFIX.replaceAll("\\.", "\\\\.") + "([\\S]+\\.){0,1}[^\\.]+$",
-			AUTO_DATASOURCE_REGEX = "^" + AUTO_DATASOURCE_PREFIX.replaceAll("\\.", "\\\\.")
-					+ "([\\S]+\\.){0,1}[^\\.]+$",
+			TABLE_API_CONFIG_PREFIX = "table.exec",
+			DATA_SYNC_CONFIG_REGEX = "^data\\.sync\\.[^\\.]+\\.((from|to)_type|script|strategy)$",
 			EXECUTION_ENVIRONMENT = "ExecutionEnvironment", CURRENT_CONFIGURATION = "CurrentConfiguration",
 			IDENTIFIER = "identifier";
 
-	private static Properties defaultProperties, configProperties;
+	private static Properties config = new Properties();
 
 	static {
-		defaultProperties = PropertiesLoaderUtils.loadIgnoreException(DEFAULT_STRATEGIES_PATH);
-		String contextFile = defaultProperties.getProperty(CONTEXT_LOCATION_KEY, "flink-jobs-context.properties");
-		try {
-			PropertiesLoaderUtils.load(defaultProperties, contextFile);
-		} catch (Exception e) {
-			log.warn("An exception occurred while loading ".concat(contextFile), e);
+		config.putAll(System.getenv());// 系统环境变量
+		config.putAll(System.getProperties());// JVM环境变量
+		PropertiesLoaderUtils.loadIgnoreException(config, DEFAULT_STRATEGIES_PATH);
+		String contextFile = config.getProperty(CONTEXT_LOCATION_KEY);
+		if (contextFile == null) {// 兼容老版本
+			contextFile = config.getProperty("context.location", DEFAULT_CONTEXT_LOCATION);
 		}
-		String configurationFile = getConfigurationFile();
 		try {
-			configProperties = PropertiesLoaderUtils.load(configurationFile);
-			Entry<Object, Object> entry;
-			Object value;
-			for (Iterator<Entry<Object, Object>> it = configProperties.entrySet().iterator(); it.hasNext();) {
-				entry = it.next();
-				value = entry.getValue();
-				if (value != null) {
-					configProperties.put(entry.getKey(), PlaceHolderUtils.replace(value.toString(), configProperties));
-				}
-			}
-			String key, name, param, keyLowercase;
-			Map<String, String> dataSource;
-			boolean ignoreCase = !Boolean.valueOf(getProperty("data.sync.timestamp.case_sensitive"));
-			int configSpliterLen = CONFIG_SPLITER.length(), datasourcePrefixLen = DATASOURCE_PREFIX.length(),
-					autoDatasourcePrefixLen = AUTO_DATASOURCE_PREFIX.length();
-			for (Iterator<Entry<Object, Object>> it = configProperties.entrySet().iterator(); it.hasNext();) {
-				entry = it.next();
-				key = entry.getKey().toString();
-				value = entry.getValue();
-				if (key.matches(DATASOURCE_REGEX)) {
-					param = key.substring(datasourcePrefixLen);
-					int index = param.indexOf(CONFIG_SPLITER);
-					if (index > 0) {
-						name = param.substring(0, index);
-						param = param.substring(index + configSpliterLen);
-						dataSource = datasources.get(name);
-						if (dataSource == null) {
-							dataSource = new LinkedHashMap<String, String>();
-							datasources.put(name, dataSource);
-						}
-						dataSource.put(param, value.toString());
-					}
-				} else if (key.matches(AUTO_DATASOURCE_REGEX)) {
-					param = key.substring(autoDatasourcePrefixLen);
-					autoDatasource.put(param, value.toString());
-				} else if (key.startsWith("table.exec")) {
-					tableExecConfigs.put(key, value.toString());
-				} else if (ignoreCase && key.matches("^data\\.sync\\.[^\\.]+\\.((from|to)_type|script|strategy)$")) {
-					keyLowercase = key.toLowerCase();
-					if (!key.equals(keyLowercase) && !defaultProperties.containsKey(keyLowercase)) {
-						defaultProperties.put(keyLowercase, value);
-					}
-				}
-			}
+			PropertiesLoaderUtils.load(config, contextFile);
 		} catch (Exception e) {
-			log.info("Configuration file " + configurationFile
-					+ " not found in classpath, the default configuration will be used.");
-			configProperties = new Properties();
+			log.warn("An exception occurred while loading ".concat(contextFile) + " in classpath", e);
+		}
+
+		String loaderClassName = config.getProperty("flink.jobs.configuration-loader",
+				"cn.tenmg.flink.jobs.configuration.loader.PropertiesFileConfigurationLoader");
+		ConfigurationLoader loader;
+		try {
+			Class<?> cls = Class.forName(loaderClassName);
+			loader = (ConfigurationLoader) cls.getConstructor().newInstance();
+		} catch (ClassNotFoundException e) {
+			throw new IllegalConfigurationException("Unable to find configuration loader " + loaderClassName, e);
+		} catch (Exception e) {
+			throw new IllegalConfigurationException("Error occurred in instantiation configuration loader", e);
+		}
+		loader.load(config);
+
+		Object value;
+		Entry<Object, Object> entry;
+		String key, name, param, keyLowercase;
+		Map<String, String> dataSource;
+		boolean ignoreCase = !Boolean.valueOf(getProperty("data.sync.timestamp.case_sensitive"));
+		int configSpliterLen = CONFIG_SPLITER.length(), datasourcePrefixLen = DATASOURCE_PREFIX.length(),
+				autoDatasourcePrefixLen = AUTO_DATASOURCE_PREFIX.length();
+		for (Iterator<Entry<Object, Object>> it = config.entrySet().iterator(); it.hasNext();) {
+			entry = it.next();
+			key = entry.getKey().toString();
+			value = entry.getValue();
+			if (key.startsWith(DATASOURCE_PREFIX)) {
+				param = key.substring(datasourcePrefixLen);
+				int index = param.indexOf(CONFIG_SPLITER);
+				if (index > 0) {
+					name = param.substring(0, index);
+					param = param.substring(index + configSpliterLen);
+					dataSource = datasources.get(name);
+					if (dataSource == null) {
+						dataSource = new LinkedHashMap<String, String>();
+						datasources.put(name, dataSource);
+					}
+					dataSource.put(param, value.toString());
+				}
+			} else if (key.startsWith(AUTO_DATASOURCE_PREFIX)) {
+				param = key.substring(autoDatasourcePrefixLen);
+				autoDatasource.put(param, value.toString());
+			} else if (key.startsWith(TABLE_API_CONFIG_PREFIX)) {
+				tableExecConfigs.put(key, value.toString());
+			} else if (ignoreCase && key.matches(DATA_SYNC_CONFIG_REGEX)) {
+				keyLowercase = key.toLowerCase();
+				if (!key.equals(keyLowercase) && !config.containsKey(keyLowercase)) {
+					config.put(keyLowercase, value);
+				}
+			}
 		}
 	}
 
@@ -232,19 +236,18 @@ public abstract class FlinkJobsContext {
 	}
 
 	/**
-	 * 根据键获取配置的属性。优先查找用户配置属性，如果用户配置属性不存在从上下文配置中查找
+	 * 根据键获取配置的属性
 	 * 
 	 * @param key
 	 *            键
 	 * @return 配置属性值或null
 	 */
 	public static String getProperty(String key) {
-		return configProperties.containsKey(key) ? configProperties.getProperty(key)
-				: defaultProperties.getProperty(key);
+		return config.getProperty(key);
 	}
 
 	/**
-	 * 根据键获取配置的属性。优先查找用户配置属性，如果用户配置属性不存在从上下文配置中查找，均不存在则返回默认值
+	 * 根据键获取配置的属性，不存在则返回默认值
 	 * 
 	 * @param key
 	 *            键
@@ -253,8 +256,7 @@ public abstract class FlinkJobsContext {
 	 * @return 配置属性值或默认值
 	 */
 	public static String getProperty(String key, String defaultValue) {
-		return configProperties.containsKey(key) ? configProperties.getProperty(key)
-				: (defaultProperties.containsKey(key) ? defaultProperties.getProperty(key) : defaultValue);
+		return config.getProperty(key, defaultValue);
 	}
 
 	/**
@@ -310,8 +312,9 @@ public abstract class FlinkJobsContext {
 	 * 
 	 * @return 返回实际使用的配置文件
 	 */
+	@Deprecated
 	public static String getConfigurationFile() {
-		return defaultProperties.getProperty(CONFIG_LOCATION_KEY, "flink-jobs.properties");
+		return config.getProperty(CONFIG_LOCATION_KEY, "flink-jobs.properties");
 	}
 
 	/**
@@ -325,8 +328,8 @@ public abstract class FlinkJobsContext {
 		Map<String, String> dataSource = datasources.get(name);
 		if (dataSource == null) {
 			if (autoDatasource.isEmpty()) {
-				throw new DataSourceNotFoundException("DataSource named " + name
-						+ " not found, Please check the configuration file " + getConfigurationFile());
+				throw new DataSourceNotFoundException(
+						"DataSource named " + name + " not found, Please check the configuration");
 			} else {
 				log.info("Generate a DataSource named " + name + " automatically");
 				dataSource = MapUtils.toHashMapBuilder(autoDatasource).build(autoDatasource.get(IDENTIFIER), name);
@@ -386,6 +389,10 @@ public abstract class FlinkJobsContext {
 	public static Object remove(Object key) {
 		Map<Object, Object> perThreadResources = resources.get();
 		return perThreadResources != null ? perThreadResources.remove(key) : null;
+	}
+
+	public Properties getConfig(String keyPrefix) {
+		return null;
 	}
 
 	/**

@@ -51,7 +51,7 @@ public class CreateTableOperator extends AbstractOperator<CreateTable> {
 		}
 		StreamTableEnvironment tableEnv = FlinkJobsContext.getOrCreateStreamTableEnvironment(env);
 		StreamTableEnvironmentUtils.useCatalogOrDefault(tableEnv, createTable.getCatalog());
-		
+
 		Map<String, String> dataSource = DataSourceFilterUtils.filter(createTable.getDataSourceFilter(),
 				FlinkJobsContext.getDatasource(datasource));
 		String primaryKey = collation(createTable, dataSource);
@@ -99,9 +99,8 @@ public class CreateTableOperator extends AbstractOperator<CreateTable> {
 		} else if (columns.isEmpty()) {// 没有用户自定义列
 			throw new IllegalArgumentException(
 					"At least one column must be configured in manual mode, or set the configuration '"
-							+ FlinkJobsContext.SMART_MODE_CONFIG_KEY + "=true' at "
-							+ FlinkJobsContext.getConfigurationFile()
-							+ " to enable automatic column acquisition in smart mode");
+							+ FlinkJobsContext.SMART_MODE_CONFIG_KEY
+							+ "=true' to enable automatic column acquisition in smart mode");
 		} else {// 全部是用户自定义列
 			collationCustom(columns);
 		}

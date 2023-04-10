@@ -2,7 +2,10 @@ package cn.tenmg.flink.jobs.utils;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Properties;
 import java.util.Set;
 
 import cn.tenmg.dsl.utils.DSLUtils;
@@ -112,6 +115,29 @@ public abstract class ConfigurationUtils {
 			}
 			return map;
 		}
+	}
+
+	/**
+	 * 获取含有指定键的前缀的配置项的集合，该集合的键为去除该前缀后剩余的子串。
+	 * 
+	 * @param config
+	 *            配置对象
+	 * @param prefix
+	 *            键的前缀
+	 * @return 指定键前缀的配置项的集合
+	 */
+	public static Properties getPrefixedKeyValuePairs(Properties config, String prefix) {
+		String key;
+		Entry<Object, Object> entry;
+		Properties keyValuePairs = new Properties();
+		for (Iterator<Entry<Object, Object>> it = config.entrySet().iterator(); it.hasNext();) {
+			entry = it.next();
+			key = entry.getKey().toString();
+			if (key.startsWith(prefix)) {
+				keyValuePairs.put(key.substring(prefix.length()), entry.getValue());
+			}
+		}
+		return keyValuePairs;
 	}
 
 	/**
