@@ -93,6 +93,7 @@ public abstract class FlinkJobsContext {
 
 		String loaderClassName = config.getProperty("flink.jobs.configuration-loader",
 				"cn.tenmg.flink.jobs.configuration.loader.PropertiesFileConfigurationLoader");
+		System.out.println(loaderClassName);
 		ConfigurationLoader loader;
 		try {
 			Class<?> cls = Class.forName(loaderClassName);

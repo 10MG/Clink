@@ -20,18 +20,20 @@ import cn.tenmg.flink.jobs.utils.ConfigurationUtils;
  */
 public class NacosConfigurationLoader extends PropertiesFileConfigurationLoader {
 
+	private static final String NACOS_CONFIG_PREFIX = "nacos.config.";
+
 	@Override
-	protected void loadConfig(Properties config) throws ConfigurationLoadException {
-		super.loadConfig(config);
-		loadNacosConfig(config, ConfigurationUtils.getPrefixedKeyValuePairs(config, "nacos.config."));
+	public void load(Properties config) throws ConfigurationLoadException {
+		super.load(config);
+		loadNacosConfig(config, ConfigurationUtils.getPrefixedKeyValuePairs(config, NACOS_CONFIG_PREFIX));
 		replacePlaceHolder(config);
 	}
 
 	protected void loadNacosConfig(Properties config, Properties nacos) throws ConfigurationLoadException {
-		String group = config.getProperty("group"), dataIds[] = config.getProperty("dataIds").split(","), dataId = null;
-		long timeoutMs = Long.valueOf(config.getProperty("pollTimeoutMs", "3000"));
+		String group = nacos.getProperty("group"), dataIds[] = nacos.getProperty("dataIds").split(","), dataId = null;
+		long timeoutMs = Long.valueOf(nacos.getProperty("pollTimeoutMs", "3000"));
 		try {
-			ConfigService configService = NacosFactory.createConfigService(config);
+			ConfigService configService = NacosFactory.createConfigService(nacos);
 			StringReader sr;
 			for (int i = 0; i < dataIds.length; i++) {
 				dataId = dataIds[i];
