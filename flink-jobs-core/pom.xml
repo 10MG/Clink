@@ -15,7 +15,7 @@
 
 	<properties>
 		<nacos-client.version>2.2.1</nacos-client.version>
-		<dsl.version>1.3.3</dsl.version>
+		<dsl.version>1.3.4</dsl.version>
 		<bsh.version>2.0b6</bsh.version>
 		<mysql-connector-j.version>8.0.32</mysql-connector-j.version>
 	</properties>
