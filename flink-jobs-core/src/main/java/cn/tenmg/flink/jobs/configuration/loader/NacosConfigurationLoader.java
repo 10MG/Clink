@@ -51,7 +51,7 @@ public class NacosConfigurationLoader extends PropertiesFileConfigurationLoader 
 				}
 			}
 		} catch (NacosException e) {
-			throw new ConfigurationLoadException("Unable to get configuration wich dataId is " + dataId + " from nacos",
+			throw new ConfigurationLoadException("Unable to get configuration from nacos wich dataId is " + dataId,
 					e);
 		}
 	}
