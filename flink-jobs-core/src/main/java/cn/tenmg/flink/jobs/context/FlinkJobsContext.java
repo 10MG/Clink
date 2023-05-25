@@ -1,9 +1,11 @@
 package cn.tenmg.flink.jobs.context;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
@@ -81,10 +83,8 @@ public abstract class FlinkJobsContext {
 		config.putAll(System.getenv());// 系统环境变量
 		config.putAll(System.getProperties());// JVM环境变量
 		PropertiesLoaderUtils.loadIgnoreException(config, DEFAULT_STRATEGIES_PATH);
-		String contextFile = config.getProperty(CONTEXT_LOCATION_KEY);
-		if (contextFile == null) {// 兼容老版本
-			contextFile = config.getProperty("context.location", DEFAULT_CONTEXT_LOCATION);
-		}
+		String contextFile = getProperty(Arrays.asList("context.location", CONTEXT_LOCATION_KEY),
+				DEFAULT_CONTEXT_LOCATION);// 兼容老的配置
 		try {
 			PropertiesLoaderUtils.load(config, contextFile);
 		} catch (Exception e) {
@@ -108,7 +108,8 @@ public abstract class FlinkJobsContext {
 		Entry<Object, Object> entry;
 		String key, name, param, keyLowercase;
 		Map<String, String> dataSource;
-		boolean ignoreCase = !Boolean.valueOf(getProperty("data.sync.timestamp.case_sensitive"));
+		boolean ignoreCase = !Boolean.valueOf(getProperty(
+				Arrays.asList("data.sync.timestamp.case_sensitive", "data.sync.timestamp.case-sensitive"), "true"));// 兼容老的配置
 		int configSpliterLen = CONFIG_SPLITER.length(), datasourcePrefixLen = DATASOURCE_PREFIX.length(),
 				autoDatasourcePrefixLen = AUTO_DATASOURCE_PREFIX.length();
 		for (Iterator<Entry<Object, Object>> it = config.entrySet().iterator(); it.hasNext();) {
@@ -247,6 +248,17 @@ public abstract class FlinkJobsContext {
 	}
 
 	/**
+	 * 根据优先键依次获取配置的属性，一旦某一键存在则返回其对应的值，均不存在则返回 {@code null}
+	 * 
+	 * @param priorKeys
+	 *            优先键
+	 * @return 配置属性值或 {@code null}
+	 */
+	public static String getProperty(List<String> priorKeys) {
+		return getProperty(priorKeys, null);
+	}
+
+	/**
 	 * 根据键获取配置的属性，不存在则返回默认值
 	 * 
 	 * @param key
@@ -257,6 +269,19 @@ public abstract class FlinkJobsContext {
 	 */
 	public static String getProperty(String key, String defaultValue) {
 		return config.getProperty(key, defaultValue);
+	}
+
+	/**
+	 * 根据优先键依次获取配置的属性，一旦某一键存在则返回其对应的值，均不存在则返回默认值
+	 * 
+	 * @param priorKeys
+	 *            优先键
+	 * @param defaultValue
+	 *            默认值
+	 * @return 配置属性值或默认值
+	 */
+	public static String getProperty(List<String> priorKeys, String defaultValue) {
+		return ConfigurationUtils.getProperty(config, priorKeys, defaultValue);
 	}
 
 	/**

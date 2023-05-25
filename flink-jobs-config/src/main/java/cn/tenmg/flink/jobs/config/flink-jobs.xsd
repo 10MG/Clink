@@ -182,7 +182,7 @@
 					</xsd:attribute>
 					<xsd:attribute name="method">
 						<xsd:annotation>
-							<xsd:documentation>调用的JDBC方法。默认"executeUpdate"（1.4.0及之前版本默认值为"executeLargeUpdate"，由于很多数据库连接池或者JDBC驱动未实现该方法，因此1.4.1版本开始改为"executeUpdate"）。可在配置文件中使用jdbc.default_method配置项修改默认值。
+							<xsd:documentation>调用的JDBC方法。默认"executeUpdate"（1.4.0及之前版本默认值为"executeLargeUpdate"，由于很多数据库连接池或者JDBC驱动未实现该方法，因此1.4.1版本开始改为"executeUpdate"）。可在配置文件中使用jdbc.default-method配置项修改默认值。
 							</xsd:documentation>
 						</xsd:annotation>
 						<xsd:simpleType>
@@ -390,7 +390,7 @@
 					</xsd:attribute>
 					<xsd:attribute name="smart" type="xsd:boolean">
 						<xsd:annotation>
-							<xsd:documentation>是否开启智能模式。不设置时，根据flink-jobs应用程序的全局配置确定是否开启智能模式，flink-jobs应用程序的全局默认配置为`data.sync.smart=true`。
+							<xsd:documentation>是否开启智能模式。不设置时，根据flink-jobs应用程序的全局配置确定是否开启智能模式，flink-jobs应用程序的全局默认配置为`flink.jobs.smart=true`。
 							</xsd:documentation>
 						</xsd:annotation>
 					</xsd:attribute>
@@ -471,7 +471,7 @@
 					</xsd:attribute>
 					<xsd:attribute name="smart" type="xsd:boolean">
 						<xsd:annotation>
-							<xsd:documentation>是否开启智能模式。不设置时，根据flink-jobs应用程序的全局配置确定是否开启智能模式，flink-jobs应用程序的全局默认配置为`data.sync.smart=true`。
+							<xsd:documentation>是否开启智能模式。不设置时，根据flink-jobs应用程序的全局配置确定是否开启智能模式，flink-jobs应用程序的全局默认配置为`flink.jobs.smart=true`。
 							</xsd:documentation>
 						</xsd:annotation>
 					</xsd:attribute>

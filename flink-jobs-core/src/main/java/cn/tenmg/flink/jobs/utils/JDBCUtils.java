@@ -51,14 +51,17 @@ public abstract class JDBCUtils {
 	 */
 	public static final Connection getConnection(Map<String, String> dataSource)
 			throws SQLException, ClassNotFoundException {
-		String driver = dataSource.get("driver"), url = dataSource.get("url");
+		String url = dataSource.get("url");
 		if (StringUtils.isBlank(url)) {
 			url = dataSource.get("jdbc-url");
 		}
-		if (StringUtils.isBlank(driver)) {
-			driver = FlinkJobsContext.getDefaultJDBCDriver(getProduct(url));
+		if (Boolean.valueOf(FlinkJobsContext.getProperty("jdbc.register-driver"))) {
+			String driver = dataSource.get("driver");
+			if (StringUtils.isBlank(driver)) {
+				driver = FlinkJobsContext.getDefaultJDBCDriver(getProduct(url));
+			}
+			Class.forName(driver);
 		}
-		Class.forName(driver);
 		Connection con = DriverManager.getConnection(url, dataSource.get("username"), dataSource.get("password"));
 		String catalog = dataSource.get("database-name");
 		if (StringUtils.isNotBlank(catalog)) {

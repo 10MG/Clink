@@ -309,7 +309,7 @@ script     | `String` | 否 | 基于[DSL](https://gitee.com/tenmg/dsl)的SQL脚�
 saveAs     | `String` | 否 | 执行结果另存为一个新的变量的名称。变量的值是执行JDBC指定方法的返回值。
 when       | `String` | 否 | 操作的条件，当且仅当该条件满足时，才执行该操作。不指定时，默认表示条件成立。
 dataSource | `String` | 是 | 使用的数据源名称。这里的数据源是在flink-jobs应用程序的配置文件中配置，并非在flink-jobs-clients应用程序的配置文件中配置。详见[flink-jobs数据源配置](#%E6%95%B0%E6%8D%AE%E6%BA%90%E9%85%8D%E7%BD%AE)。
-method     | `String` | 否 | 调用的JDBC方法，支持"get"/"select"/"execute"/"executeUpdate"/"executeLargeUpdate"，默认是"executeUpdate"（1.4.0及之前版本默认值为"executeLargeUpdate"，由于很多数据库连接池或者JDBC驱动未实现该方法，因此1.4.1版本开始改为"executeUpdate"）。可在配置文件中使用`jdbc.default_method`配置项修改默认值。
+method     | `String` | 否 | 调用的JDBC方法，支持"get"/"select"/"execute"/"executeUpdate"/"executeLargeUpdate"，默认是"executeUpdate"（1.4.0及之前版本默认值为"executeLargeUpdate"，由于很多数据库连接池或者JDBC驱动未实现该方法，因此1.4.1版本开始改为"executeUpdate"）。可在配置文件中使用`jdbc.default-method`配置项修改默认值。
 script     | `String` | 是 | 基于[DSL](https://gitee.com/tenmg/dsl)的SQL脚本。使用标签内文本表示。
 
 #### `<data-sync>`
@@ -328,7 +328,7 @@ toConfig   | `String`  | 是 | 目标配置。例如：`sink.buffer-flush.max-ro
 table      | `String`  | 是 | 同步数据表名。
 primaryKey | `String`  | 否 | 主键，多个列名以“,”分隔。当开启智能模式时，会自动获取主键信息。
 timestamp  | `String`  | 否 | 时间戳列名，多个列名使用“,”分隔。设置这个值后，创建源表和目标表时会添加这些列，并在数据同步时写入这些列。一般在flink-jobs应用程序中使用配置文件统一指定，而不是每个同步任务单独指定。
-smart      | `Boolean` | 否 | 是否开启智能模式。不设置时，根据全局配置确定是否开启智能模式，全局默认配置为`data.sync.smart=true`。
+smart      | `Boolean` | 否 | 是否开启智能模式。不设置时，根据全局配置确定是否开启智能模式，全局默认配置为`flink.jobs.smart=true`。
 `<column>` | `Element` | 否 | 同步数据列。当开启智能模式时，会自动获取列信息。
 
 ##### `<column>`
@@ -356,7 +356,7 @@ tableName        | `String` | 是 | 创建表的表名。即`CREATE TABLE table_
 catalog          | `String` | 否 | 执行SQL使用的Flink SQL的catalog名称。
 bindTableName    | `String` | 否 | 绑定的表名，即WITH子句的“table-name”，默认与tableName相同。
 primaryKey       | `String` | 否 | 主键，多个列名以“,”分隔。当开启智能模式时，会自动获取主键信息。
-smart            | `String` | 否 | 是否开启智能模式。不设置时，根据flink-jobs应用程序的全局配置确定是否开启智能模式，flink-jobs应用程序的全局默认配置为`data.sync.smart=true`。
+smart            | `String` | 否 | 是否开启智能模式。不设置时，根据flink-jobs应用程序的全局配置确定是否开启智能模式，flink-jobs应用程序的全局默认配置为`flink.jobs.smart=true`。
 
 ##### `<column>`
 
@@ -943,23 +943,31 @@ metadata.getter.jdbc=cn.tenmg.flink.jobs.metadata.getter.JDBCMetaDataGetter
 metadata.getter.starrocks=cn.tenmg.flink.jobs.metadata.getter.StarrocksMetaDataGetter
 ```
 
-### metadata.starrocks.unique_key_as_primary_key
+### ~~metadata.starrocks.unique_key_as_primary_key~~
 
-是否将获取的StarRocks更新模型的`UNIQUE KEY`列作为主键`PRIMARY KEY`，1.3.2 版本开始支持。默认值为：
+1.3.2 版本开始支持，但为规范命名，自1.5.6版本开始已废弃，请使用 `metadata.starrocks.unique_key-as-primary-key` 替换。
+
+### metadata.starrocks.unique-key-as-primary-key
+
+是否将获取的StarRocks更新模型的`UNIQUE KEY`列作为主键`PRIMARY KEY`。该配置自 1.5.6 版本开始支持，之前版本为`metadata.starrocks.unique_key_as_primary_key`。默认值为：
 
 ```
-metadata.starrocks.unique_key_as_primary_key=true
+metadata.starrocks.unique-key-as-primary-key=true
 
 ```
 
 由于只有带主键`PRIMARY KEY`的Flink SQL任务支持安全停止（`stopWithSavepoint`），因此将更新模型的`UNIQUE KEY`作为主键`PRIMARY KEY`是非常有意义的。它意味对于StarRocks更新模型（`UNIQUE KEY`）表使用自动生成的末端表（Sink Table）会带有主键（`PRIMARY KEY`），因此对应的同步（或写入）任务可以被安全停止。
 
-### metadata.starrocks.catalog_as_schema
+### ~~metadata.starrocks.catalog_as_schema~~
 
-Starrocks 对 JDBC 适配有问题。`catalog`和`schema`对调了（`catalog`应为`null`，但它实际上是`schema`的值）。因此，这个配置允许用户选择是否使用`catalog`作为`schema`作为元数据的查询条件，以便正确获取元数据。该配置从 1.3.3 版本开始支持，它的默认值为：
+1.3.2 版本开始支持，但为规范命名，自1.5.6版本开始已废弃，请使用 `metadata.starrocks.catalog-as-schema` 替换。
+
+### metadata.starrocks.catalog-as-schema
+
+Starrocks 对 JDBC 适配有问题。`catalog`和`schema`对调了（`catalog`应为`null`，但它实际上是`schema`的值）。因此，这个配置允许用户选择是否使用`catalog`作为`schema`作为元数据的查询条件，以便正确获取元数据。该配置自 1.5.6 版本开始支持，之前版本为`metadata.starrocks.catalog_as_schema`，它的默认值为：
 
 ```
-metadata.starrocks.catalog_as_schema=true
+metadata.starrocks.catalog-as-schema=true
 ```
 
 Starrocks的错误详细解释如下：
@@ -972,23 +980,32 @@ String catalog = con.getCatalog(), schema = con.getSchema();
 
 ## 数据同步配置
 
-### data.sync.smart
+### ~~data.sync.smart~~
 
 是否开启数据同步的智能模式，默认为`true`。开启智能模式的潜台词是指，自动通过已实现的元数据获取器（也可自行扩展）获取同步的目标库的元数据以生成Flink SQL的源表（Source Table）、目标表（Slink Table）和相应的插入语句（`INSERT INTO … SELECT … FROM …`）。
 
  _注意：1.3.0 版本开始 `data.sync.smart` 配置已被废弃，请使用 `flink.jobs.smart` 替代，默认值仍为 `true` 。 `data.sync.smart` 已在 1.4.0 版本开始不再兼容。_ 
 
-### data.sync.from_table_prefix
 
-源表（Source Table）表名的前缀，默认为`SOURCE_`。该前缀和目标表（Slink Table）的表名拼接起来即为源表的表名。
+### ~~data.sync.from_table_prefix~~
 
-### data.sync.group_id_prefix
+为规范命名，自1.5.6版本开始已废弃，请使用 `data.sync.from-table-prefix` 替换。
 
-数据同步时消费消息队列（Kafka）的`groupid`的前缀，默认为`flink-jobs-data-sync.`。该前缀和目标表（Slink Table）的表名拼接起来构成消费消息队列（Kafka）的`groupid`，但用户在任务中指定`properties.group.id`的除外。
+### data.sync.from-table-prefix
 
-### data.sync.metadata.getter.*
+源表（Source Table）表名的前缀，默认为`SOURCE_`。该前缀和目标表（Slink Table）的表名拼接起来即为源表的表名。该配置自 1.5.6 版本开始支持，之前版本为`data.sync.from_table_prefix`。
 
- _注意：1.3.2 版本开始 `data.sync.metadata.getter.*` 配置已被废弃，请使用 `metadata.getter.*` 替代。_ 
+### ~~data.sync.group_id_prefix~~
+
+为规范命名，自1.5.6版本开始已废弃，请使用 `data.sync.group-id-prefix` 替换。
+
+### data.sync.group-id-prefix
+
+数据同步时消费消息队列（Kafka）的`groupid`的前缀，默认为`flink-jobs-data-sync.`。该前缀和目标表（Slink Table）的表名拼接起来构成消费消息队列（Kafka）的`groupid`，但用户在任务中指定`properties.group.id`的除外。该配置自 1.5.6 版本开始支持，之前版本为`data.sync.from_table_prefix`。
+
+### ~~data.sync.metadata.getter.*~~
+
+1.3.2 版本开始已被废弃，请使用 `metadata.getter.*` 替代。
 
 ### data.sync.columns.convert
 
@@ -1018,25 +1035,45 @@ data.sync.columns.convert=BIGINT,TIMESTAMP:TO_TIMESTAMP(FROM_UNIXTIME(#columnNam
 
 示例2则在示例1的基础之上，增加了INT类型日期的自动转换配置（使用Debezium时，通常会把日期转换成`INT`类型，因此同步时需要重新转换为`DATE`类型）。
 
-### data.sync.timestamp.case_sensitive
+### ~~data.sync.timestamp.case_sensitive~~
 
-1.1.4 版本开始支持`data.sync.timestamp.case_sensitive`，用于配置数据同步的时间戳列名的大小写敏感性，他是flink-jobs在识别时间戳列时的策略配置。由于Flink SQL通常是大小写敏感的，因此该值默认为`true`，用户可以根据需要在配置文件中调整配置。大小写敏感的情况下，有关时间戳的列名必须按照实际建表的列名完全匹配，否则无法识别；大小写不敏感，则在匹配时间戳列时对列名忽略大小写。
+1.1.4 版本开始支持，但为规范命名，自1.5.6版本开始已废弃，请使用 `data.sync.timestamp.case-sensitive` 替换。
 
-### data.sync.timestamp.from_type
+### data.sync.timestamp.case-sensitive
 
-1.1.4 版本开始支持`data.sync.timestamp.from_type`，用于配置数据同步的来源时间戳列的默认类型，默认值为`TIMESTAMP(3) METADATA FROM 'value.ingestion-timestamp' VIRTUAL`，这是Flink SQL所支持的几种变更数据捕获（CDC）工具（Debezium/Canal/Maxwell）都支持的。
+用于配置数据同步的时间戳列名的大小写敏感性，他是flink-jobs在识别时间戳列时的策略配置。由于Flink SQL通常是大小写敏感的，因此该值默认为`true`，用户可以根据需要在配置文件中调整配置。大小写敏感的情况下，有关时间戳的列名必须按照实际建表的列名完全匹配，否则无法识别；大小写不敏感，则在匹配时间戳列时对列名忽略大小写。该配置自 1.5.6 版本开始支持，之前版本为`data.sync.timestamp.case_sensitive`。
 
-### data.sync.timestamp.to_type
+### ~~data.sync.timestamp.from_type~~
 
-1.1.4 版本开始支持`data.sync.timestamp.to_type`，用于配置数据同步的目标时间戳列的默认类型，默认值为`TIMESTAMP(3)`，与`data.sync.timestamp.from_type`的默认值具有对应关系。
+1.1.4 版本开始支持，为规范命名，自1.5.6版本开始已废弃，请使用 `data.sync.timestamp.from-type`替换。
 
-### data.sync.*.from_type
+### data.sync.timestamp.from-type
 
-1.1.4 版本开始支持`data.sync.*.from_type`，其中`*`需要替换为具体的列名，用于配置数据同步增加的特定时间戳列的来源类型，如果没有配置则使用`data.sync.timestamp.from_type`的值。典型的值为`TIMESTAMP(3) METADATA FROM 'value.ingestion-timestamp' VIRTUAL`或`TIMESTAMP(3) METADATA FROM 'value.source.timestamp' VIRTUAL`（目前仅Debezium支持），可根据具体情况确定。
+用于配置数据同步的来源时间戳列的默认类型，默认值为`TIMESTAMP(3) METADATA FROM 'value.ingestion-timestamp' VIRTUAL`，这是Flink SQL所支持的几种变更数据捕获（CDC）工具（Debezium/Canal/Maxwell）都支持的。该配置自 1.5.6 版本开始支持，之前版本为`data.sync.timestamp.from_type`。
 
-### data.sync.*.to_type
+### ~~data.sync.timestamp.to_type~~
 
-1.1.4 版本开始支持`data.sync.*.to_type`，其中`*`需要替换为具体的列名，用于配置数据同步增加的特定时间戳列的目标类型，如果没有配置则使用`data.sync.timestamp.to_type`的值。典型的值为`TIMESTAMP(3)`，具体精度可根据数据源的精度确定。
+1.1.4 版本开始支持，但为规范命名，自1.5.6版本开始已废弃，请使用 `data.sync.timestamp.to-type`替换。
+
+### data.sync.timestamp.to-type
+
+用于配置数据同步的目标时间戳列的默认类型，默认值为`TIMESTAMP(3)`，与`data.sync.timestamp.from-type`的默认值具有对应关系。该配置自 1.5.6 版本开始支持，之前版本为`data.sync.timestamp.to_type`。
+
+### ~~data.sync.*.from_type~~
+
+1.1.4 版本开始支持，但为规范命名，自1.5.6版本开始已废弃，请使用 `data.sync.*.from-type`替换。
+
+### data.sync.*.from-type
+
+其中`*`需要替换为具体的列名，用于配置数据同步增加的特定时间戳列的来源类型，如果没有配置则使用`data.sync.timestamp.from-type`的值。典型的值为`TIMESTAMP(3) METADATA FROM 'value.ingestion-timestamp' VIRTUAL`或`TIMESTAMP(3) METADATA FROM 'value.source.timestamp' VIRTUAL`（目前仅Debezium支持），可根据具体情况确定。该配置自 1.5.6 版本开始支持，之前版本为`data.sync.*.from_type`。
+
+### ~~data.sync.*.to_type~~
+
+1.1.4 版本开始支持，但为规范命名，自1.5.6版本开始已废弃，请使用 `data.sync.*.to-type`替换。
+
+### data.sync.*.to-type
+
+其中`*`需要替换为具体的列名，用于配置数据同步增加的特定时间戳列的目标类型，如果没有配置则使用`data.sync.timestamp.to_type`的值。典型的值为`TIMESTAMP(3)`，具体精度可根据数据源的精度确定。该配置自 1.5.6 版本开始支持，之前版本为`data.sync.*.to_type`。
 
 ### data.sync.*.strategy
 
@@ -1077,23 +1114,36 @@ data.sync.ETL_TIMESTAMP.script=NOW()
 
 默认类型，默认值为`STRING`。当找不到特定目标数据库的类型映射关系时，使用该值作为Flink SQL建表语句的数据类型。
 
-### flink.sql.type.with_precision
 
-含精度的Flink SQL数据类型，使用大写表示，多个类型使用“,”分隔，默认值为`DECIMAL,NUMERIC`。
+### ~~flink.sql.type.with_precision~~
 
-### flink.sql.type.with_size
+为规范命名，自1.5.6版本开始已废弃，请使用 `flink.sql.type.with-precision`替换。
 
-含长度的Flink SQL数据类型，使用大写表示，多个类型使用“,”分隔，默认值为`TIME,TIMESTAMP`。
+### flink.sql.type.with-precision
 
-### flink.sql.type.*.size_offset
+含精度的Flink SQL数据类型，使用大写表示，多个类型使用“,”分隔，默认值为`DECIMAL,NUMERIC`。该配置自 1.5.6 版本开始支持，之前版本为`flink.sql.type.with_precision`。
 
-某一含长度的Flink SQL数据类型的长度偏移量，用于将JDBC获取到的`COLUMN_SIZE`转换为Flink SQL数据类型的长度。计算方法为`COLUMN_SIZE-size_offset`。其中*表示某一类型的Flink SQL数据类型，使用大写表示。默认值为：
+### ~~flink.sql.type.with_size~~
+
+为规范命名，自1.5.6版本开始已废弃，请使用 `flink.sql.type.with-size`替换。
+
+### flink.sql.type.with-size
+
+含长度的Flink SQL数据类型，使用大写表示，多个类型使用“,”分隔，默认值为`TIME,TIMESTAMP`。该配置自 1.5.6 版本开始支持，之前版本为`flink.sql.type.with_size`。
+
+### ~~flink.sql.type.*.size_offset~~
+
+为规范命名，自1.5.6版本开始已废弃，请使用 `flink.sql.type.*.size-offset`替换。
+
+### flink.sql.type.*.size-offset
+
+某一含长度的Flink SQL数据类型的长度偏移量，用于将JDBC获取到的`COLUMN_SIZE`转换为Flink SQL数据类型的长度。计算方法为`COLUMN_SIZE-size-offset`。其中*表示某一类型的Flink SQL数据类型，使用大写表示。该配置自 1.5.6 版本开始支持，之前版本为`flink.sql.type.*.size_offset`。默认值为：
 
 ```
 # Size offset for Convert JDBC type to Flink SQL type TIME
-flink.sql.type.TIME.size_offset=9
+flink.sql.type.TIME.size-offset=9
 # Size offset for Convert JDBC type to Flink SQL type TIMESTAMP
-flink.sql.type.TIMESTAMP.size_offset=20
+flink.sql.type.TIMESTAMP.size-offset=20
 ```
 
 ### `flink.sql.type.*.*`
@@ -1218,11 +1268,11 @@ A, ABS, ABSOLUTE, ACTION, ADA, ADD, ADMIN, AFTER, ALL, ALLOCATE, ALLOW, ALTER, A
 # Flink SQL关键字配置
 flink.sql.custom.keywords=PERIOD
 ```
-### sql.reserved.keywords
+### ~~sql.reserved.keywords~~
 
 1.2.2 及以前版本的配置，1.2.3 版本开始已改为`flink.sql.reserved.keywords`，1.3 版本开始已不再兼容。
 
-### sql.custom.keywords
+### ~~sql.custom.keywords~~
 
 1.2.2 及以前版本的配置，1.2.3 版本开始已改为`flink.sql.custom.keywords`，1.3 版本开始已不再兼容。
 
@@ -1239,6 +1289,10 @@ jdbc.postgresql.driver=org.postgresql.Driver
 jdbc.oracle.driver=oracle.jdbc.OracleDriver
 jdbc.sqlserver.driver=com.microsoft.sqlserver.jdbc.SQLServerDriver
 ```
+
+### ~~jdbc.default_method~~
+
+为规范命名，自1.5.6版本开始已废弃，请使用 `jdbc.default_method`替换。
 
 ### jdbc.default_method
 

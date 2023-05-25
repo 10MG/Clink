@@ -3,12 +3,14 @@ package cn.tenmg.flink.jobs.utils;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Set;
 
 import cn.tenmg.dsl.utils.DSLUtils;
+import cn.tenmg.dsl.utils.StringUtils;
 
 /**
  * 配置工具类
@@ -124,9 +126,11 @@ public abstract class ConfigurationUtils {
 	 *            配置对象
 	 * @param prefix
 	 *            键的前缀
+	 * @param camelCaseKey
+	 *            是否将键转换为驼峰形式
 	 * @return 指定键前缀的配置项的集合
 	 */
-	public static Properties getPrefixedKeyValuePairs(Properties config, String prefix) {
+	public static Properties getPrefixedKeyValuePairs(Properties config, String prefix, boolean camelCaseKey) {
 		String key;
 		Entry<Object, Object> entry;
 		Properties keyValuePairs = new Properties();
@@ -134,10 +138,46 @@ public abstract class ConfigurationUtils {
 			entry = it.next();
 			key = entry.getKey().toString();
 			if (key.startsWith(prefix)) {
-				keyValuePairs.put(key.substring(prefix.length()), entry.getValue());
+				keyValuePairs.put(StringUtils.toCamelCase(key.substring(prefix.length()), "[-|_]", false),
+						entry.getValue());
 			}
 		}
 		return keyValuePairs;
+	}
+
+	/**
+	 * 根据优先键依次从配置中获取配置的属性，一旦某一键存在则返回其对应的值，均不存在则返回 {@code null}
+	 * 
+	 * @param config
+	 *            配置
+	 * @param priorKeys
+	 *            优先键
+	 * @return 配置属性值或 {@code null}
+	 */
+	public static String getProperty(Properties config, List<String> priorKeys) {
+		return getProperty(config, priorKeys, null);
+	}
+
+	/**
+	 * 根据优先键依次从配置中获取配置的属性，一旦某一键存在则返回其对应的值，均不存在则返回默认值
+	 * 
+	 * @param config
+	 *            配置
+	 * @param priorKeys
+	 *            优先键
+	 * @param defaultValue
+	 *            默认值
+	 * @return 配置属性值或默认值
+	 */
+	public static String getProperty(Properties config, List<String> priorKeys, String defaultValue) {
+		String key;
+		for (int i = 0, size = priorKeys.size(); i < size; i++) {
+			key = priorKeys.get(i);
+			if (config.containsKey(key)) {
+				return config.getProperty(key);
+			}
+		}
+		return defaultValue;
 	}
 
 	/**

@@ -4,6 +4,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -20,8 +21,11 @@ import cn.tenmg.flink.jobs.utils.JDBCUtils;
 public class StarrocksMetaDataGetter extends AbstractJDBCMetaDataGetter {
 
 	private static final boolean UK_AS_PK = Boolean
-			.valueOf(FlinkJobsContext.getProperty("metadata.starrocks.unique_key_as_primary_key")),
-			CAL_AS_SCM = Boolean.valueOf(FlinkJobsContext.getProperty("metadata.starrocks.catalog_as_schema"));
+			.valueOf(FlinkJobsContext.getProperty(Arrays.asList("metadata.starrocks.unique_key_as_primary_key",
+					"metadata.starrocks.unique-key-as-primary-key"), "true")),
+			CAL_AS_SCM = Boolean.valueOf(FlinkJobsContext.getProperty(
+					Arrays.asList("metadata.starrocks.catalog_as_schema", "metadata.starrocks.catalog-as-schema"),
+					"true"));// 兼容老的配置
 
 	@Override
 	protected Set<String> getPrimaryKeys(Connection con, String catalog, String schema, String tableName)

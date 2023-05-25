@@ -2,6 +2,7 @@ package cn.tenmg.flink.jobs.configuration.loader;
 
 import java.io.IOException;
 import java.io.StringReader;
+import java.util.Arrays;
 import java.util.Properties;
 
 import com.alibaba.nacos.api.NacosFactory;
@@ -25,13 +26,14 @@ public class NacosConfigurationLoader extends PropertiesFileConfigurationLoader 
 	@Override
 	public void load(Properties config) throws ConfigurationLoadException {
 		super.load(config);
-		loadNacosConfig(config, ConfigurationUtils.getPrefixedKeyValuePairs(config, NACOS_CONFIG_PREFIX));
+		loadNacosConfig(config, ConfigurationUtils.getPrefixedKeyValuePairs(config, NACOS_CONFIG_PREFIX, true));
 		replacePlaceHolder(config);
 	}
 
 	protected void loadNacosConfig(Properties config, Properties nacos) throws ConfigurationLoadException {
 		String group = nacos.getProperty("group"), dataIds[] = nacos.getProperty("dataIds").split(","), dataId = null;
-		long timeoutMs = Long.valueOf(nacos.getProperty("pollTimeoutMs", "3000"));
+		long timeoutMs = Long.valueOf(
+				ConfigurationUtils.getProperty(nacos, Arrays.asList("pollTimeoutMs", "configLongPollTimeout"), "3000"));
 		try {
 			ConfigService configService = NacosFactory.createConfigService(nacos);
 			StringReader sr;
@@ -51,8 +53,7 @@ public class NacosConfigurationLoader extends PropertiesFileConfigurationLoader 
 				}
 			}
 		} catch (NacosException e) {
-			throw new ConfigurationLoadException("Unable to get configuration from nacos wich dataId is " + dataId,
-					e);
+			throw new ConfigurationLoadException("Unable to get configuration from nacos wich dataId is " + dataId, e);
 		}
 	}
 

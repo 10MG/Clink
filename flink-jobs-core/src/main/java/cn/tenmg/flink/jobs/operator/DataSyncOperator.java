@@ -2,6 +2,7 @@ package cn.tenmg.flink.jobs.operator;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -47,19 +48,14 @@ public class DataSyncOperator extends AbstractOperator<DataSync> {
 
 	private static Logger log = LoggerFactory.getLogger(DataSyncOperator.class);
 
-	private static final String FROM_TABLE_PREFIX_KEY = "data.sync.from_table_prefix", TOPIC_KEY = "topic",
-			GROUP_ID_KEY = "properties.group.id", GROUP_ID_PREFIX_KEY = "data.sync.group_id_prefix",
+	private static final String TOPIC_KEY = "topic", GROUP_ID_KEY = "properties.group.id",
 			TIMESTAMP_COLUMNS = "data.sync.timestamp.columns", TIMESTAMP_COLUMNS_SPLIT = ",",
-			TIMESTAMP_FROM_TYPE_KEY = "data.sync.timestamp.from_type",
-			TIMESTAMP_TO_TYPE_KEY = "data.sync.timestamp.to_type",
 			TYPE_KEY_PREFIX = "data.sync" + FlinkJobsContext.CONFIG_SPLITER,
-			TO_TYPE_KEY_SUFFIX = FlinkJobsContext.CONFIG_SPLITER + "to_type",
-			FROM_TYPE_KEY_SUFFIX = FlinkJobsContext.CONFIG_SPLITER + "from_type",
 			SCRIPT_KEY_SUFFIX = FlinkJobsContext.CONFIG_SPLITER + "script",
 			STRATEGY_KEY_SUFFIX = FlinkJobsContext.CONFIG_SPLITER + "strategy", COLUMN_NAME = "columnName";
 
-	private static final boolean TO_LOWERCASE = !Boolean
-			.valueOf(FlinkJobsContext.getProperty("data.sync.timestamp.case_sensitive"));// 不区分大小写，统一转为小写
+	private static final boolean TO_LOWERCASE = !Boolean.valueOf(FlinkJobsContext.getProperty(
+			Arrays.asList("data.sync.timestamp.case_sensitive", "data.sync.timestamp.case-sensitive"), "true"));// 不区分大小写，统一转为小写
 
 	private static final Map<String, ColumnConvertArgs> columnConvertArgsMap = new HashMap<String, ColumnConvertArgs>();
 
@@ -115,7 +111,8 @@ public class DataSyncOperator extends AbstractOperator<DataSync> {
 			throw new IllegalArgumentException("The property 'from', 'to' or 'table' cannot be blank.");
 		}
 		StreamTableEnvironment tableEnv = FlinkJobsContext.getOrCreateStreamTableEnvironment(env);
-		String fromTable = FlinkJobsContext.getProperty(FROM_TABLE_PREFIX_KEY) + table,
+		String fromTable = FlinkJobsContext
+				.getProperty(Arrays.asList("data.sync.from_table_prefix", "data.sync.from-table-prefix")) + table, // 兼容老的配置
 				fromConfig = dataSync.getFromConfig();
 		StreamTableEnvironmentUtils.useCatalogOrDefault(tableEnv, null);
 
@@ -519,17 +516,21 @@ public class DataSyncOperator extends AbstractOperator<DataSync> {
 	}
 
 	private static String getDefaultTimestampFromType(String columnName) {
-		String fromType = FlinkJobsContext.getProperty(TYPE_KEY_PREFIX + columnName + FROM_TYPE_KEY_SUFFIX);
+		String prefix = TYPE_KEY_PREFIX + columnName + FlinkJobsContext.CONFIG_SPLITER,
+				fromType = FlinkJobsContext.getProperty(Arrays.asList(prefix + "from_type", prefix + "from-type"));// 兼容老的配置
 		if (fromType == null) {
-			return FlinkJobsContext.getProperty(TIMESTAMP_FROM_TYPE_KEY);
+			return FlinkJobsContext
+					.getProperty(Arrays.asList("data.sync.timestamp.from_type", "data.sync.timestamp.from-type"));// 兼容老的配置
 		}
 		return fromType;
 	}
 
 	private static String getDefaultTimestampToType(String columnName) {
-		String toType = FlinkJobsContext.getProperty(TYPE_KEY_PREFIX + columnName + TO_TYPE_KEY_SUFFIX);
+		String prefix = TYPE_KEY_PREFIX + columnName + FlinkJobsContext.CONFIG_SPLITER,
+				toType = FlinkJobsContext.getProperty(Arrays.asList(prefix + "to_type", prefix + "to-type"));// 兼容老的配置
 		if (toType == null) {
-			return FlinkJobsContext.getProperty(TIMESTAMP_TO_TYPE_KEY);
+			return FlinkJobsContext
+					.getProperty(Arrays.asList("data.sync.timestamp.to_type", "data.sync.timestamp.to-type"));// 兼容老的配置
 		}
 		return toType;
 	}
@@ -577,7 +578,10 @@ public class DataSyncOperator extends AbstractOperator<DataSync> {
 		}
 		if (ConfigurationUtils.isKafka(dataSource)) {
 			if (!dataSource.containsKey(GROUP_ID_KEY)) {
-				dataSource.put(GROUP_ID_KEY, FlinkJobsContext.getProperty(GROUP_ID_PREFIX_KEY) + table);// 设置properties.group.id
+				dataSource.put(GROUP_ID_KEY,
+						FlinkJobsContext
+								.getProperty(Arrays.asList("data.sync.group_id_prefix", "data.sync.group-id-prefix"))// 兼容老的配置
+								+ table);// 设置properties.group.id
 			}
 			if (topic != null) {
 				dataSource.put(TOPIC_KEY, topic);

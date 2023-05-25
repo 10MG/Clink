@@ -4,6 +4,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -91,7 +92,8 @@ public class JdbcOperator extends AbstractOperator<Jdbc> {
 		if (StringUtils.isNotBlank(datasource)) {
 			String method = jdbc.getMethod();
 			if (!sqlExecuterKeys.contains(method)) {
-				method = FlinkJobsContext.getProperty("jdbc.default_method", "execute");
+				method = FlinkJobsContext.getProperty(Arrays.asList("jdbc.default_method", "jdbc.default-method"),
+						"execute");// 兼容老的配置
 			}
 			SQLExecutor<?> executer = sqlExecuters.get(method);
 			if (executer == null) {
