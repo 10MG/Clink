@@ -62,7 +62,8 @@ public abstract class FlinkJobsContext {
 
 	private static final ThreadLocal<Map<Object, Object>> resources = new InheritableThreadLocalMap<Map<Object, Object>>();
 
-	private static final Map<String, Map<String, String>> datasources = new HashMap<String, Map<String, String>>();
+	private static final Map<String, Map<String, String>> datasources = new HashMap<String, Map<String, String>>(),
+			datasourceCache = new HashMap<String, Map<String, String>>();
 
 	private static final Map<String, String> autoDatasource = new HashMap<String, String>();
 
@@ -356,9 +357,21 @@ public abstract class FlinkJobsContext {
 				throw new DataSourceNotFoundException(
 						"DataSource named " + name + " not found, Please check the configuration");
 			} else {
-				log.info("Generate a DataSource named " + name + " automatically");
-				dataSource = MapUtils.toHashMapBuilder(autoDatasource).build(autoDatasource.get(IDENTIFIER), name);
-				dataSource.remove(IDENTIFIER);
+				dataSource = datasourceCache.get(name);
+				if (dataSource == null) {
+					synchronized (datasourceCache) {
+						dataSource = datasourceCache.get(name);
+						if (dataSource == null) {
+							log.debug("Generated and cached the DataSource named " + name + " automatically");
+							dataSource = MapUtils.toHashMapBuilder(autoDatasource).build(autoDatasource.get(IDENTIFIER),
+									name);
+							dataSource.remove(IDENTIFIER);
+							datasourceCache.put(name, dataSource);
+						}
+					}
+				} else {
+					log.debug("Get automatically generated DataSource named " + name + " from cache");
+				}
 			}
 		}
 		return dataSource;
