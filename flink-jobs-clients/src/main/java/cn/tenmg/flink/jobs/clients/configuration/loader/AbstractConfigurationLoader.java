@@ -19,6 +19,7 @@ public abstract class AbstractConfigurationLoader implements ConfigurationLoader
 
 	@Override
 	public void load(Properties config) throws ConfigurationLoadException {
+		replacePlaceHolder(config);
 		loadConfig(config);
 		replacePlaceHolder(config);
 	}
