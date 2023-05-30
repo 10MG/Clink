@@ -26,14 +26,14 @@ public abstract class FlinkJobsClientsContext {
 
 	static {
 		try {
-			configProperties = PropertiesLoaderUtils.loadFromClassPath(DEFAULT_STRATEGIES_PATH);
+			configProperties = PropertiesLoaderUtils.load(DEFAULT_STRATEGIES_PATH);
 		} catch (Exception e) {
 			log.warn(DEFAULT_STRATEGIES_PATH + " not found in the classpath.", e);
 			configProperties = new Properties();
 		}
 		String configurationFile = configProperties.getProperty(CONFIG_LOCATION_KEY, "flink-jobs-clients.properties");
 		try {
-			configProperties.putAll(PropertiesLoaderUtils.loadFromClassPath(configurationFile));
+			configProperties.putAll(PropertiesLoaderUtils.load(configurationFile));
 		} catch (Exception e) {
 			log.info("Configuration file " + configurationFile
 					+ " not found in classpath, the default configuration will be used.");

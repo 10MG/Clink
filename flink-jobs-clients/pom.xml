@@ -13,6 +13,10 @@
 	<artifactId>flink-jobs-clients</artifactId>
 	<packaging>jar</packaging>
 
+	<properties>
+		<nacos-client.version>2.2.1</nacos-client.version>
+	</properties>
+
 	<dependencies>
 		<dependency>
 			<groupId>${project.groupId}</groupId>
@@ -32,6 +36,14 @@
 			<artifactId>flink-clients</artifactId>
 			<version>${flink.version}</version>
 			<scope>provided</scope>
+		</dependency>
+
+		<!-- https://mvnrepository.com/artifact/com.alibaba.nacos/nacos-client -->
+		<dependency>
+			<groupId>com.alibaba.nacos</groupId>
+			<artifactId>nacos-client</artifactId>
+			<version>${nacos-client.version}</version>
+			<optional>true</optional>
 		</dependency>
 
 		<!-- https://mvnrepository.com/artifact/org.apache.logging.log4j/log4j-slf4j-impl -->

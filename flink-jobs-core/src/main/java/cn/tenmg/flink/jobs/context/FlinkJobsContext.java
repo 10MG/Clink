@@ -1,5 +1,6 @@
 package cn.tenmg.flink.jobs.context;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -100,7 +101,8 @@ public abstract class FlinkJobsContext {
 			loader = (ConfigurationLoader) cls.getConstructor().newInstance();
 		} catch (ClassNotFoundException e) {
 			throw new IllegalConfigurationException("Unable to find configuration loader " + loaderClassName, e);
-		} catch (Exception e) {
+		} catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException
+				| NoSuchMethodException | SecurityException e) {
 			throw new IllegalConfigurationException("Error occurred in instantiation configuration loader", e);
 		}
 		loader.load(config);

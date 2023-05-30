@@ -1,6 +1,7 @@
 package cn.tenmg.flink.jobs.clients;
 
 import java.io.File;
+import java.lang.reflect.InvocationTargetException;
 import java.util.LinkedList;
 import java.util.Properties;
 import java.util.Queue;
@@ -8,7 +9,6 @@ import java.util.Set;
 
 import org.apache.flink.client.program.ClusterClient;
 import org.apache.flink.configuration.Configuration;
-import org.apache.flink.configuration.ConfigurationUtils;
 import org.apache.flink.configuration.JobManagerOptions;
 import org.apache.flink.configuration.RestOptions;
 import org.slf4j.Logger;
@@ -18,8 +18,11 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.serializer.PropertyFilter;
 
 import cn.tenmg.flink.jobs.FlinkJobsClient;
+import cn.tenmg.flink.jobs.clients.configuration.ConfigurationLoader;
+import cn.tenmg.flink.jobs.clients.exception.ConfigurationLoadException;
 import cn.tenmg.flink.jobs.clients.utils.PropertiesLoaderUtils;
 import cn.tenmg.flink.jobs.clients.utils.Sets;
+import cn.tenmg.flink.jobs.clients.utils.StringUtils;
 import cn.tenmg.flink.jobs.config.model.FlinkJobs;
 
 /**
@@ -29,16 +32,15 @@ import cn.tenmg.flink.jobs.config.model.FlinkJobs;
  * 
  * @since 1.2.0
  *
- * @param <T> flink集群客户端的类型
+ * @param <T>
+ *            flink集群客户端的类型
  */
 public abstract class AbstractFlinkJobsClient<T extends ClusterClient<?>> implements FlinkJobsClient<T> {
 
 	protected static final String FLINK_JOBS_DEFAULT_JAR_KEY = "flink.jobs.default.jar",
-			FLINK_JOBS_DEFAULT_CLASS_KEY = "flink.jobs.default.class";
-
+			FLINK_JOBS_DEFAULT_CLASS_KEY = "flink.jobs.default.class", NACOS_CONFIG_PREFIX = "nacos.config.",
+			EMPTY_ARGUMENTS = "{}";
 	protected static final Set<String> EXCLUDES = Sets.as("options", "mainClass", "jar", "allwaysNewJob");
-
-	protected static final String EMPTY_ARGUMENTS = "{}";
 
 	protected Logger log = LoggerFactory.getLogger(getClass());
 
@@ -62,18 +64,24 @@ public abstract class AbstractFlinkJobsClient<T extends ClusterClient<?>> implem
 	}
 
 	protected void init(String pathInClassPath) {
-		try {
-			properties = PropertiesLoaderUtils.loadFromClassPath(pathInClassPath);
-		} catch (Exception e) {
-			properties = new Properties();
-			log.error("Failed to load configuration file " + pathInClassPath);
-		}
-		init(properties);
+		init(PropertiesLoaderUtils.loadIgnoreException(pathInClassPath));
 	}
 
 	protected void init(Properties properties) {
 		this.properties = properties;
-		Configuration configuration = ConfigurationUtils.createConfiguration(properties);
+		String className = properties.getProperty("flink.jobs.clients.configuration-loader");
+		if (StringUtils.isNotBlank(className)) {
+			try {
+				ConfigurationLoader loader = (ConfigurationLoader) Class.forName(className).getConstructor()
+						.newInstance();
+				loader.load(properties);
+			} catch (InstantiationException | IllegalAccessException | IllegalArgumentException
+					| InvocationTargetException | NoSuchMethodException | SecurityException
+					| ClassNotFoundException e) {
+				throw new ConfigurationLoadException("Unable to load configuration", e);
+			}
+		}
+		Configuration configuration = org.apache.flink.configuration.ConfigurationUtils.createConfiguration(properties);
 		String rpcServers = properties.getProperty("jobmanager.rpc.servers");
 		String address = properties.getProperty("rest.addresses", properties.getProperty("rest.address"));
 		if (!isBlank(address)) {// 新的方式
@@ -112,7 +120,8 @@ public abstract class AbstractFlinkJobsClient<T extends ClusterClient<?>> implem
 	/**
 	 * 获取运行的JAR。如果flink-jobs配置对象没有配置运行的JAR则返回配置文件中配置的默认JAR，如果均没有，则返回<code>null</code>
 	 * 
-	 * @param flinkJobs flink-jobs配置对象
+	 * @param flinkJobs
+	 *            flink-jobs配置对象
 	 * @return 返回运行的JAR
 	 */
 	protected File getJar(FlinkJobs flinkJobs) {
@@ -126,7 +135,8 @@ public abstract class AbstractFlinkJobsClient<T extends ClusterClient<?>> implem
 	/**
 	 * 获取入口类名
 	 * 
-	 * @param flinkJobs flink-jobs配置对象
+	 * @param flinkJobs
+	 *            flink-jobs配置对象
 	 * @return 返回入口类名
 	 */
 	protected String getEntryPointClassName(FlinkJobs flinkJobs) {
@@ -140,7 +150,8 @@ public abstract class AbstractFlinkJobsClient<T extends ClusterClient<?>> implem
 	/**
 	 * 获取flink程序运行参数
 	 * 
-	 * @param flinkJobs flink-jobs配置对象
+	 * @param flinkJobs
+	 *            flink-jobs配置对象
 	 * @return 返回运行
 	 */
 	protected static String getArguments(FlinkJobs flinkJobs) {
@@ -158,7 +169,8 @@ public abstract class AbstractFlinkJobsClient<T extends ClusterClient<?>> implem
 	/**
 	 * 判断运行参数是否为空
 	 * 
-	 * @param arguments 运行参数
+	 * @param arguments
+	 *            运行参数
 	 * @return true/false
 	 */
 	protected static Boolean isEmptyArguments(String arguments) {
@@ -168,7 +180,8 @@ public abstract class AbstractFlinkJobsClient<T extends ClusterClient<?>> implem
 	/**
 	 * 获取运行的JAR文件位置
 	 * 
-	 * @param flinkJobs flink-jobs配置对象
+	 * @param flinkJobs
+	 *            flink-jobs配置对象
 	 * @return 运行的JAR文件位置
 	 */
 	protected String getJarPath(FlinkJobs flinkJobs) {
@@ -182,7 +195,8 @@ public abstract class AbstractFlinkJobsClient<T extends ClusterClient<?>> implem
 	/**
 	 * 判断指定字符串是否为空（<code>null</code>）、空字符串（<code>""</code>）或者仅含空格的字符串
 	 * 
-	 * @param string 指定字符串
+	 * @param string
+	 *            指定字符串
 	 * @return 指定字符串为空（<code>null</code>）、空字符串（<code>""</code>）或者仅含空格的字符串返回
 	 *         <code>true</code>，否则返回<code>false</code>
 	 */
