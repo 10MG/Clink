@@ -9,6 +9,7 @@ import java.util.Set;
 
 import org.apache.flink.client.program.ClusterClient;
 import org.apache.flink.configuration.Configuration;
+import org.apache.flink.configuration.ConfigurationUtils;
 import org.apache.flink.configuration.JobManagerOptions;
 import org.apache.flink.configuration.RestOptions;
 import org.slf4j.Logger;
@@ -81,7 +82,7 @@ public abstract class AbstractFlinkJobsClient<T extends ClusterClient<?>> implem
 				throw new ConfigurationLoadException("Unable to load configuration", e);
 			}
 		}
-		Configuration configuration = org.apache.flink.configuration.ConfigurationUtils.createConfiguration(properties);
+		Configuration configuration = ConfigurationUtils.createConfiguration(properties);
 		String rpcServers = properties.getProperty("jobmanager.rpc.servers");
 		String address = properties.getProperty("rest.addresses", properties.getProperty("rest.address"));
 		if (!isBlank(address)) {// 新的方式
