@@ -45,22 +45,19 @@ public abstract class AbstractFlinkJobsClient<T extends ClusterClient<?>> implem
 
 	protected Logger log = LoggerFactory.getLogger(getClass());
 
-	protected Properties properties;
+	protected Properties config = new Properties();
 
 	protected final Queue<Configuration> configurations = new LinkedList<Configuration>();
 
 	public AbstractFlinkJobsClient() {
-		super();
 		init("flink-jobs-clients.properties");
 	}
 
 	public AbstractFlinkJobsClient(String pathInClassPath) {
-		super();
 		init(pathInClassPath);
 	}
 
 	public AbstractFlinkJobsClient(Properties properties) {
-		super();
 		init(properties);
 	}
 
@@ -69,22 +66,24 @@ public abstract class AbstractFlinkJobsClient<T extends ClusterClient<?>> implem
 	}
 
 	protected void init(Properties properties) {
-		this.properties = properties;
-		String className = properties.getProperty("flink.jobs.clients.configuration-loader");
+		config.putAll(System.getenv());// 系统环境变量
+		config.putAll(System.getProperties());// JVM环境变量
+		config.putAll(properties);
+		String className = config.getProperty("flink.jobs.clients.configuration-loader");
 		if (StringUtils.isNotBlank(className)) {
 			try {
 				ConfigurationLoader loader = (ConfigurationLoader) Class.forName(className).getConstructor()
 						.newInstance();
-				loader.load(properties);
+				loader.load(config);
 			} catch (InstantiationException | IllegalAccessException | IllegalArgumentException
 					| InvocationTargetException | NoSuchMethodException | SecurityException
 					| ClassNotFoundException e) {
 				throw new ConfigurationLoadException("Unable to load configuration", e);
 			}
 		}
-		Configuration configuration = ConfigurationUtils.createConfiguration(properties);
-		String rpcServers = properties.getProperty("jobmanager.rpc.servers");
-		String address = properties.getProperty("rest.addresses", properties.getProperty("rest.address"));
+		Configuration configuration = ConfigurationUtils.createConfiguration(config);
+		String rpcServers = config.getProperty("jobmanager.rpc.servers");
+		String address = config.getProperty("rest.addresses", config.getProperty("rest.address"));
 		if (!isBlank(address)) {// 新的方式
 			Configuration config;
 			String addresses[] = address.split(","), addr[];
@@ -143,7 +142,7 @@ public abstract class AbstractFlinkJobsClient<T extends ClusterClient<?>> implem
 	protected String getEntryPointClassName(FlinkJobs flinkJobs) {
 		String mainClass = flinkJobs.getMainClass();
 		if (isBlank(mainClass) && isBlank(getJarPath(flinkJobs))) {
-			mainClass = properties.getProperty(FLINK_JOBS_DEFAULT_CLASS_KEY, "cn.tenmg.flink.jobs.FlinkJobsPortal");
+			mainClass = config.getProperty(FLINK_JOBS_DEFAULT_CLASS_KEY, "cn.tenmg.flink.jobs.FlinkJobsPortal");
 		}
 		return mainClass;
 	}
@@ -188,7 +187,7 @@ public abstract class AbstractFlinkJobsClient<T extends ClusterClient<?>> implem
 	protected String getJarPath(FlinkJobs flinkJobs) {
 		String jar = flinkJobs.getJar();
 		if (isBlank(jar)) {
-			jar = properties.getProperty(FLINK_JOBS_DEFAULT_JAR_KEY);
+			jar = config.getProperty(FLINK_JOBS_DEFAULT_JAR_KEY);
 		}
 		return jar;
 	}

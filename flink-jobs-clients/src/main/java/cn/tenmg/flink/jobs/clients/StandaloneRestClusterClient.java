@@ -142,8 +142,8 @@ public class StandaloneRestClusterClient extends AbstractFlinkJobsClient<RestClu
 	@Override
 	public JobID submit(FlinkJobs flinkJobs) throws Exception {
 		Map<String, String> options = flinkJobs.getOptions();
-		String classpaths = properties.getProperty("classpaths"),
-				parallelism = properties.getProperty("parallelism.default", "1");
+		String classpaths = config.getProperty("classpaths"),
+				parallelism = config.getProperty("parallelism.default", "1");
 		SavepointRestoreSettings savepointRestoreSettings = SavepointRestoreSettings.none();
 		if (options != null && !options.isEmpty()) {
 			if (options.containsKey("classpaths")) {
@@ -191,8 +191,7 @@ public class StandaloneRestClusterClient extends AbstractFlinkJobsClient<RestClu
 			packagedProgram = builder.build();
 			if (submit) {
 				JobGraph jobGraph = PackagedProgramUtils.createJobGraph(packagedProgram, configuration,
-						Integer.parseInt(parallelism),
-						Boolean.valueOf(properties.getProperty("suppress.output", "false")));
+						Integer.parseInt(parallelism), Boolean.valueOf(config.getProperty("suppress.output", "false")));
 				return retry(submitJobActuator, jobGraph, configuration, customConf);
 			} else {
 				final ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
@@ -238,7 +237,7 @@ public class StandaloneRestClusterClient extends AbstractFlinkJobsClient<RestClu
 
 	@Override
 	public String stop(JobID jobId) throws Exception {
-		return retry(stopJobActuator, new JobStopParams(jobId, properties.getProperty("state.savepoints.dir")),
+		return retry(stopJobActuator, new JobStopParams(jobId, config.getProperty("state.savepoints.dir")),
 				getConfiguration(), null);
 	}
 
