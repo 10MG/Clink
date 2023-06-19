@@ -1294,7 +1294,7 @@ jdbc.sqlserver.driver=com.microsoft.sqlserver.jdbc.SQLServerDriver
 
 为规范命名，自1.5.6版本开始已废弃，请使用 `jdbc.default_method`替换。
 
-### jdbc.default_method
+### jdbc.default-method
 
 在不指定`method`属性时，执行的默认JDBC方法名称。
 
