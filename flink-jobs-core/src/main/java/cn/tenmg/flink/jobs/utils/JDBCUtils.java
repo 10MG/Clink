@@ -156,7 +156,7 @@ public abstract class JDBCUtils {
 		}
 		if (clazz == null) {
 			try {
-				clazz = Class.forName(driver);
+				Class.forName(driver);
 			} catch (ClassNotFoundException e) {
 				throw new SQLException(e.getMessage(), e);
 			}
