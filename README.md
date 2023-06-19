@@ -1001,7 +1001,7 @@ String catalog = con.getCatalog(), schema = con.getSchema();
 
 ### data.sync.group-id-prefix
 
-数据同步时消费消息队列（Kafka）的`groupid`的前缀，默认为`flink-jobs-data-sync.`。该前缀和目标表（Slink Table）的表名拼接起来构成消费消息队列（Kafka）的`groupid`，但用户在任务中指定`properties.group.id`的除外。该配置自 1.5.6 版本开始支持，之前版本为`data.sync.from_table_prefix`。
+数据同步时消费消息队列（Kafka）的`groupid`的前缀，默认值为`flink-jobs-data-sync.`。该前缀和目标表（Slink Table）的表名拼接起来构成消费消息队列（Kafka）的`groupid`，但用户在任务中指定`properties.group.id`的除外。该配置自 1.5.6 版本开始支持，之前版本为`data.sync.group_id_prefix`。
 
 ### ~~data.sync.metadata.getter.*~~
 
