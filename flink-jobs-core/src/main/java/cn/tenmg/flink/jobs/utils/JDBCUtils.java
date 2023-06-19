@@ -9,6 +9,7 @@ import java.sql.Statement;
 import java.util.List;
 import java.util.Map;
 
+import cn.tenmg.dsl.utils.ClassUtils;
 import cn.tenmg.dsl.utils.StringUtils;
 import cn.tenmg.flink.jobs.context.FlinkJobsContext;
 
@@ -55,13 +56,11 @@ public abstract class JDBCUtils {
 		if (StringUtils.isBlank(url)) {
 			url = dataSource.get("jdbc-url");
 		}
-		if (Boolean.valueOf(FlinkJobsContext.getProperty("jdbc.register-driver"))) {
-			String driver = dataSource.get("driver");
-			if (StringUtils.isBlank(driver)) {
-				driver = FlinkJobsContext.getDefaultJDBCDriver(getProduct(url));
-			}
-			Class.forName(driver);
+		String driver = dataSource.get("driver");
+		if (StringUtils.isBlank(driver)) {
+			driver = FlinkJobsContext.getDefaultJDBCDriver(getProduct(url));
 		}
+		ensureDriverLoaded(driver);
 		Connection con = DriverManager.getConnection(url, dataSource.get("username"), dataSource.get("password"));
 		String catalog = dataSource.get("database-name");
 		if (StringUtils.isNotBlank(catalog)) {
@@ -138,6 +137,29 @@ public abstract class JDBCUtils {
 		}
 		for (int i = 0, size = params.size(); i < size; i++) {
 			ps.setObject(i + 1, params.get(i));
+		}
+	}
+
+	/**
+	 * 确保驱动类已被加载
+	 * 
+	 * @param driver
+	 *            驱动类名
+	 * @throws SQLException
+	 */
+	private static void ensureDriverLoaded(String driver) throws SQLException {
+		Class<?> clazz = null;
+		try {
+			clazz = ClassUtils.getDefaultClassLoader().loadClass(driver);
+		} catch (ClassNotFoundException e) {
+			// skip
+		}
+		if (clazz == null) {
+			try {
+				clazz = Class.forName(driver);
+			} catch (ClassNotFoundException e) {
+				throw new SQLException(e.getMessage(), e);
+			}
 		}
 	}
 
