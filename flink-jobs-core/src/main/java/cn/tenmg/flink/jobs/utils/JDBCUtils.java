@@ -148,13 +148,13 @@ public abstract class JDBCUtils {
 	 * @throws SQLException
 	 */
 	private static void ensureDriverLoaded(String driver) throws SQLException {
-		Class<?> clazz = null;
+		Class<?> cls = null;
 		try {
-			clazz = ClassUtils.getDefaultClassLoader().loadClass(driver);
+			cls = ClassUtils.getDefaultClassLoader().loadClass(driver);
 		} catch (ClassNotFoundException e) {
 			// skip
 		}
-		if (clazz == null) {
+		if (cls == null) {
 			try {
 				Class.forName(driver);
 			} catch (ClassNotFoundException e) {
