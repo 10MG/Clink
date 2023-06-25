@@ -1309,6 +1309,108 @@ jdbc.sqlserver.driver=com.microsoft.sqlserver.jdbc.SQLServerDriver
 flink.sql.smart.table-name=jdbc,starrocks,hbase*
 ```
 
+# 使用配置中心
+
+1.5.6 版本开始，支持使用Nacos配置中心管理配置文件，也可以自行扩展其他配置加载类。
+
+## Nacos
+
+1. 在 `flink-jobs-context-loader.properties` 配置文件中指定启动配置文件和配置加载类：
+
+```
+# 启动配置文件（缺省为flink-jobs.properties）
+flink.jobs.configuration-file=bootstrap.properties
+# 使用Nacos配置中心
+flink.jobs.configuration-loader=cn.tenmg.flink.jobs.configuration.loader.NacosConfigurationLoader
+```
+
+2. 配置启动配置文件 `bootstrap.properties` （默认为 `flink-jobs.properties`）：
+
+```
+# nacos配置中心
+nacos.config.server-addr=${NACOS_ADDRESS:127.0.0.1}
+nacos.config.namespace=${NACOS_NAMESPACE:flink-jobs}
+nacos.config.group=${NACOS_GROUP:DEFAULT_GROUP}
+nacos.config.username=${NACOS_USER:your-name}
+nacos.config.password=${NACOS_PASSWORD:your-password}
+nacos.config.data-ids=flink-jobs.properties
+nacos.config.poll-timeout-ms=3000
+```
+
+3. 在 Nacos 管理平台上添加 `flink-jobs` 命名空间（或者使用任意符合 Nacos 命名规范的名称，注意与上面的启动配置文件的配置保持一致），并在该空间下添加配置文件 `flink-jobs.properties`（或者使用任意符合 Nacos 命名规范的名称，注意与上面的启动配置文件的配置保持一致）。配置内容如下（内容仅用于演示，开发者在项目中使用时需结合实际调整）：
+
+```
+#Flink Table API配置
+#空值处理配置
+table.exec.sink.not-null-enforcer=drop
+
+#数据同步自动添加时间戳列
+data.sync.timestamp.columns=EVENT_TIMESTAMP,ETL_TIMESTAMP
+#数据同步自动添加EVENT_TIMESTAMP时间戳列的类型配置
+data.sync.EVENT_TIMESTAMP.from_type=TIMESTAMP_LTZ(3) METADATA FROM 'op_ts' VIRTUAL
+data.sync.EVENT_TIMESTAMP.to_type=TIMESTAMP_LTZ(3)
+#ETL_TIMESTAMP列取当前时间戳，策略设置为to，仅创建目标列而不创建来源列
+data.sync.ETL_TIMESTAMP.strategy=to
+data.sync.ETL_TIMESTAMP.script=CURRENT_TIMESTAMP
+
+#FlinkSQL数据源配置
+# 配置自动数据源，自动数据源会将auto.datasource.identifier外的所有配置，加上auto.datasource.identifier对应的配置值作为键并将数据源名称作为值返回，两者加起来构成一个完整的数据源。
+auto.datasource.jdbc-url=jdbc:mysql://192.168.10.140:9030
+auto.datasource.scan-url=192.168.10.140:8030
+auto.datasource.load-url=192.168.10.140:8030
+auto.datasource.username=your-name
+auto.datasource.password=your-password
+#auto.datasource.sink.parallelism=1
+auto.datasource.sink.properties.strip_outer_array=true
+auto.datasource.sink.properties.format=json
+# the flushing time interval, range: [1000ms, 3600000ms].
+auto.datasource.sink.buffer-flush.interval-ms=10000
+# max retry times of the stream load request, range: [0, 10].
+auto.datasource.sink.max-retries=3
+auto.datasource.connector=starrocks
+auto.datasource.identifier=database-name
+
+# 源头数据库配置
+source.hostname=192.168.1.10
+source.port=3306
+source.username=your-name
+source.password=your-password
+
+# 配置名称为odc（订单中心）的数据源
+datasource.odc.connector=mysql-cdc
+datasource.odc.server-time-zone=Asia/Shanghai
+datasource.odc.hostname=${source.hostname}
+datasource.odc.port=${source.port}
+datasource.odc.username=${source.username}
+datasource.odc.password=${source.password}
+datasource.odc.database-name=odc
+
+# 配置名称为pmc（支付中心）的数据源
+datasource.pmc.connector=mysql-cdc
+datasource.pmc.server-time-zone=Asia/Shanghai
+datasource.pmc.hostname=${source.hostname}
+datasource.pmc.port=${source.port}
+datasource.pmc.username=${source.username}
+datasource.pmc.password=${source.password}
+datasource.pmc.database-name=pmc
+```
+
+4. 如果 flink-jobs-client 的配置文件也需使用 Nacos 配置中心并共享 Nacos 配置，则需指定在实例化客户端是指定相同的启动配置文件：
+
+```
+StandaloneRestClusterClient client = new StandaloneRestClusterClient("bootstrap.properties");
+```
+
+并在 Nacos 中的配置添加 flink-jobs-client 的配置内容。例如：
+
+```
+# Flink 集群配置
+rest.address=192.168.100.21,192.168.100.22,192.168.100.23
+rest.connection-timeout=3000
+# Retry only once (default is 20) to avoid too long retry time after some nodes are hung
+rest.retry.max-attempts=1
+```
+
 # DSL
 
 [DSL](https://gitee.com/tenmg/dsl)的全称是动态脚本语言(Dynamic Script Language)，它使用特殊字符`#[]`标记脚本片段，片段内使用若干个参数，一起构成动态片段（支持嵌套使用）。当使用flink-jobs运行Flink SQL时，判断实际传入参数值是否为空（`null`）决定是否保留该片段（同时自动去除`#[]`），形成最终可执行的脚本提交执行。使用[DSL](https://gitee.com/tenmg/dsl)可以有效避免程序员手动拼接繁杂的SQL，使得程序员能从繁杂的业务逻辑中解脱出来。
