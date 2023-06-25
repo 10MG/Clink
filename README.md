@@ -1309,7 +1309,7 @@ jdbc.sqlserver.driver=com.microsoft.sqlserver.jdbc.SQLServerDriver
 flink.sql.smart.table-name=jdbc,starrocks,hbase*
 ```
 
-# 使用配置中心
+# 配置中心
 
 1.5.6 版本开始，支持使用Nacos配置中心管理配置文件，也可以自行扩展其他配置加载类。
 
@@ -1410,6 +1410,10 @@ rest.connection-timeout=3000
 # Retry only once (default is 20) to avoid too long retry time after some nodes are hung
 rest.retry.max-attempts=1
 ```
+## 扩展配置加载器
+
+扩展 flink-jobs-core 的配置加载器必须实现 `cn.tenmg.flink.jobs.configuration.ConfigurationLoader` 接口，推荐实现类继承 `cn.tenmg.flink.jobs.configuration.loader.AbstractConfigurationLoader` 类。扩展 flink-jobs-client 的配置加载器必须实现 `cn.tenmg.flink.jobs.clients.configuration.ConfigurationLoader` 接口，推荐实现类继承 `cn.tenmg.flink.jobs.clients.configuration.loader.AbstractConfigurationLoader` 类。
+
 
 # DSL
 
