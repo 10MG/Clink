@@ -1,0 +1,4 @@
+cn.tenmg.clink.jdbc.switcher.Db2DatabaseSwitcher
+cn.tenmg.clink.jdbc.switcher.OracleDatabaseSwitcher
+cn.tenmg.clink.jdbc.switcher.PopularDatabaseSwitcher
+cn.tenmg.clink.jdbc.switcher.SQLServerDatabaseSwithcer

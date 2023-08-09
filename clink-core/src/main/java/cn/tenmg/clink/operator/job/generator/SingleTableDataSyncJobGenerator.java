@@ -1,0 +1,231 @@
+package cn.tenmg.clink.operator.job.generator;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import org.apache.flink.configuration.Configuration;
+import org.apache.flink.configuration.PipelineOptions;
+import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
+import org.apache.flink.table.api.TableConfig;
+import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
+
+import cn.tenmg.clink.context.ClinkContext;
+import cn.tenmg.clink.exception.IllegalJobConfigException;
+import cn.tenmg.clink.metadata.MetaDataGetter;
+import cn.tenmg.clink.metadata.MetaDataGetterFactory;
+import cn.tenmg.clink.metadata.MetaDataGetter.TableMetaData;
+import cn.tenmg.clink.metadata.MetaDataGetter.TableMetaData.ColumnType;
+import cn.tenmg.clink.model.DataSync;
+import cn.tenmg.clink.model.data.sync.Column;
+import cn.tenmg.clink.utils.ConfigurationUtils;
+import cn.tenmg.clink.utils.DataSourceFilterUtils;
+import cn.tenmg.clink.utils.SQLUtils;
+import cn.tenmg.dsl.utils.DSLUtils;
+import cn.tenmg.dsl.utils.StringUtils;
+
+/**
+ * 单表数据同步作业生成器
+ * 
+ * @author June wjzhao@aliyun.com
+ * 
+ * @since 1.6.0
+ */
+public class SingleTableDataSyncJobGenerator extends AbstractDataSyncJobGenerator {
+
+	private static final SingleTableDataSyncJobGenerator INSTANCE = new SingleTableDataSyncJobGenerator();
+
+	private SingleTableDataSyncJobGenerator() {
+	}
+
+	public static SingleTableDataSyncJobGenerator getInstance() {
+		return INSTANCE;
+	}
+
+	@Override
+	public Object generate(StreamExecutionEnvironment env, StreamTableEnvironment tableEnv, DataSync dataSync,
+			Map<String, Object> params) throws Exception {
+		String from = dataSync.getFrom(), to = dataSync.getTo(), table = dataSync.getTable(),
+				fromTable = ClinkContext.getProperty(
+						Arrays.asList("data.sync.from_table_prefix", "data.sync.from-table-prefix")) + table, // 兼容老的配置
+				fromConfig = dataSync.getFromConfig();
+		TableConfig tableConfig = tableEnv.getConfig();
+		if (tableConfig != null) {
+			Configuration configuration = tableConfig.getConfiguration();
+			String pipelineName = configuration.get(PipelineOptions.NAME);
+			if (StringUtils.isBlank(pipelineName)) {
+				configuration.set(PipelineOptions.NAME, "data-sync" + ClinkContext.CONFIG_SPLITER
+						+ String.join(ClinkContext.CONFIG_SPLITER, String.join("-", from, "to", to), table));
+			}
+		}
+		Map<String, String> fromDataSource = DataSourceFilterUtils.filter("source",
+				ClinkContext.getDatasource(from)),
+				toDataSource = DataSourceFilterUtils.filter("sink", ClinkContext.getDatasource(to));
+
+		Set<String> primaryKeys = collation(dataSync, toDataSource, params);
+		List<Column> columns = dataSync.getColumns();
+
+		String sql = fromCreateTableSQL(fromDataSource, dataSync.getTopic(), table, fromTable, columns, primaryKeys,
+				fromConfig, params);
+		if (log.isInfoEnabled()) {
+			log.info("Create source table by Flink SQL: " + SQLUtils.hiddePassword(sql));
+		}
+		tableEnv.executeSql(sql);
+
+		sql = sinkTableSQL(toDataSource, table, columns, primaryKeys, dataSync.getToConfig(), params);
+		if (log.isInfoEnabled()) {
+			log.info("Create sink table by Flink SQL: " + SQLUtils.hiddePassword(sql));
+		}
+		tableEnv.executeSql(sql);
+
+		sql = insertSQL(table, fromTable, columns, params);
+		if (log.isInfoEnabled()) {
+			log.info("Execute Flink SQL: " + sql);
+		}
+		return tableEnv.executeSql(sql);
+	}
+
+	/**
+	 * 校对和整理列配置并返回主键列（多个列之间使用“,”分隔）
+	 * 
+	 * @param dataSync
+	 *            数据同步配置对象
+	 * @param toDataSource
+	 *            目标数据源
+	 * @param params
+	 *            参数查找表
+	 * @return 返回主键
+	 * @throws Exception
+	 *             发生异常
+	 */
+	private static Set<String> collation(DataSync dataSync, Map<String, String> toDataSource,
+			Map<String, Object> params) throws Exception {
+		List<Column> columns = dataSync.getColumns();
+		if (columns == null) {
+			dataSync.setColumns(columns = new ArrayList<Column>());
+		}
+		Boolean smart = dataSync.getSmart();
+		if (smart == null) {
+			smart = Boolean.valueOf(ClinkContext.getProperty(ClinkContext.SMART_MODE_CONFIG_KEY));
+		}
+		Set<String> primaryKeys = null;
+		String primaryKey = dataSync.getPrimaryKey(), timestamp = dataSync.getTimestamp();
+		if (StringUtils.isNotBlank(primaryKey)) {
+			primaryKeys = new HashSet<String>();
+			String[] columnNames = primaryKey.split(",");
+			for (int i = 0; i < columnNames.length; i++) {
+				primaryKeys.add(columnNames[i].trim());
+			}
+		}
+
+		boolean hasCustomTimestamp = StringUtils.isNotBlank(timestamp);
+		if (!hasCustomTimestamp) {// 没有指定时间戳列名，使用配置的全局默认值，并根据目标表的实际情况确定是否添加时间戳列
+			timestamp = getDefaultTimestamp();
+		}
+		Map<String, String> timestampMap = StringUtils.isBlank(timestamp) ? Collections.emptyMap()
+				: toMap(TO_LOWERCASE, timestamp.split(TIMESTAMP_COLUMNS_SPLIT));// 不区分大小写，统一转为小写
+		if (Boolean.TRUE.equals(smart)) {// 智能模式，自动查询列名、数据类型
+			MetaDataGetter metaDataGetter = MetaDataGetterFactory.getMetaDataGetter(toDataSource);
+			TableMetaData tableMetaData = metaDataGetter.getTableMetaData(toDataSource, dataSync.getTable());
+			if (primaryKey == null) {
+				primaryKeys = tableMetaData.getPrimaryKeys();
+			}
+			String connector = toDataSource.get("connector");
+			Map<String, ColumnType> columnTypes = tableMetaData.getColumns();
+			if (columns.isEmpty()) {// 没有用户自定义列
+				addSmartLoadColumns(connector, columns, columnTypes, params, timestampMap);
+			} else {// 有用户自定义列
+				collationPartlyCustom(connector, columns, params, columnTypes, timestampMap);
+			}
+		} else if (columns.isEmpty()) {// 没有用户自定义列
+			throw new IllegalJobConfigException(
+					"At least one column must be configured in manual mode, or set the configuration '"
+							+ ClinkContext.SMART_MODE_CONFIG_KEY
+							+ "=true' to enable automatic column acquisition in smart mode");
+		} else {// 全部是用户自定义列
+			collationCustom(columns, params, timestampMap);
+		}
+		if (hasCustomTimestamp) {// 配置了时间戳列名
+			String columnName;
+			for (Iterator<String> it = timestampMap.values().iterator(); it.hasNext();) {// 如果没有时间戳列，但是配置了该列名，依然增加该列，这是用户的错误配置。运行时，可能会由于列不存在会报错
+				columnName = it.next();
+				Column column = new Column();
+				column.setFromName(columnName);
+				column.setToName(columnName);// 目标列名和来源列名相同
+				columnName = TO_LOWERCASE ? columnName.toLowerCase() : columnName;// 不区分大小写，统一转为小写
+				column.setFromType(getDefaultTimestampFromType(columnName));
+				column.setToType(getDefaultTimestampToType(columnName));
+				columns.add(column);
+			}
+		}
+		return primaryKeys;
+	}
+
+	private static String fromCreateTableSQL(Map<String, String> dataSource, String topic, String table,
+			String fromTable, List<Column> columns, Set<String> primaryKeys, String fromConfig,
+			Map<String, Object> params) throws IOException {
+		Set<String> actualPrimaryKeys = newSet(primaryKeys);
+		StringBuffer sqlBuffer = new StringBuffer();
+		sqlBuffer.append("CREATE TABLE ").append(SQLUtils.wrapIfReservedKeywords(fromTable)).append("(");
+		Column column;
+		String toName;
+		int i = 0, size = columns.size();
+		while (i < size) {
+			column = columns.get(i++);
+			if (Strategy.TO.equals(column.getStrategy())) {
+				toName = column.getToName();
+				actualPrimaryKeys.remove(toName == null ? column.getFromName() : toName);
+			} else {
+				sqlBuffer.append(column.getFromName()).append(DSLUtils.BLANK_SPACE).append(column.getFromType());
+				break;
+			}
+		}
+		while (i < size) {
+			column = columns.get(i++);
+			if (Strategy.TO.equals(column.getStrategy())) {
+				toName = column.getToName();
+				actualPrimaryKeys.remove(toName == null ? column.getFromName() : toName);
+			} else {
+				sqlBuffer.append(DSLUtils.COMMA).append(DSLUtils.BLANK_SPACE).append(column.getFromName())
+						.append(DSLUtils.BLANK_SPACE).append(column.getFromType());
+			}
+		}
+		if (!actualPrimaryKeys.isEmpty()) {
+			sqlBuffer.append(DSLUtils.COMMA).append(DSLUtils.BLANK_SPACE).append("PRIMARY KEY (")
+					.append(String.join(", ", actualPrimaryKeys)).append(") NOT ENFORCED");
+		}
+		sqlBuffer.append(") ").append("WITH (");
+		if (StringUtils.isNotBlank(fromConfig)) {
+			dataSource.putAll(ConfigurationUtils.load(SQLUtils.toSQL(DSLUtils.parse(fromConfig, params))));
+		}
+		if (ConfigurationUtils.isKafka(dataSource)) {
+			if (!dataSource.containsKey(GROUP_ID_KEY)) {
+				dataSource.put(GROUP_ID_KEY,
+						ClinkContext
+								.getProperty(Arrays.asList("data.sync.group_id_prefix", "data.sync.group-id-prefix"))// 兼容老的配置
+								+ table);// 设置properties.group.id
+			}
+			if (topic != null) {
+				dataSource.put(TOPIC_KEY, topic);
+			}
+		}
+		SQLUtils.appendDataSource(sqlBuffer, dataSource, table);
+		sqlBuffer.append(")");
+		return sqlBuffer.toString();
+	}
+
+	private static Set<String> newSet(Set<String> set) {
+		Set<String> newSet = new HashSet<String>();
+		if (set != null) {
+			newSet.addAll(set);
+		}
+		return newSet;
+	}
+
+}

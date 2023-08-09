@@ -98,13 +98,13 @@ rest.addresses=192.168.100.11,192.168.100.12,192.168.100.13
 rest.retry.max-attempts=1
 
 # The default class that the flink-jobs-clients submits for execution, it is not required. You can also specify the main class in jar
-# The cn.tenmg.flink.jobs.FlinkJobsPortal class is provided since version 1.5.2, or you can implement and configure your own class
-# The default value is cn.tenmg.flink.jobs.FlinkJobsPortal since version 1.5.4
-#flink.jobs.default.class=cn.tenmg.flink.jobs.FlinkJobsPortal
+# The cn.tenmg.clink.FlinkJobsPortal class is provided since version 1.5.2, or you can implement and configure your own class
+# The default value is cn.tenmg.clink.FlinkJobsPortal since version 1.5.4
+#flink.jobs.default.class=cn.tenmg.clink.FlinkJobsPortal
 ```
 
 
-4.  编写应用入口类（此步骤非必须，1.5.2版本开始可直接使用`cn.tenmg.flink.jobs.FlinkJobsPortal`）
+4.  编写应用入口类（此步骤非必须，1.5.2版本开始可直接使用`cn.tenmg.clink.FlinkJobsPortal`）
 
 ```
 public class FlinkJobsPortal {
@@ -112,7 +112,7 @@ public class FlinkJobsPortal {
 	/**
 	 * 服务基础包名
 	 */
-	private static final String basePackage = "cn.tenmg.flink.jobs.quickstart.service";
+	private static final String basePackage = "cn.tenmg.clink.quickstart.service";
 
 	public static void main(String... args) throws Exception {
 		FlinkJobsRunner runner = new FlinkJobsRunner() {
@@ -285,7 +285,7 @@ java代码。采用文本表示，如：`<java>java code</java>`或`<option><![C
 saveAs           | `String` | 否 | 操作结果另存为一个新的变量的名称。变量的值是flink的`tableEnv.executeSql(statement);`的返回值。
 when             | `String` | 否 | 操作的条件，当且仅当该条件满足时，才执行该操作。不指定时，默认表示条件成立。
 dataSource       | `String` | 否 | 使用的数据源名称。这里的数据源是在[flink-jobs](https://gitee.com/tenmg/flink-jobs)应用程序的配置文件中配置，并非在flink-jobs-clients应用程序的配置文件中配置。详见[flink-jobs数据源配置](https://gitee.com/tenmg/flink-jobs#%E6%95%B0%E6%8D%AE%E6%BA%90%E9%85%8D%E7%BD%AE)。
-dataSourceFilter | `String` | 否 | 使用的数据源过滤器。内置两种数据源过滤器（source/sink），如果内置过滤器无法满足使用要求，也可使用自定义类名（该类需实现`cn.tenmg.flink.jobs.datasource.DataSourceFilter`接口）。
+dataSourceFilter | `String` | 否 | 使用的数据源过滤器。内置两种数据源过滤器（source/sink），如果内置过滤器无法满足使用要求，也可使用自定义类名（该类需实现`cn.tenmg.clink.datasource.DataSourceFilter`接口）。
 catalog          | `String` | 否 | 执行SQL使用的Flink SQL的catalog名称。
 script           | `String` | 否 | 基于[DSL](https://gitee.com/tenmg/dsl)的SQL脚本。使用标签内文本表示，如：`<execute-sql>SQL code</execute-sql>`或`<execute-sql><![CDATA[SQL code]]></execute-sql>`。由于Flink SQL不支持DELETE、UPDATE语句，因此如果配置的SQL脚本是DELETE或者UPDATE语句，该语句将在程序main函数中采用JDBC执行。
 
@@ -351,7 +351,7 @@ script   | `String` | 否 | 自定义脚本。通常是需要进行函数转换�
 saveAs           | `String` | 否 | 操作结果另存为一个新的变量的名称。变量的值是flink的`tableEnv.executeSql(statement);`的返回值。
 when             | `String` | 否 | 操作的条件，当且仅当该条件满足时，才执行该操作。不指定时，默认表示条件成立。
 dataSource       | `String` | 是 | 使用的数据源名称。flink-jobs从该数据源读取元数据信息，并自动生成Flink SQL。
-dataSourceFilter | `String` | 否 | 使用的数据源过滤器。内置两种数据源过滤器（source/sink），如果内置过滤器无法满足使用要求，也可使用自定义类名（该类需实现`cn.tenmg.flink.jobs.datasource.DataSourceFilter`接口）。
+dataSourceFilter | `String` | 否 | 使用的数据源过滤器。内置两种数据源过滤器（source/sink），如果内置过滤器无法满足使用要求，也可使用自定义类名（该类需实现`cn.tenmg.clink.datasource.DataSourceFilter`接口）。
 tableName        | `String` | 是 | 创建表的表名。即`CREATE TABLE table_name ...`中的`table_name`。
 catalog          | `String` | 否 | 执行SQL使用的Flink SQL的catalog名称。
 bindTableName    | `String` | 否 | 绑定的表名，即WITH子句的“table-name”，默认与tableName相同。
@@ -692,7 +692,7 @@ type             | `String` | 是 | 操作类型。这里是"ExecuteSql"。
 saveAs           | `String` | 否 | 操作结果另存为一个新的变量的名称。变量的值是flink的`tableEnv.executeSql(statement);`的返回值。
 when             | `String` | 否 | 操作的条件，当且仅当该条件满足时，才执行该操作。不指定时，默认表示条件成立。
 dataSource       | `String` | 否 | 使用的数据源名称。
-dataSourceFilter | `String` | 否 | 使用的数据源过滤器。内置两种数据源过滤器（source/sink），如果内置过滤器无法满足使用要求，也可使用自定义类名（该类需实现`cn.tenmg.flink.jobs.datasource.DataSourceFilter`接口）。
+dataSourceFilter | `String` | 否 | 使用的数据源过滤器。内置两种数据源过滤器（source/sink），如果内置过滤器无法满足使用要求，也可使用自定义类名（该类需实现`cn.tenmg.clink.datasource.DataSourceFilter`接口）。
 catalog          | `String` | 否 | 执行SQL使用的Flink SQL的catalog名称。
 script           | `String` | 是 | 基于[DSL](https://gitee.com/tenmg/dsl)的SQL脚本。由于Flink SQL不支持DELETE、UPDATE语句，因此如果配置的SQL脚本是DELETE或者UPDATE语句，该语句将在程序main函数中采用JDBC执行。
 
@@ -770,7 +770,7 @@ type             | `String` | 是 | 操作类型。这里是"CreateTable"。
 saveAs           | `String` | 否 | 操作结果另存为一个新的变量的名称。变量的值是flink的`tableEnv.executeSql(statement);`的返回值。
 when             | `String` | 否 | 操作的条件，当且仅当该条件满足时，才执行该操作。不指定时，默认表示条件成立。
 dataSource       | `String` | 是 | 使用的数据源名称。flink-jobs从该数据源读取元数据信息，并自动生成Flink SQL。
-dataSourceFilter | `String` | 否 | 使用的数据源过滤器。内置两种数据源过滤器（source/sink），如果内置过滤器无法满足使用要求，也可使用自定义类名（该类需实现`cn.tenmg.flink.jobs.datasource.DataSourceFilter`接口）。
+dataSourceFilter | `String` | 否 | 使用的数据源过滤器。内置两种数据源过滤器（source/sink），如果内置过滤器无法满足使用要求，也可使用自定义类名（该类需实现`cn.tenmg.clink.datasource.DataSourceFilter`接口）。
 tableName        | `String` | 是 | 创建表的表名。即`CREATE TABLE table_name ...`中的`table_name`。
 catalog          | `String` | 否 | 执行SQL使用的Flink SQL的catalog名称。
 bindTableName    | `String` | 否 | 绑定的表名，即WITH子句的“table-name”，默认与tableName相同。
@@ -936,11 +936,11 @@ source.datasource.filter.starrocks=load-url,sink.*
 
 ### metadata.getter.*
 
-1.3.2 版本开始支持（之前版本为`data.sync.metadata.getter.*`），用户可以根据需要实现`cn.tenmg.flink.jobs.metadata.MetaDataGetter`接口并通过该配置项来扩展元数据获取器，也可以使用自实现的元数据获取器来替换原有的元数据获取器。默认配置为：
+1.3.2 版本开始支持（之前版本为`data.sync.metadata.getter.*`），用户可以根据需要实现`cn.tenmg.clink.metadata.MetaDataGetter`接口并通过该配置项来扩展元数据获取器，也可以使用自实现的元数据获取器来替换原有的元数据获取器。默认配置为：
 
 ```
-metadata.getter.jdbc=cn.tenmg.flink.jobs.metadata.getter.JDBCMetaDataGetter
-metadata.getter.starrocks=cn.tenmg.flink.jobs.metadata.getter.StarrocksMetaDataGetter
+metadata.getter.jdbc=cn.tenmg.clink.metadata.getter.JDBCMetaDataGetter
+metadata.getter.starrocks=cn.tenmg.clink.metadata.getter.StarrocksMetaDataGetter
 ```
 
 ### ~~metadata.starrocks.unique_key_as_primary_key~~
@@ -1321,7 +1321,7 @@ flink.sql.smart.table-name=jdbc,starrocks,hbase*
 # 启动配置文件（缺省为flink-jobs.properties）
 flink.jobs.configuration-file=bootstrap.properties
 # 使用Nacos配置中心
-flink.jobs.configuration-loader=cn.tenmg.flink.jobs.configuration.loader.NacosConfigurationLoader
+flink.jobs.configuration-loader=cn.tenmg.clink.configuration.loader.NacosConfigurationLoader
 ```
 
 2. 配置启动配置文件 `bootstrap.properties` （默认为 `flink-jobs.properties`）：
@@ -1412,7 +1412,7 @@ rest.retry.max-attempts=1
 ```
 ## 扩展配置加载器
 
-扩展 flink-jobs-core 的配置加载器必须实现 `cn.tenmg.flink.jobs.configuration.ConfigurationLoader` 接口，推荐实现类继承 `cn.tenmg.flink.jobs.configuration.loader.AbstractConfigurationLoader` 类。扩展 flink-jobs-client 的配置加载器必须实现 `cn.tenmg.flink.jobs.clients.configuration.ConfigurationLoader` 接口，推荐实现类继承 `cn.tenmg.flink.jobs.clients.configuration.loader.AbstractConfigurationLoader` 类。
+扩展 flink-jobs-core 的配置加载器必须实现 `cn.tenmg.clink.configuration.ConfigurationLoader` 接口，推荐实现类继承 `cn.tenmg.clink.configuration.loader.AbstractConfigurationLoader` 类。扩展 flink-jobs-client 的配置加载器必须实现 `cn.tenmg.clink.clients.configuration.ConfigurationLoader` 接口，推荐实现类继承 `cn.tenmg.clink.clients.configuration.loader.AbstractConfigurationLoader` 类。
 
 
 # DSL
