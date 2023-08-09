@@ -1,6 +1,6 @@
 package cn.tenmg.clink.runner;
 
-import cn.tenmg.clink.FlinkJobsRunner;
+import cn.tenmg.clink.ClinkRunner;
 import cn.tenmg.clink.StreamService;
 
 /**
@@ -10,11 +10,11 @@ import cn.tenmg.clink.StreamService;
  * 
  * @since 1.5.2
  */
-public class SimpleFlinkJobsRunner extends FlinkJobsRunner {
+public class SimpleClinkRunner extends ClinkRunner {
 
-	private static final SimpleFlinkJobsRunner INSTANCE = new SimpleFlinkJobsRunner();
+	private static final SimpleClinkRunner INSTANCE = new SimpleClinkRunner();
 
-	public static SimpleFlinkJobsRunner getInstance() {
+	public static SimpleClinkRunner getInstance() {
 		return INSTANCE;
 	}
 

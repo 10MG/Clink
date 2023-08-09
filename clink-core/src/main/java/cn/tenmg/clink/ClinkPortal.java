@@ -1,6 +1,6 @@
 package cn.tenmg.clink;
 
-import cn.tenmg.clink.runner.SimpleFlinkJobsRunner;
+import cn.tenmg.clink.runner.SimpleClinkRunner;
 
 /**
  * 默认Clink程序入口
@@ -10,10 +10,10 @@ import cn.tenmg.clink.runner.SimpleFlinkJobsRunner;
  * @since 1.5.2
  * 
  */
-public class FlinkJobsPortal {
+public class ClinkPortal {
 
 	public static void main(String... args) throws Exception {
-		SimpleFlinkJobsRunner.getInstance().run(args);
+		SimpleClinkRunner.getInstance().run(args);
 	}
 
 }

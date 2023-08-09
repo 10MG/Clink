@@ -22,7 +22,7 @@ import cn.tenmg.dsl.utils.MapUtils;
  * 
  * @since 1.1.0
  */
-public abstract class BasicFlinkJobsRunner {
+public abstract class BasicClinkRunner {
 
 	/**
 	 * 运行自定义程序

@@ -11,7 +11,7 @@ import cn.tenmg.clink.model.Arguments;
  * 
  * @since 1.0.0
  */
-public abstract class FlinkJobsRunner extends BasicFlinkJobsRunner {
+public abstract class ClinkRunner extends BasicClinkRunner {
 
 	/**
 	 * 根据服务名称获取流处理服务

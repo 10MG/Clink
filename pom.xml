@@ -15,8 +15,8 @@
 		<module>clink-clients</module>
 	</modules>
 
-	<name>flink-jobs</name>
-	<url>https://gitee.com/tenmg/flink-jobs</url>
+	<name>Clink</name>
+	<url>https://gitee.com/tenmg/Clink</url>
 
 	<organization>
 		<name>10MG</name>
@@ -42,8 +42,8 @@
 	</developers>
 
 	<scm>
-		<connection>scm:git:https://gitee.com/tenmg/flink-jobs.git</connection>
-		<url>https://gitee.com/tenmg/flink-jobs.git</url>
+		<connection>scm:git:https://gitee.com/tenmg/Clink.git</connection>
+		<url>https://gitee.com/tenmg/Clink.git</url>
 		<developerConnection>scm:git:https://gitee.com/tenmg</developerConnection>
 	</scm>
 
