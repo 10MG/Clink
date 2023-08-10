@@ -42,7 +42,7 @@ public abstract class DataTypeUtils {
 	 * 
 	 * @param type
 	 *            Flink SQL 类型
-	 * @return
+	 * @return 数据类型 {@code DataType} 对象
 	 */
 	public static DataType fromFlinkSQLType(String type) {
 		if (StringUtils.isBlank(type)) {
