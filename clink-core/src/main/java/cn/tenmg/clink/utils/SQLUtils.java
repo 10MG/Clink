@@ -38,7 +38,7 @@ public abstract class SQLUtils {
 					.compile("[Cc][Rr][Ee][Aa][Tt][Ee][\\s]+[Tt][Aa][Bb][Ll][Ee][\\s]+[^\\s\\(]+");
 
 	private static final Set<String> sqlReservedKeywords = new HashSet<String>(),
-			smartTableMameConnectors = new HashSet<String>();
+			smartTableNameConnectors = new HashSet<String>();
 
 	static {
 		addReservedKeywords(ClinkContext.getProperty("flink.sql.reserved.keywords"));
@@ -47,7 +47,7 @@ public abstract class SQLUtils {
 		if (config != null) {
 			String[] connectors = config.split(",");
 			for (int i = 0; i < connectors.length; i++) {
-				smartTableMameConnectors.add(connectors[i].trim());
+				smartTableNameConnectors.add(connectors[i].trim());
 			}
 		}
 	}
@@ -233,7 +233,7 @@ public abstract class SQLUtils {
 	 * @return 如果数据源需要添加默认的table-name则返回true，否则返回false
 	 */
 	public static boolean needDefaultTableName(Map<String, String> dataSource) {
-		return MatchUtils.matchesAny(smartTableMameConnectors, dataSource.get("connector"));
+		return MatchUtils.matchesAny(smartTableNameConnectors, dataSource.get("connector"));
 	}
 
 	/**

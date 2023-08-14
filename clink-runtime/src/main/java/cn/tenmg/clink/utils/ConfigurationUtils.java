@@ -1,6 +1,5 @@
 package cn.tenmg.clink.utils;
 
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -10,6 +9,7 @@ import java.util.Set;
 
 import cn.tenmg.dsl.utils.DSLUtils;
 import cn.tenmg.dsl.utils.MapUtils;
+import cn.tenmg.dsl.utils.SetUtils;
 import cn.tenmg.dsl.utils.StringUtils;
 
 /**
@@ -25,18 +25,7 @@ public abstract class ConfigurationUtils {
 
 	private static final char VALUE_BEGIN = '=';
 
-	private static final Set<Character> VALUE_END = new HashSet<Character>() {
-		/**
-		 * 
-		 */
-		private static final long serialVersionUID = 3151893719267729294L;
-
-		{
-			add(',');
-			add('\r');
-			add('\n');
-		}
-	};
+	private static final Set<Character> VALUE_END = SetUtils.newHashSet(',', '\r', '\n');
 
 	/**
 	 * 加载字符串配置

@@ -2,8 +2,6 @@ package cn.tenmg.clink.clients;
 
 import java.io.File;
 import java.lang.reflect.InvocationTargetException;
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Properties;
 import java.util.Queue;
@@ -25,6 +23,7 @@ import cn.tenmg.clink.clients.configuration.ConfigurationLoader;
 import cn.tenmg.clink.clients.exception.ConfigurationLoadException;
 import cn.tenmg.clink.config.model.Clink;
 import cn.tenmg.dsl.utils.PropertiesLoaderUtils;
+import cn.tenmg.dsl.utils.SetUtils;
 import cn.tenmg.dsl.utils.StringUtils;
 
 /**
@@ -42,8 +41,7 @@ public abstract class AbstractClinkClient<T extends ClusterClient<?>> implements
 	protected static final String FLINK_JOBS_DEFAULT_JAR_KEY = "clink.default.jar",
 			FLINK_JOBS_DEFAULT_CLASS_KEY = "clink.default.class", NACOS_CONFIG_PREFIX = "nacos.config.",
 			EMPTY_ARGUMENTS = "{}";
-	protected static final Set<String> EXCLUDES = new HashSet<String>(
-			Arrays.asList("options", "mainClass", "jar", "allwaysNewJob"));
+	protected static final Set<String> EXCLUDES = SetUtils.newHashSet("options", "mainClass", "jar", "allwaysNewJob");
 
 	protected Logger log = LoggerFactory.getLogger(getClass());
 

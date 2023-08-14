@@ -3,10 +3,8 @@ package cn.tenmg.clink.clients;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -33,6 +31,7 @@ import org.slf4j.LoggerFactory;
 import cn.tenmg.clink.clients.utils.ClinkClientsUtils;
 import cn.tenmg.clink.config.model.Clink;
 import cn.tenmg.clink.config.model.Operate;
+import cn.tenmg.dsl.utils.SetUtils;
 
 /**
  * 独立群集REST客户端Clink客户端。用于远程提交、监控和停止flink任务
@@ -45,23 +44,11 @@ public class StandaloneRestClusterClient extends AbstractClinkClient<RestCluster
 
 	private static final char SINGLE_QUOTATION_MARK = '\'', BACKSLASH = '\\', BLANK_SPACE = '\u0020', VALUE_BEGIN = '=';
 
-	private static final Set<Character> VALUE_END = new HashSet<Character>() {
-
-		/**
-		 * 
-		 */
-		private static final long serialVersionUID = 6149301286530143148L;
-
-		{
-			add(',');
-			add('\r');
-			add('\n');
-		}
-	};
+	private static final Set<Character> VALUE_END = SetUtils.newHashSet(',', '\r', '\n');
 
 	private static Logger log = LoggerFactory.getLogger(StandaloneRestClusterClient.class);
 
-	private static final Set<String> localOperates = new HashSet<String>(Arrays.asList("Bsh", "Jdbc"));
+	private static final Set<String> localOperates = SetUtils.newHashSet("Bsh", "Jdbc");
 
 	private static final Actuator<JobID, JobGraph> submitJobActuator = new Actuator<JobID, JobGraph>() {
 		@Override

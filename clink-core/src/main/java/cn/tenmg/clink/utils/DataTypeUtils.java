@@ -1,7 +1,5 @@
 package cn.tenmg.clink.utils;
 
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.ServiceLoader;
@@ -13,6 +11,7 @@ import cn.tenmg.clink.data.type.DataTypeFactory;
 import cn.tenmg.clink.exception.UnsupportedTypeException;
 import cn.tenmg.dsl.utils.DSLUtils;
 import cn.tenmg.dsl.utils.MapUtils;
+import cn.tenmg.dsl.utils.SetUtils;
 import cn.tenmg.dsl.utils.StringUtils;
 
 /**
@@ -26,7 +25,7 @@ public abstract class DataTypeUtils {
 
 	private static Map<String, DataTypeFactory> factories = MapUtils.newHashMap();
 
-	private static Set<Character> typeNameEndChars = new HashSet<Character>(Arrays.asList('(', '<'));
+	private static Set<Character> typeNameEndChars = SetUtils.newHashSet('(', '<');
 
 	static {
 		DataTypeFactory factory;
