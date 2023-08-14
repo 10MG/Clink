@@ -1,1 +1,1 @@
-cn.tenmg.clink.cdc.sqlserver.source.factory.SQLServerCdcSourceFactory
+cn.tenmg.clink.cdc.sqlserver.source.SQLServerCdcSourceFactory

@@ -1,4 +1,4 @@
-package cn.tenmg.clink.cdc.sqlserver.source.factory;
+package cn.tenmg.clink.cdc.mysql.source;
 
 import java.time.Duration;
 import java.util.Arrays;
@@ -12,7 +12,6 @@ import java.util.Set;
 
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.configuration.ConfigOption;
-import org.apache.flink.configuration.ConfigOptions;
 import org.apache.flink.table.api.ValidationException;
 import org.apache.flink.table.data.StringData;
 import org.apache.flink.table.data.TimestampData;
@@ -21,19 +20,20 @@ import org.apache.flink.types.Row;
 import org.apache.flink.util.Preconditions;
 import org.apache.flink.util.TimeUtils;
 
-import com.ververica.cdc.connectors.base.options.JdbcSourceOptions;
-import com.ververica.cdc.connectors.base.options.SourceOptions;
-import com.ververica.cdc.connectors.base.options.StartupMode;
-import com.ververica.cdc.connectors.base.options.StartupOptions;
-import com.ververica.cdc.connectors.base.source.jdbc.JdbcIncrementalSource;
+import com.ververica.cdc.connectors.mysql.source.MySqlSource;
+import com.ververica.cdc.connectors.mysql.source.MySqlSourceBuilder;
+import com.ververica.cdc.connectors.mysql.source.config.MySqlSourceOptions;
+import com.ververica.cdc.connectors.mysql.source.config.ServerIdRange;
+import com.ververica.cdc.connectors.mysql.table.StartupMode;
+import com.ververica.cdc.connectors.mysql.table.StartupOptions;
 import com.ververica.cdc.connectors.shaded.org.apache.kafka.connect.data.Struct;
 import com.ververica.cdc.connectors.shaded.org.apache.kafka.connect.source.SourceRecord;
-import com.ververica.cdc.connectors.sqlserver.source.SqlServerSourceBuilder;
 import com.ververica.cdc.debezium.table.DebeziumOptions;
 import com.ververica.cdc.debezium.table.MetadataConverter;
 
-import cn.tenmg.clink.cdc.sqlserver.debezium.MultiTableDebeziumDeserializationSchema;
+import cn.tenmg.clink.cdc.mysql.debezium.MultiTableDebeziumDeserializationSchema;
 import cn.tenmg.clink.source.SourceFactory;
+import cn.tenmg.clink.utils.ConfigurationUtils;
 import cn.tenmg.dsl.utils.MapUtils;
 import cn.tenmg.dsl.utils.StringUtils;
 import io.debezium.connector.AbstractSourceInfo;
@@ -46,34 +46,11 @@ import io.debezium.data.Envelope;
  * 
  * @since 1.6.0
  */
-public class SQLServerCdcSourceFactory implements SourceFactory<JdbcIncrementalSource<Tuple2<String, Row>>> {
+public class MySqlCdcSourceFactory implements SourceFactory<MySqlSource<Tuple2<String, Row>>> {
 
 	public static final String IDENTIFIER = "mysql-cdc", SINGLE_QUOTATION_MARK = "'",
 			JDBC_PROPERTIES_PREFIX = "jdbc.properties.", INCLUDE_SCHEMA_CHANGES = "include-schema-changes",
 			CONVERT_DELETE_TO_UPDATE = "convert-delete-to-update";
-
-	private static final ConfigOption<String> HOSTNAME = ConfigOptions.key("hostname").stringType().noDefaultValue()
-			.withDescription("IP address or hostname of the SqlServer database server.");
-
-	private static final ConfigOption<Integer> PORT = ConfigOptions.key("port").intType().defaultValue(1433)
-			.withDescription("Integer port number of the SqlServer database server.");
-
-	private static final ConfigOption<String> USERNAME = ConfigOptions.key("username").stringType().noDefaultValue()
-			.withDescription("Name of the SqlServer database to use when connecting to the SqlServer database server.");
-
-	private static final ConfigOption<String> PASSWORD = ConfigOptions.key("password").stringType().noDefaultValue()
-			.withDescription("Password to use when connecting to the SqlServer database server.");
-
-	private static final ConfigOption<String> DATABASE_NAME = ConfigOptions.key("database-name").stringType()
-			.noDefaultValue().withDescription("Database name of the SqlServer server to monitor.");
-
-	public static final ConfigOption<String> SERVER_TIME_ZONE = ConfigOptions.key("server-time-zone").stringType()
-			.defaultValue("UTC").withDescription("The session time zone in database server.");
-
-	public static final ConfigOption<String> SCAN_STARTUP_MODE = ConfigOptions.key("scan.startup.mode").stringType()
-			.defaultValue("initial")
-			.withDescription("Optional startup mode for SqlServer CDC consumer, valid enumerations are "
-					+ "\"initial\", \"initial-only\", \"latest-offset\"");
 
 	@Override
 	public String factoryIdentifier() {
@@ -81,9 +58,9 @@ public class SQLServerCdcSourceFactory implements SourceFactory<JdbcIncrementalS
 	}
 
 	@Override
-	public JdbcIncrementalSource<Tuple2<String, Row>> create(Map<String, String> config, Map<String, RowType> rowTypes,
+	public MySqlSource<Tuple2<String, Row>> create(Map<String, String> config, Map<String, RowType> rowTypes,
 			Map<String, Map<Integer, String>> metadatas) {
-		String databaseName = getOrDefault(config, DATABASE_NAME), parts[];
+		String databaseName = getOrDefault(config, MySqlSourceOptions.DATABASE_NAME), parts[];
 		Set<String> databases = new HashSet<String>(), tables;
 		if (StringUtils.isBlank(databaseName)) {
 			tables = rowTypes.keySet();
@@ -110,36 +87,40 @@ public class SQLServerCdcSourceFactory implements SourceFactory<JdbcIncrementalS
 			}
 		}
 
-		SqlServerSourceBuilder<Tuple2<String, Row>> builder = SqlServerSourceBuilder.SqlServerIncrementalSource
-				.<Tuple2<String, Row>>builder().hostname(getOrDefault(config, HOSTNAME))
-				.port(getIntegerOrDefault(config, PORT)).username(getOrDefault(config, USERNAME))
-				.password(getOrDefault(config, PASSWORD)).databaseList(String.join(",", databases))
-				.tableList(String.join(",", tables)).debeziumProperties(DebeziumOptions.getDebeziumProperties(config));
+		MySqlSourceBuilder<Tuple2<String, Row>> builder = MySqlSource.<Tuple2<String, Row>>builder()
+				.hostname(config.get(MySqlSourceOptions.HOSTNAME.key()))
+				.port(getIntegerOrDefault(config, MySqlSourceOptions.PORT))
+				.username(config.get(MySqlSourceOptions.USERNAME.key()))
+				.password(config.get(MySqlSourceOptions.PASSWORD.key())).databaseList(String.join(",", databases))
+				.tableList(String.join(",", tables)).serverId(validateAndGetServerId(config))
+				.debeziumProperties(DebeziumOptions.getDebeziumProperties(config))
+				.jdbcProperties(ConfigurationUtils.getPrefixedKeyValuePairs(config, JDBC_PROPERTIES_PREFIX, false));
 
-		if (config.containsKey(SERVER_TIME_ZONE.key())) {
-			builder.serverTimeZone(config.get(SERVER_TIME_ZONE.key()));
-		}
 		StartupOptions startupOptions = getStartupOptions(config);
-		validateStartupOptionIfEnableParallel(startupOptions);
 		builder.startupOptions(startupOptions);
+		if (config.containsKey(MySqlSourceOptions.SERVER_TIME_ZONE.key())) {
+			builder.serverTimeZone(config.get(MySqlSourceOptions.SERVER_TIME_ZONE.key()));
+		}
+		validateStartupOptionIfEnableParallel(startupOptions);
 
-		int splitSize = getIntegerOrDefault(config, SourceOptions.SCAN_INCREMENTAL_SNAPSHOT_CHUNK_SIZE);
-		validateIntegerOption(SourceOptions.SCAN_INCREMENTAL_SNAPSHOT_CHUNK_SIZE, splitSize, 1);
+		int splitSize = getIntegerOrDefault(config, MySqlSourceOptions.SCAN_INCREMENTAL_SNAPSHOT_CHUNK_SIZE);
+		validateIntegerOption(MySqlSourceOptions.SCAN_INCREMENTAL_SNAPSHOT_CHUNK_SIZE, splitSize, 1);
 		builder.splitSize(splitSize);
-		int fetchSize = getIntegerOrDefault(config, SourceOptions.SCAN_SNAPSHOT_FETCH_SIZE);
-		validateIntegerOption(SourceOptions.SCAN_SNAPSHOT_FETCH_SIZE, fetchSize, 1);
+
+		int fetchSize = getIntegerOrDefault(config, MySqlSourceOptions.SCAN_SNAPSHOT_FETCH_SIZE);
+		validateIntegerOption(MySqlSourceOptions.SCAN_SNAPSHOT_FETCH_SIZE, fetchSize, 1);
 		builder.fetchSize(fetchSize);
 
-		int splitMetaGroupSize = getIntegerOrDefault(config, SourceOptions.CHUNK_META_GROUP_SIZE);
-		validateIntegerOption(SourceOptions.CHUNK_META_GROUP_SIZE, splitMetaGroupSize, 1);
+		int splitMetaGroupSize = getIntegerOrDefault(config, MySqlSourceOptions.CHUNK_META_GROUP_SIZE);
+		validateIntegerOption(MySqlSourceOptions.CHUNK_META_GROUP_SIZE, splitMetaGroupSize, 1);
 		builder.splitMetaGroupSize(splitMetaGroupSize);
 
-		int connectionPoolSize = getIntegerOrDefault(config, JdbcSourceOptions.CONNECTION_POOL_SIZE);
-		validateIntegerOption(JdbcSourceOptions.CONNECTION_POOL_SIZE, connectionPoolSize, 1);
+		int connectionPoolSize = getIntegerOrDefault(config, MySqlSourceOptions.CONNECTION_POOL_SIZE);
+		validateIntegerOption(MySqlSourceOptions.CONNECTION_POOL_SIZE, connectionPoolSize, 1);
 		builder.connectionPoolSize(connectionPoolSize);
 
-		int connectMaxRetries = getIntegerOrDefault(config, JdbcSourceOptions.CONNECT_MAX_RETRIES);
-		validateIntegerOption(JdbcSourceOptions.CONNECT_MAX_RETRIES, connectMaxRetries, 0);
+		int connectMaxRetries = getIntegerOrDefault(config, MySqlSourceOptions.CONNECT_MAX_RETRIES);
+		validateIntegerOption(MySqlSourceOptions.CONNECT_MAX_RETRIES, connectMaxRetries, 0);
 		builder.connectMaxRetries(connectMaxRetries);
 
 		builder.distributionFactorLower(
@@ -148,7 +129,10 @@ public class SQLServerCdcSourceFactory implements SourceFactory<JdbcIncrementalS
 		builder.distributionFactorUpper(
 				Double.parseDouble(getOrDefault(config, Arrays.asList("chunk-key.even-distribution.factor.upper-bound",
 						"split-key.even-distribution.factor.upper-bound"), "1000")));
-		builder.connectTimeout(getDurationOrDefault(config, JdbcSourceOptions.CONNECT_TIMEOUT));
+		builder.connectTimeout(getDurationOrDefault(config, MySqlSourceOptions.CONNECT_TIMEOUT));
+		builder.scanNewlyAddedTableEnabled(
+				getBooleanOrDefault(config, MySqlSourceOptions.SCAN_NEWLY_ADDED_TABLE_ENABLED));
+		builder.heartbeatInterval(getDurationOrDefault(config, MySqlSourceOptions.HEARTBEAT_INTERVAL));
 		if (config.containsKey(INCLUDE_SCHEMA_CHANGES)) {
 			builder.includeSchemaChanges(Boolean.valueOf(config.get(INCLUDE_SCHEMA_CHANGES)));
 		}
@@ -184,11 +168,32 @@ public class SQLServerCdcSourceFactory implements SourceFactory<JdbcIncrementalS
 		return defaultValue;
 	}
 
+	private static Boolean getBooleanOrDefault(Map<String, String> config, ConfigOption<Boolean> option) {
+		if (config.containsKey(option.key())) {
+			return Boolean.parseBoolean(config.get(option.key()));
+		}
+		return option.defaultValue();
+	}
+
 	private static Duration getDurationOrDefault(Map<String, String> config, ConfigOption<Duration> option) {
 		if (config.containsKey(option.key())) {
 			return TimeUtils.parseDuration(config.get(option.key()));
 		}
 		return option.defaultValue();
+	}
+
+	private String validateAndGetServerId(Map<String, String> config) {
+		final String serverIdValue = config.get(MySqlSourceOptions.SERVER_ID.key());
+		if (serverIdValue != null) {
+			// validation
+			try {
+				ServerIdRange.from(serverIdValue);
+			} catch (Exception e) {
+				throw new ValidationException(
+						String.format("The value of option 'server-id' is invalid: '%s'", serverIdValue), e);
+			}
+		}
+		return serverIdValue;
 	}
 
 	private static final String SCAN_STARTUP_MODE_VALUE_INITIAL = "initial";
@@ -198,7 +203,7 @@ public class SQLServerCdcSourceFactory implements SourceFactory<JdbcIncrementalS
 	private static final String SCAN_STARTUP_MODE_VALUE_TIMESTAMP = "timestamp";
 
 	private static StartupOptions getStartupOptions(Map<String, String> config) {
-		String modeString = getOrDefault(config, SCAN_STARTUP_MODE);
+		String modeString = getOrDefault(config, MySqlSourceOptions.SCAN_STARTUP_MODE);
 		switch (modeString.toLowerCase()) {
 		case SCAN_STARTUP_MODE_VALUE_INITIAL:
 			return StartupOptions.initial();
@@ -217,8 +222,8 @@ public class SQLServerCdcSourceFactory implements SourceFactory<JdbcIncrementalS
 		default:
 			throw new ValidationException(
 					String.format("Invalid value for option '%s'. Supported values are [%s, %s], but was: %s",
-							SCAN_STARTUP_MODE.key(), SCAN_STARTUP_MODE_VALUE_INITIAL, SCAN_STARTUP_MODE_VALUE_LATEST,
-							modeString));
+							MySqlSourceOptions.SCAN_STARTUP_MODE.key(), SCAN_STARTUP_MODE_VALUE_INITIAL,
+							SCAN_STARTUP_MODE_VALUE_LATEST, modeString));
 		}
 	}
 
