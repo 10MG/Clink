@@ -375,10 +375,9 @@
 					</xsd:documentation>
 				</xsd:annotation>
 			</xsd:attribute>
-			<xsd:attribute name="timestamp" type="xsd:string">
+			<xsd:attribute name="autoColumns" type="xsd:string">
 				<xsd:annotation>
-					<xsd:documentation>时间戳字段名，多个字段名使用“,”分隔。设置这个值后，会使用这些字段名创建源表和目标表，并在数据同步时写入这些字段值。
-					</xsd:documentation>
+					<xsd:documentation>自动添加的列，多个列名使用“,”分隔。设置这个值后，会使用这些列名创建源表和目标表，并在数据同步时写入这些列的值。如果没有设置，则使用全局配置“data.sync.auto-columns”的值</xsd:documentation>
 				</xsd:annotation>
 			</xsd:attribute>
 			<xsd:attribute name="smart" type="xsd:boolean">

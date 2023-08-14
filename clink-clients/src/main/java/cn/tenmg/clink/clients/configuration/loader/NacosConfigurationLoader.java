@@ -10,7 +10,7 @@ import com.alibaba.nacos.api.config.ConfigService;
 import com.alibaba.nacos.api.exception.NacosException;
 
 import cn.tenmg.clink.clients.exception.ConfigurationLoadException;
-import cn.tenmg.clink.clients.utils.ConfigurationUtils;
+import cn.tenmg.clink.utils.ConfigurationUtils;
 
 /**
  * Nacos 配置加载器

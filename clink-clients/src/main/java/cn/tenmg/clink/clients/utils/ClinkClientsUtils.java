@@ -7,7 +7,7 @@ import org.apache.flink.api.common.JobID;
 import org.apache.flink.client.program.ClusterClient;
 
 /**
- * Clink客户端工具类
+ * flink-jobs客户端工具类
  * 
  * @author June wjzhao@aliyun.com
  * 

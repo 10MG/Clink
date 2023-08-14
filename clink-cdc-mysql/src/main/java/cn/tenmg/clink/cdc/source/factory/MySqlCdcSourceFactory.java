@@ -1,7 +1,8 @@
-package cn.tenmg.clink.source.factory;
+package cn.tenmg.clink.cdc.source.factory;
 
 import java.time.Duration;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -29,30 +30,36 @@ import com.ververica.cdc.connectors.shaded.org.apache.kafka.connect.data.Struct;
 import com.ververica.cdc.connectors.shaded.org.apache.kafka.connect.source.SourceRecord;
 import com.ververica.cdc.debezium.table.DebeziumOptions;
 import com.ververica.cdc.debezium.table.MetadataConverter;
-import com.ververica.cdc.debezium.utils.JdbcUrlUtils;
 
 import cn.tenmg.clink.cdc.debezium.MultiTableDebeziumDeserializationSchema;
 import cn.tenmg.clink.source.SourceFactory;
-import cn.tenmg.clink.utils.SQLUtils;
+import cn.tenmg.clink.utils.ConfigurationUtils;
 import cn.tenmg.dsl.utils.MapUtils;
 import cn.tenmg.dsl.utils.StringUtils;
 import io.debezium.connector.AbstractSourceInfo;
 import io.debezium.data.Envelope;
 
 /**
- * 基于 Flink CDC MySQL 连接器的支持多表的源工厂
+ * 基于 MySQL CDC 连接器的支持多表的源工厂
  * 
  * @author June wjzhao@aliyun.com
  * 
  * @since 1.6.0
  */
-public class FlinkCdcMySqlSourceFactory implements SourceFactory<MySqlSource<Tuple2<String, Row>>> {
+public class MySqlCdcSourceFactory implements SourceFactory<MySqlSource<Tuple2<String, Row>>> {
 
-	public static final String INCLUDE_SCHEMA_CHANGES = "include-schema-changes", DATABASE_NAME = "database-name";
+	public static final String IDENTIFIER = "mysql-cdc", SINGLE_QUOTATION_MARK = "'",
+			JDBC_PROPERTIES_PREFIX = "jdbc.properties.", INCLUDE_SCHEMA_CHANGES = "include-schema-changes",
+			CONVERT_DELETE_TO_UPDATE = "convert-delete-to-update";
+
+	@Override
+	public String factoryIdentifier() {
+		return IDENTIFIER;
+	}
 
 	@Override
 	public MySqlSource<Tuple2<String, Row>> create(Map<String, String> config, Map<String, RowType> rowTypes,
-			Map<Integer, String> metadatas) {
+			Map<String, Map<Integer, String>> metadatas) {
 		String databaseName = config.get(MySqlSourceOptions.DATABASE_NAME.key()), parts[];
 		Set<String> databases = new HashSet<String>(), tables;
 		if (StringUtils.isBlank(databaseName)) {
@@ -64,8 +71,7 @@ public class FlinkCdcMySqlSourceFactory implements SourceFactory<MySqlSource<Tup
 				}
 			}
 		} else {
-			if (databaseName.startsWith(SQLUtils.SINGLE_QUOTATION_MARK)
-					&& databaseName.endsWith(SQLUtils.SINGLE_QUOTATION_MARK)) {
+			if (databaseName.startsWith(SINGLE_QUOTATION_MARK) && databaseName.endsWith(SINGLE_QUOTATION_MARK)) {
 				databaseName = databaseName.substring(1, databaseName.length() - 1);
 			}
 			databases.add(databaseName);
@@ -88,7 +94,7 @@ public class FlinkCdcMySqlSourceFactory implements SourceFactory<MySqlSource<Tup
 				.password(config.get(MySqlSourceOptions.PASSWORD.key())).databaseList(String.join(",", databases))
 				.tableList(String.join(",", tables)).serverId(validateAndGetServerId(config))
 				.debeziumProperties(DebeziumOptions.getDebeziumProperties(config))
-				.jdbcProperties(JdbcUrlUtils.getJdbcProperties(config));
+				.jdbcProperties(ConfigurationUtils.getPrefixedKeyValuePairs(config, JDBC_PROPERTIES_PREFIX, false));
 
 		StartupOptions startupOptions = getStartupOptions(config);
 		builder.startupOptions(startupOptions);
@@ -132,8 +138,10 @@ public class FlinkCdcMySqlSourceFactory implements SourceFactory<MySqlSource<Tup
 				builder.includeSchemaChanges(Boolean.valueOf(config.get(INCLUDE_SCHEMA_CHANGES)));
 			}
 		}
+		String convertDeleteToUpdate = config.get(CONVERT_DELETE_TO_UPDATE);
 		return builder
-				.deserializer(new MultiTableDebeziumDeserializationSchema(rowTypes, toMetadataConverters(metadatas)))
+				.deserializer(new MultiTableDebeziumDeserializationSchema(rowTypes, toMetadataConverters(metadatas),
+						convertDeleteToUpdate == null ? false : Boolean.parseBoolean(convertDeleteToUpdate)))
 				.build();
 	}
 
@@ -278,22 +286,31 @@ public class FlinkCdcMySqlSourceFactory implements SourceFactory<MySqlSource<Tup
 				}
 			}).build();
 
-	private Map<Integer, MetadataConverter> toMetadataConverters(Map<Integer, String> metadatas) {
-		Map<Integer, MetadataConverter> metadataConverters = MapUtils.newHashMap();
-		if (metadatas == null) {
-			return null;
+	private Map<String, Map<Integer, MetadataConverter>> toMetadataConverters(
+			Map<String, Map<Integer, String>> metadatas) {
+		if (MapUtils.isEmpty(metadatas)) {
+			return Collections.emptyMap();
 		}
-		Entry<Integer, String> entry;
-		MetadataConverter metadataConverter;
-		for (Iterator<Entry<Integer, String>> it = metadatas.entrySet().iterator(); it.hasNext();) {
+		Map<String, Map<Integer, MetadataConverter>> metadataConverterses = MapUtils.newHashMap();
+		Entry<String, Map<Integer, String>> entry;
+		Map<Integer, MetadataConverter> metadataConverters;
+		for (Iterator<Entry<String, Map<Integer, String>>> it = metadatas.entrySet().iterator(); it.hasNext();) {
 			entry = it.next();
-			metadataConverter = METADATA_CONVERTERS.get(entry.getValue());
-			if (metadataConverter == null) {
-				throw new UnsupportedOperationException("Invalid metadata key: " + entry.getKey());
+			Entry<Integer, String> e;
+			MetadataConverter metadataConverter;
+			metadataConverters = MapUtils.newHashMap();
+			for (Iterator<Entry<Integer, String>> eit = entry.getValue().entrySet().iterator(); eit.hasNext();) {
+				e = eit.next();
+				metadataConverter = METADATA_CONVERTERS.get(e.getValue());
+				if (metadataConverter == null) {
+					throw new UnsupportedOperationException(
+							"Invalid metadata: " + e.getValue() + " for the connector: " + IDENTIFIER);
+				}
+				metadataConverters.put(e.getKey(), metadataConverter);
 			}
-			metadataConverters.put(entry.getKey(), metadataConverter);
+			metadataConverterses.put(entry.getKey(), metadataConverters);
 		}
-		return metadataConverters;
+		return metadataConverterses;
 	}
 
 }

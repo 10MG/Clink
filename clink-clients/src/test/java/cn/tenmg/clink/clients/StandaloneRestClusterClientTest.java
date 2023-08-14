@@ -12,10 +12,9 @@ import org.apache.flink.runtime.rest.messages.job.JobDetailsInfo;
 
 import com.alibaba.fastjson.JSON;
 
-import cn.tenmg.clink.clients.StandaloneRestClusterClient;
-import cn.tenmg.clink.clients.utils.ClassUtils;
 import cn.tenmg.clink.config.loader.XMLConfigLoader;
 import cn.tenmg.clink.config.model.Clink;
+import cn.tenmg.dsl.utils.ClassUtils;
 
 /**
  * StandaloneRestClusterClient测试
@@ -38,9 +37,10 @@ public class StandaloneRestClusterClientTest {
 		// JobID jobId = JobID.fromHexString(hexString);
 		JobStatus jobStatus = client.getJobStatus(jobId);// 获取作业状态
 		System.out.println("Job status: " + jobStatus);
-		
+
 		// 高级功能
-		//RestClusterClient<StandaloneClusterId> restClusterClient = client.getClusterClient(customConf);
+		// RestClusterClient<StandaloneClusterId> restClusterClient =
+		// client.getClusterClient(customConf);
 		RestClusterClient<StandaloneClusterId> restClusterClient = client.getClusterClient();
 		JobDetailsInfo jobDetailsInfo = restClusterClient.getJobDetails(jobId).get();
 		System.out.println("Job details info: " + JSON.toJSONString(jobDetailsInfo));

@@ -130,16 +130,62 @@ public abstract class ConfigurationUtils {
 	 *            是否将键转换为驼峰形式
 	 * @return 指定键前缀的配置项的集合
 	 */
+	public static Properties getPrefixedKeyValuePairs(Map<String, String> config, String prefix, boolean camelCaseKey) {
+		String key;
+		Entry<String, String> entry;
+		Properties keyValuePairs = new Properties();
+		if (camelCaseKey) {
+			for (Iterator<Entry<String, String>> it = config.entrySet().iterator(); it.hasNext();) {
+				entry = it.next();
+				key = entry.getKey().toString();
+				if (key.startsWith(prefix)) {
+					keyValuePairs.put(StringUtils.toCamelCase(key.substring(prefix.length()), "[_-]", false),
+							entry.getValue());
+				}
+			}
+		} else {
+			for (Iterator<Entry<String, String>> it = config.entrySet().iterator(); it.hasNext();) {
+				entry = it.next();
+				key = entry.getKey().toString();
+				if (key.startsWith(prefix)) {
+					keyValuePairs.put(key.substring(prefix.length()), entry.getValue());
+				}
+			}
+		}
+		return keyValuePairs;
+	}
+
+	/**
+	 * 获取含有指定键的前缀的配置项的集合，该集合的键为去除该前缀后剩余的子串。
+	 * 
+	 * @param config
+	 *            配置对象
+	 * @param prefix
+	 *            键的前缀
+	 * @param camelCaseKey
+	 *            是否将键转换为驼峰形式
+	 * @return 指定键前缀的配置项的集合
+	 */
 	public static Properties getPrefixedKeyValuePairs(Properties config, String prefix, boolean camelCaseKey) {
 		String key;
 		Entry<Object, Object> entry;
 		Properties keyValuePairs = new Properties();
-		for (Iterator<Entry<Object, Object>> it = config.entrySet().iterator(); it.hasNext();) {
-			entry = it.next();
-			key = entry.getKey().toString();
-			if (key.startsWith(prefix)) {
-				keyValuePairs.put(StringUtils.toCamelCase(key.substring(prefix.length()), "[_-]", false),
-						entry.getValue());
+		if (camelCaseKey) {
+			for (Iterator<Entry<Object, Object>> it = config.entrySet().iterator(); it.hasNext();) {
+				entry = it.next();
+				key = entry.getKey().toString();
+				if (key.startsWith(prefix)) {
+					keyValuePairs.put(StringUtils.toCamelCase(key.substring(prefix.length()), "[_-]", false),
+							entry.getValue());
+				}
+			}
+		} else {
+			for (Iterator<Entry<Object, Object>> it = config.entrySet().iterator(); it.hasNext();) {
+				entry = it.next();
+				key = entry.getKey().toString();
+				if (key.startsWith(prefix)) {
+					keyValuePairs.put(key.substring(prefix.length()), entry.getValue());
+				}
 			}
 		}
 		return keyValuePairs;

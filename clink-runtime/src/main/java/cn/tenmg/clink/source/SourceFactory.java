@@ -17,6 +17,13 @@ import org.apache.flink.types.Row;
 public interface SourceFactory<S extends Source<Tuple2<String, Row>, ?, ?>> {
 
 	/**
+	 * 获取工厂唯一标识
+	 * 
+	 * @return 工厂唯一标识
+	 */
+	String factoryIdentifier();
+
+	/**
 	 * 创建源
 	 * 
 	 * @param config
@@ -27,6 +34,6 @@ public interface SourceFactory<S extends Source<Tuple2<String, Row>, ?, ?>> {
 	 *            元数据查找表
 	 * @return 源
 	 */
-	S create(Map<String, String> config, Map<String, RowType> rowTypes, Map<Integer, String> metadatas);
+	S create(Map<String, String> config, Map<String, RowType> rowTypes, Map<String, Map<Integer, String>> metadatas);
 
 }

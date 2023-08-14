@@ -5,6 +5,7 @@ import java.util.Map;
 
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 
+import cn.tenmg.clink.context.ClinkContext;
 import cn.tenmg.clink.exception.IllegalJobConfigException;
 import cn.tenmg.clink.model.DataSync;
 import cn.tenmg.clink.model.data.sync.Column;
@@ -22,6 +23,8 @@ import cn.tenmg.dsl.utils.StringUtils;
  */
 public class DataSyncOperator extends AbstractOperator<DataSync> {
 
+	private static final String CONVERT_DELETE_TO_UPDATE = "convert-delete-to-update";
+
 	@Override
 	public Object execute(StreamExecutionEnvironment env, DataSync dataSync, Map<String, Object> params)
 			throws Exception {
@@ -38,8 +41,10 @@ public class DataSyncOperator extends AbstractOperator<DataSync> {
 				}
 			}
 		}
-		return (table.contains(",") ? MultiTablesDataSyncJobGenerator.getInstance()
-				: SingleTableDataSyncJobGenerator.getInstance()).generate(env, dataSync, params);
+		return (table.contains(",")
+				|| "true".equals(ClinkContext.getDatasource(dataSync.getFrom()).get(CONVERT_DELETE_TO_UPDATE))
+						? MultiTablesDataSyncJobGenerator.getInstance()
+						: SingleTableDataSyncJobGenerator.getInstance()).generate(env, dataSync, params);
 	}
 
 }

@@ -34,12 +34,13 @@ import cn.tenmg.clink.datasource.DataSourceConverter;
 import cn.tenmg.clink.exception.IllegalConfigurationException;
 import cn.tenmg.clink.exception.IllegalJobConfigException;
 import cn.tenmg.clink.metadata.MetaDataGetter;
-import cn.tenmg.clink.metadata.MetaDataGetterFactory;
 import cn.tenmg.clink.metadata.MetaDataGetter.TableMetaData;
 import cn.tenmg.clink.metadata.MetaDataGetter.TableMetaData.ColumnType;
+import cn.tenmg.clink.metadata.MetaDataGetterFactory;
 import cn.tenmg.clink.model.DataSync;
 import cn.tenmg.clink.model.data.sync.Column;
 import cn.tenmg.clink.source.SourceFactory;
+import cn.tenmg.clink.table.functions.MultiTablesRowsFilterFunction;
 import cn.tenmg.clink.utils.ConfigurationUtils;
 import cn.tenmg.clink.utils.DataSourceFilterUtils;
 import cn.tenmg.clink.utils.DataTypeUtils;
@@ -57,16 +58,24 @@ import cn.tenmg.dsl.utils.StringUtils;
  * 
  * @since 1.6.0
  */
+@SuppressWarnings({ "rawtypes", "unchecked" })
 public class MultiTablesDataSyncJobGenerator extends AbstractDataSyncJobGenerator {
 
 	private static final MultiTablesDataSyncJobGenerator INSTANCE = new MultiTablesDataSyncJobGenerator();
-
-	private static final String SOURCE_FACTORY_KEY_PREFIX = "source.factory.";
 
 	private static final Map<String, DataSourceConverter> converters = MapUtils.newHashMap();
 
 	private static volatile Map<String, SourceFactory<Source<Tuple2<String, Row>, ?, ?>>> factories = MapUtils
 			.newHashMap();
+
+	static {
+		SourceFactory factory;
+		ServiceLoader<SourceFactory> loader = ServiceLoader.load(SourceFactory.class);
+		for (Iterator<SourceFactory> it = loader.iterator(); it.hasNext();) {
+			factory = it.next();
+			factories.put(factory.factoryIdentifier(), factory);
+		}
+	}
 
 	private static final Pattern METADATA_PATTERN = Pattern.compile("METADATA[\\s]+FROM[\\s]+'[\\S]+'[\\s]+VIRTUAL");
 
@@ -96,40 +105,42 @@ public class MultiTablesDataSyncJobGenerator extends AbstractDataSyncJobGenerato
 		SourceFactory<Source<Tuple2<String, Row>, ?, ?>> sourceFactory = getSourceFactory(connector);
 
 		Map<String, Set<String>> tablePrimaryKeys = parseTableConfigs(dataSync.getPrimaryKey());
-		Map<String, Set<String>> tableTimestamps = parseTableConfigs(dataSync.getTimestamp());
-		String defaultTimestamp = getDefaultTimestamp();
-		Map<String, String> defaultTimestamps = StringUtils.isBlank(defaultTimestamp) ? Collections.emptyMap()
-				: toMap(TO_LOWERCASE, defaultTimestamp.split(TIMESTAMP_COLUMNS_SPLIT));
+		Map<String, Set<String>> autoColumnses = parseTableConfigs(dataSync.getAutoColumns());
+		String defaultAutoColumnsStr = getDefaultAutoColumns();
+		Map<String, String> defaultAutoColumns = StringUtils.isBlank(defaultAutoColumnsStr) ? Collections.emptyMap()
+				: toMap(TO_LOWERCASE, defaultAutoColumnsStr.split(AUTO_COLUMNS_SPLIT));
 		String tables[] = dataSync.getTable().split(","), defaultDatabase = tableEnv.getCurrentDatabase(), fromType,
 				toTable, parts[], sql;
 		Map<String, String[]> actualPrimaryKeys = MapUtils.newHashMap();// 实际主键
-		Map<String, List<Column>> columnsMap = MapUtils.newHashMap(tables.length);
+		Map<String, List<Column>> columnses = MapUtils.newHashMap(tables.length);
 		Map<String, RowTypeInfo> rowTypeInfos = MapUtils.newHashMap();
 		Map<String, RowType> rowTypes = MapUtils.newHashMap();
-		Map<Integer, String> metadatas = MapUtils.newHashMap();
+		Map<String, Map<Integer, String>> metadatas = MapUtils.newHashMap();
+		Map<Integer, String> metadata;
 		for (int i = 0, columnIndex = 0; i < tables.length; i++, columnIndex = 0) {
 			String table = tables[i].trim();
-			Set<String> primaryKeys = new HashSet<String>(), timestamps = new HashSet<String>(),
-					pks = tablePrimaryKeys.get(table), tms = tableTimestamps.get(table);
+			Set<String> primaryKeys = new HashSet<String>(), autoColumns = new HashSet<String>(),
+					pks = tablePrimaryKeys.get(table), atcs = autoColumnses.get(table);
 			if (CollectionUtils.isEmpty(pks)) {
 				pks = tablePrimaryKeys.get(null);// 获取全局主键配置
 			}
 			if (CollectionUtils.isNotEmpty(pks)) {
 				primaryKeys.addAll(pks);
 			}
-			if (CollectionUtils.isEmpty(tms)) {// 获取特定表的时间戳列配置
-				tms = tableTimestamps.get(null);// 获取全局时间戳列配置
+			if (CollectionUtils.isEmpty(atcs)) {// 获取特定表的自动添加列配置
+				atcs = autoColumnses.get(null);// 获取全局自动添加列配置
 			}
-			if (CollectionUtils.isNotEmpty(tms)) {
-				timestamps.addAll(tms);
+			if (CollectionUtils.isNotEmpty(atcs)) {
+				autoColumns.addAll(atcs);
 			}
 			List<Column> columns = collation(dataSync, params, toDataSource, table, primaryKeys,
-					CollectionUtils.isEmpty(timestamps) ? MapUtils.toHashMap(defaultTimestamps)
-							: toMap(TO_LOWERCASE, timestamps));// 任务中没有时间戳列配置，则使用配置文件的默认时间戳列配置
+					CollectionUtils.isEmpty(autoColumns) ? MapUtils.toHashMap(defaultAutoColumns)
+							: toMap(TO_LOWERCASE, autoColumns));// 任务中没有自动添加列配置，则使用配置文件的配置
 			LogicalType logicalType;
 			List<String> fromNames = new ArrayList<String>();
 			List<LogicalType> logicalTypes = new ArrayList<LogicalType>();
 			List<TypeInformation<?>> typeInformations = new ArrayList<TypeInformation<?>>();
+			metadata = MapUtils.newHashMap();
 			for (Column column : columns) {
 				if (Strategy.TO.equals(column.getStrategy())) {// 跳过无来源的列，例如直接写入当前时间的列
 					continue;
@@ -145,7 +156,7 @@ public class MultiTablesDataSyncJobGenerator extends AbstractDataSyncJobGenerato
 						fromType = fromType.substring(0, matcher.start());
 					}
 					String group = matcher.group();
-					metadatas.put(columnIndex, group.substring(group.indexOf(SQLUtils.SINGLE_QUOTATION_MARK) + 1,
+					metadata.put(columnIndex, group.substring(group.indexOf(SQLUtils.SINGLE_QUOTATION_MARK) + 1,
 							group.lastIndexOf(SQLUtils.SINGLE_QUOTATION_MARK)));
 				}
 				DataType dataType = DataTypeUtils.fromFlinkSQLType(fromType);
@@ -154,7 +165,8 @@ public class MultiTablesDataSyncJobGenerator extends AbstractDataSyncJobGenerato
 				typeInformations.add(InternalTypeInfo.of(logicalType));
 				columnIndex++;
 			}
-			columnsMap.put(table, columns);
+			columnses.put(table, columns);
+			metadatas.put(table, metadata);
 
 			parts = table.split("\\.", 2);
 			if (parts.length > 1) {//
@@ -187,7 +199,7 @@ public class MultiTablesDataSyncJobGenerator extends AbstractDataSyncJobGenerato
 			int cols = logicalTypes.size();
 			String[] names = fromNames.toArray(new String[cols]);
 			rowTypes.put(table, RowType.of(logicalTypes.toArray(new LogicalType[cols]), names));
-			rowTypeInfos.put(table, new RowTypeInfo(typeInformations.toArray(new TypeInformation[cols]), names));
+			rowTypeInfos.put(table, new RowTypeInfo(typeInformations.toArray(new TypeInformation[0]), names));
 		}
 
 		String fromConfig = dataSync.getFromConfig();
@@ -203,12 +215,13 @@ public class MultiTablesDataSyncJobGenerator extends AbstractDataSyncJobGenerato
 
 		Source<Tuple2<String, Row>, ?, ?> source = sourceFactory.create(fromDataSource, rowTypes, metadatas);
 		SingleOutputStreamOperator<Tuple2<String, Row>> stream = env
-				.fromSource(source, WatermarkStrategy.noWatermarks(), connector).disableChaining();
+				.fromSource(source, WatermarkStrategy.noWatermarks(), connector).disableChaining().name(connector);
 
 		StatementSet statementSet = tableEnv.createStatementSet();
 		// stream 转 Table，创建临时视图，插入sink表
 		String primaryKeys[], fromTable, prefix = ClinkContext
 				.getProperty(Arrays.asList("data.sync.from_table_prefix", "data.sync.from-table-prefix")); // 兼容老的配置
+		SingleOutputStreamOperator<Row> dataStream;
 		for (Map.Entry<String, RowTypeInfo> entry : rowTypeInfos.entrySet()) {
 			String tableName = entry.getKey();
 			parts = tableName.split("\\.", 2);
@@ -217,18 +230,15 @@ public class MultiTablesDataSyncJobGenerator extends AbstractDataSyncJobGenerato
 			} else {
 				fromTable = prefix + tableName;
 			}
+			dataStream = stream.flatMap(new MultiTablesRowsFilterFunction(tableName), entry.getValue());
 			primaryKeys = actualPrimaryKeys.get(tableName);
-			RowTypeInfo rowTypeInfo = entry.getValue();
 			if (primaryKeys == null) {
-				tableEnv.createTemporaryView(fromTable, tableEnv.fromChangelogStream(
-						stream.filter(data -> data.f0.equals(tableName)).map(data -> data.f1, rowTypeInfo)));
+				tableEnv.createTemporaryView(fromTable, tableEnv.fromChangelogStream(dataStream));
 			} else {
 				tableEnv.createTemporaryView(fromTable,
-						tableEnv.fromChangelogStream(
-								stream.filter(data -> data.f0.equals(tableName)).map(data -> data.f1, rowTypeInfo),
-								Schema.newBuilder().primaryKey(primaryKeys).build()));
+						tableEnv.fromChangelogStream(dataStream, Schema.newBuilder().primaryKey(primaryKeys).build()));
 			}
-			sql = insertSQL(tableName, fromTable, columnsMap.get(tableName), params);
+			sql = insertSQL(tableName, fromTable, columnses.get(tableName), params);
 			if (log.isInfoEnabled()) {
 				log.info("Execute Flink SQL: " + SQLUtils.hiddePassword(sql));
 			}
@@ -269,21 +279,9 @@ public class MultiTablesDataSyncJobGenerator extends AbstractDataSyncJobGenerato
 		return tableConfigs;
 	}
 
-	/**
-	 * 校对和整理列配置并返回主键列（多个列之间使用“,”分隔）
-	 * 
-	 * @param dataSync
-	 *            数据同步配置对象
-	 * @param toDataSource
-	 *            目标数据源
-	 * @param params
-	 *            参数查找表
-	 * @return 返回主键
-	 * @throws Exception
-	 *             发生异常
-	 */
+	// 校对和整理列配置
 	private static List<Column> collation(DataSync dataSync, Map<String, Object> params,
-			Map<String, String> toDataSource, String table, Set<String> primaryKeys, Map<String, String> timestamps)
+			Map<String, String> toDataSource, String table, Set<String> primaryKeys, Map<String, String> autoColumns)
 			throws Exception {
 		List<Column> columns = dataSync.getColumns();
 		if (CollectionUtils.isEmpty(columns)) {
@@ -322,9 +320,25 @@ public class MultiTablesDataSyncJobGenerator extends AbstractDataSyncJobGenerato
 			String connector = toDataSource.get("connector");
 			Map<String, ColumnType> columnTypes = tableMetaData.getColumns();
 			if (columns.isEmpty()) {// 没有用户自定义列
-				addSmartLoadColumns(connector, columns, columnTypes, params, timestamps);
+				addSmartLoadColumns(connector, columns, columnTypes, params, autoColumns);
 			} else {// 有用户自定义列
-				collationPartlyCustom(connector, columns, params, columnTypes, timestamps);
+				collationPartlyCustom(connector, columns, params, columnTypes, autoColumns);
+			}
+			String columnName, strategy;
+			for (Iterator<String> it = autoColumns.values().iterator(); it.hasNext();) {
+				columnName = it.next();
+				Column column = new Column();
+				column.setFromName(columnName);
+				column.setToName(columnName);// 目标列名和来源列名相同
+				columnName = TO_LOWERCASE ? columnName.toLowerCase() : columnName;// 不区分大小写，统一转为小写
+				strategy = getDefaultStrategy(columnName);
+				if (Strategy.FROM.equals(strategy)) {// 如果目标库元数据或者用户定义列中没有该自动添加的列，但策略是from，则仍然添加该列
+					column.setStrategy(strategy);
+					column.setFromType(getDefaultFromType(columnName));
+					column.setToType(getDefaultToType(columnName));
+					column.setScript(getDefaultScript(columnName));
+					columns.add(column);
+				}
 			}
 		} else if (columns.isEmpty()) {// 没有用户自定义列
 			throw new IllegalJobConfigException(
@@ -332,18 +346,20 @@ public class MultiTablesDataSyncJobGenerator extends AbstractDataSyncJobGenerato
 							+ ClinkContext.SMART_MODE_CONFIG_KEY
 							+ "=true' to enable automatic column acquisition in smart mode");
 		} else {// 全部是用户自定义列
-			collationCustom(columns, params, timestamps);
-		}
-		String columnName;
-		for (Iterator<String> it = timestamps.values().iterator(); it.hasNext();) {// 如果没有时间戳列，但是配置了该列名，依然增加该列，这是用户的错误配置。运行时，可能会由于列不存在会报错
-			columnName = it.next();
-			Column column = new Column();
-			column.setFromName(columnName);
-			column.setToName(columnName);// 目标列名和来源列名相同
-			columnName = TO_LOWERCASE ? columnName.toLowerCase() : columnName;// 不区分大小写，统一转为小写
-			column.setFromType(getDefaultTimestampFromType(columnName));
-			column.setToType(getDefaultTimestampToType(columnName));
-			columns.add(column);
+			collationCustom(columns, params, autoColumns);
+			String columnName;
+			for (Iterator<String> it = autoColumns.values().iterator(); it.hasNext();) {
+				columnName = it.next();
+				Column column = new Column();
+				column.setFromName(columnName);
+				column.setToName(columnName);// 目标列名和来源列名相同
+				columnName = TO_LOWERCASE ? columnName.toLowerCase() : columnName;// 不区分大小写，统一转为小写
+				column.setStrategy(getDefaultStrategy(columnName));
+				column.setFromType(getDefaultFromType(columnName));
+				column.setToType(getDefaultToType(columnName));
+				column.setScript(getDefaultScript(columnName));
+				columns.add(column);
+			}
 		}
 		return columns;
 	}
@@ -380,34 +396,10 @@ public class MultiTablesDataSyncJobGenerator extends AbstractDataSyncJobGenerato
 		return StringUtils.isBlank(columnName) || !columnName.contains(".") || columnName.startsWith(prefix);
 	}
 
-	@SuppressWarnings({ "unchecked" })
 	private static SourceFactory<Source<Tuple2<String, Row>, ?, ?>> getSourceFactory(String connector) {
 		SourceFactory<Source<Tuple2<String, Row>, ?, ?>> factory = factories.get(connector);
 		if (factory == null) {
-			synchronized (factories) {
-				if (factories.containsKey(connector)) {
-					return factories.get(connector);
-				} else {
-					String className = ClinkContext.getProperty(SOURCE_FACTORY_KEY_PREFIX + connector);
-					if (StringUtils.isBlank(className)) {
-						throw new IllegalConfigurationException(
-								"Cannot find source factory for connector " + connector);
-					} else {
-						try {
-							factory = (SourceFactory<Source<Tuple2<String, Row>, ?, ?>>) Class.forName(className)
-									.getConstructor().newInstance();
-							factories.put(connector, factory);
-							return factory;
-						} catch (ClassNotFoundException e) {
-							throw new IllegalConfigurationException(
-									"Wrong source factory configuration for connector " + connector, e);
-						} catch (Exception e) {
-							throw new IllegalConfigurationException(
-									"Cannot instantiate source factory for connector " + connector, e);
-						}
-					}
-				}
-			}
+			throw new IllegalConfigurationException("Cannot find source factory for connector " + connector);
 		}
 		return factory;
 	}

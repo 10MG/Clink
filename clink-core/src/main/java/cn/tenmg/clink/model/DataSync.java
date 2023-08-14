@@ -32,7 +32,7 @@ public class DataSync extends Operate {
 
 	private String primaryKey;
 
-	private String timestamp;
+	private String autoColumns;
 
 	private Boolean smart;
 
@@ -191,22 +191,22 @@ public class DataSync extends Operate {
 	}
 
 	/**
-	 * 获取时间戳字段名
+	 * 获取自动添加的列
 	 * 
-	 * @return 时间戳字段名
+	 * @return 自动添加的列
 	 */
-	public String getTimestamp() {
-		return timestamp;
+	public String getAutoColumns() {
+		return autoColumns;
 	}
 
 	/**
-	 * 设置时间戳字段名，多个字段名使用“,”分隔。设置这个值后，会使用这些字段名创建源表和目标表，并在数据同步时写入这些字段值。
+	 * 设置自动添加的列，多个列名使用“,”分隔。设置这个值后，会使用这些列名创建源表和目标表，并在数据同步时写入这些列的值。
 	 * 
-	 * @param timestamp
-	 *            时间戳字段名
+	 * @param autoColumns
+	 *            自动添加的列
 	 */
-	public void setTimestamp(String timestamp) {
-		this.timestamp = timestamp;
+	public void setAutoColumns(String autoColumns) {
+		this.autoColumns = autoColumns;
 	}
 
 	/**

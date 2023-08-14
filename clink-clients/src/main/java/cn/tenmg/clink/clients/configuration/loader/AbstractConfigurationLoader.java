@@ -2,12 +2,11 @@ package cn.tenmg.clink.clients.configuration.loader;
 
 import java.util.Iterator;
 import java.util.Map.Entry;
+import java.util.Properties;
 
 import cn.tenmg.clink.clients.configuration.ConfigurationLoader;
 import cn.tenmg.clink.clients.exception.ConfigurationLoadException;
-import cn.tenmg.clink.clients.utils.PlaceHolderUtils;
-
-import java.util.Properties;
+import cn.tenmg.dsl.utils.PlaceHolderUtils;
 
 /**
  * 抽象配置加载器

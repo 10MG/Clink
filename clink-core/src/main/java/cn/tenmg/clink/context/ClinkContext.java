@@ -111,8 +111,7 @@ public abstract class ClinkContext {
 		Entry<Object, Object> entry;
 		String key, name, param, keyLowercase;
 		Map<String, String> dataSource;
-		boolean ignoreCase = !Boolean.valueOf(getProperty(
-				Arrays.asList("data.sync.timestamp.case_sensitive", "data.sync.timestamp.case-sensitive"), "true"));// 兼容老的配置
+		boolean ignoreCase = !Boolean.valueOf(getProperty("data.sync.case-sensitive", "true"));
 		int configSpliterLen = CONFIG_SPLITER.length(), datasourcePrefixLen = DATASOURCE_PREFIX.length(),
 				autoDatasourcePrefixLen = AUTO_DATASOURCE_PREFIX.length();
 		for (Iterator<Entry<Object, Object>> it = config.entrySet().iterator(); it.hasNext();) {

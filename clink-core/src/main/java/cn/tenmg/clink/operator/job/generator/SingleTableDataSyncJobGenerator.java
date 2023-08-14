@@ -19,9 +19,9 @@ import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
 import cn.tenmg.clink.context.ClinkContext;
 import cn.tenmg.clink.exception.IllegalJobConfigException;
 import cn.tenmg.clink.metadata.MetaDataGetter;
-import cn.tenmg.clink.metadata.MetaDataGetterFactory;
 import cn.tenmg.clink.metadata.MetaDataGetter.TableMetaData;
 import cn.tenmg.clink.metadata.MetaDataGetter.TableMetaData.ColumnType;
+import cn.tenmg.clink.metadata.MetaDataGetterFactory;
 import cn.tenmg.clink.model.DataSync;
 import cn.tenmg.clink.model.data.sync.Column;
 import cn.tenmg.clink.utils.ConfigurationUtils;
@@ -64,8 +64,7 @@ public class SingleTableDataSyncJobGenerator extends AbstractDataSyncJobGenerato
 						+ String.join(ClinkContext.CONFIG_SPLITER, String.join("-", from, "to", to), table));
 			}
 		}
-		Map<String, String> fromDataSource = DataSourceFilterUtils.filter("source",
-				ClinkContext.getDatasource(from)),
+		Map<String, String> fromDataSource = DataSourceFilterUtils.filter("source", ClinkContext.getDatasource(from)),
 				toDataSource = DataSourceFilterUtils.filter("sink", ClinkContext.getDatasource(to));
 
 		Set<String> primaryKeys = collation(dataSync, toDataSource, params);
@@ -115,7 +114,7 @@ public class SingleTableDataSyncJobGenerator extends AbstractDataSyncJobGenerato
 			smart = Boolean.valueOf(ClinkContext.getProperty(ClinkContext.SMART_MODE_CONFIG_KEY));
 		}
 		Set<String> primaryKeys = null;
-		String primaryKey = dataSync.getPrimaryKey(), timestamp = dataSync.getTimestamp();
+		String primaryKey = dataSync.getPrimaryKey(), autoColumnsStr = dataSync.getAutoColumns();
 		if (StringUtils.isNotBlank(primaryKey)) {
 			primaryKeys = new HashSet<String>();
 			String[] columnNames = primaryKey.split(",");
@@ -123,13 +122,11 @@ public class SingleTableDataSyncJobGenerator extends AbstractDataSyncJobGenerato
 				primaryKeys.add(columnNames[i].trim());
 			}
 		}
-
-		boolean hasCustomTimestamp = StringUtils.isNotBlank(timestamp);
-		if (!hasCustomTimestamp) {// 没有指定时间戳列名，使用配置的全局默认值，并根据目标表的实际情况确定是否添加时间戳列
-			timestamp = getDefaultTimestamp();
+		if (StringUtils.isBlank(autoColumnsStr)) {// 没有指定自动添加列名，使用配置的全局默认值，并根据目标表的实际情况确定是否添加自动添加列
+			autoColumnsStr = getDefaultAutoColumns();
 		}
-		Map<String, String> timestampMap = StringUtils.isBlank(timestamp) ? Collections.emptyMap()
-				: toMap(TO_LOWERCASE, timestamp.split(TIMESTAMP_COLUMNS_SPLIT));// 不区分大小写，统一转为小写
+		Map<String, String> autoColumns = StringUtils.isBlank(autoColumnsStr) ? Collections.emptyMap()
+				: toMap(TO_LOWERCASE, autoColumnsStr.split(AUTO_COLUMNS_SPLIT));// 不区分大小写，统一转为小写
 		if (Boolean.TRUE.equals(smart)) {// 智能模式，自动查询列名、数据类型
 			MetaDataGetter metaDataGetter = MetaDataGetterFactory.getMetaDataGetter(toDataSource);
 			TableMetaData tableMetaData = metaDataGetter.getTableMetaData(toDataSource, dataSync.getTable());
@@ -139,9 +136,25 @@ public class SingleTableDataSyncJobGenerator extends AbstractDataSyncJobGenerato
 			String connector = toDataSource.get("connector");
 			Map<String, ColumnType> columnTypes = tableMetaData.getColumns();
 			if (columns.isEmpty()) {// 没有用户自定义列
-				addSmartLoadColumns(connector, columns, columnTypes, params, timestampMap);
+				addSmartLoadColumns(connector, columns, columnTypes, params, autoColumns);
 			} else {// 有用户自定义列
-				collationPartlyCustom(connector, columns, params, columnTypes, timestampMap);
+				collationPartlyCustom(connector, columns, params, columnTypes, autoColumns);
+			}
+			String columnName, strategy;
+			for (Iterator<String> it = autoColumns.values().iterator(); it.hasNext();) {
+				columnName = it.next();
+				Column column = new Column();
+				column.setFromName(columnName);
+				column.setToName(columnName);// 目标列名和来源列名相同
+				columnName = TO_LOWERCASE ? columnName.toLowerCase() : columnName;// 不区分大小写，统一转为小写
+				strategy = getDefaultStrategy(columnName);
+				if (Strategy.FROM.equals(strategy)) {// 如果目标库元数据或者用户定义列中没有该自动添加的列，但策略是from，则仍然添加该列
+					column.setStrategy(strategy);
+					column.setFromType(getDefaultFromType(columnName));
+					column.setToType(getDefaultToType(columnName));
+					column.setScript(getDefaultScript(columnName));
+					columns.add(column);
+				}
 			}
 		} else if (columns.isEmpty()) {// 没有用户自定义列
 			throw new IllegalJobConfigException(
@@ -149,18 +162,18 @@ public class SingleTableDataSyncJobGenerator extends AbstractDataSyncJobGenerato
 							+ ClinkContext.SMART_MODE_CONFIG_KEY
 							+ "=true' to enable automatic column acquisition in smart mode");
 		} else {// 全部是用户自定义列
-			collationCustom(columns, params, timestampMap);
-		}
-		if (hasCustomTimestamp) {// 配置了时间戳列名
+			collationCustom(columns, params, autoColumns);
 			String columnName;
-			for (Iterator<String> it = timestampMap.values().iterator(); it.hasNext();) {// 如果没有时间戳列，但是配置了该列名，依然增加该列，这是用户的错误配置。运行时，可能会由于列不存在会报错
+			for (Iterator<String> it = autoColumns.values().iterator(); it.hasNext();) {
 				columnName = it.next();
 				Column column = new Column();
 				column.setFromName(columnName);
 				column.setToName(columnName);// 目标列名和来源列名相同
 				columnName = TO_LOWERCASE ? columnName.toLowerCase() : columnName;// 不区分大小写，统一转为小写
-				column.setFromType(getDefaultTimestampFromType(columnName));
-				column.setToType(getDefaultTimestampToType(columnName));
+				column.setStrategy(getDefaultStrategy(columnName));
+				column.setFromType(getDefaultFromType(columnName));
+				column.setToType(getDefaultToType(columnName));
+				column.setScript(getDefaultScript(columnName));
 				columns.add(column);
 			}
 		}

@@ -3,6 +3,7 @@ package cn.tenmg.clink.clients;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -30,7 +31,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import cn.tenmg.clink.clients.utils.ClinkClientsUtils;
-import cn.tenmg.clink.clients.utils.Sets;
 import cn.tenmg.clink.config.model.Clink;
 import cn.tenmg.clink.config.model.Operate;
 
@@ -61,7 +61,7 @@ public class StandaloneRestClusterClient extends AbstractClinkClient<RestCluster
 
 	private static Logger log = LoggerFactory.getLogger(StandaloneRestClusterClient.class);
 
-	private static final Set<String> localOperates = Sets.as("Bsh", "Jdbc");
+	private static final Set<String> localOperates = new HashSet<String>(Arrays.asList("Bsh", "Jdbc"));
 
 	private static final Actuator<JobID, JobGraph> submitJobActuator = new Actuator<JobID, JobGraph>() {
 		@Override

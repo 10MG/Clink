@@ -6,19 +6,20 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
 import org.apache.flink.api.common.typeinfo.TypeHint;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.api.java.tuple.Tuple2;
-import org.apache.flink.calcite.shaded.com.google.common.collect.Maps;
 import org.apache.flink.table.data.DecimalData;
 import org.apache.flink.table.data.StringData;
 import org.apache.flink.table.data.TimestampData;
 import org.apache.flink.table.types.logical.DecimalType;
 import org.apache.flink.table.types.logical.LogicalType;
 import org.apache.flink.table.types.logical.RowType;
+import org.apache.flink.table.types.logical.RowType.RowField;
 import org.apache.flink.types.Row;
 import org.apache.flink.types.RowKind;
 import org.apache.flink.util.Collector;
@@ -33,7 +34,6 @@ import com.ververica.cdc.debezium.table.DeserializationRuntimeConverter;
 import com.ververica.cdc.debezium.table.MetadataConverter;
 import com.ververica.cdc.debezium.utils.TemporalConversions;
 
-import cn.tenmg.clink.exception.UnsupportedTypeException;
 import cn.tenmg.dsl.utils.MapUtils;
 import cn.tenmg.dsl.utils.StringUtils;
 import io.debezium.data.Envelope;
@@ -61,14 +61,17 @@ public class MultiTableDebeziumDeserializationSchema implements DebeziumDeserial
 
 	private final Map<String, RowType> rowTypes;
 
-	private final Map<Integer, MetadataConverter> metadataConverters;
+	private final Map<String, Map<Integer, MetadataConverter>> metadataConverters;
 
-	private final Map<String, DeserializationRuntimeConverter> physicalConverters = Maps.newHashMap();
+	private final boolean convertDeleteToUpdate;
+
+	private final Map<String, DeserializationRuntimeConverter> physicalConverters = MapUtils.newHashMap();
 
 	public MultiTableDebeziumDeserializationSchema(Map<String, RowType> rowTypes,
-			Map<Integer, MetadataConverter> metadataConverters) {
+			Map<String, Map<Integer, MetadataConverter>> metadataConverters, boolean convertDeleteToUpdate) {
 		this.rowTypes = rowTypes;
 		this.metadataConverters = metadataConverters == null ? MapUtils.newHashMap() : metadataConverters;
+		this.convertDeleteToUpdate = convertDeleteToUpdate;
 		for (String tablename : this.rowTypes.keySet()) {
 			RowType rowType = this.rowTypes.get(tablename);
 			DeserializationRuntimeConverter physicalConverter = createNotNullConverter(rowType);
@@ -99,22 +102,37 @@ public class MultiTableDebeziumDeserializationSchema implements DebeziumDeserial
 		if (op == Envelope.Operation.CREATE || op == Envelope.Operation.READ) {
 			Row insert = extractAfterRow(value, valueSchema, physicalConverter);
 			insert.setKind(RowKind.INSERT);
-			setMetadatas(insert, record);
+			setMetadatas(tablename, insert, record);
 			out.collect(Tuple2.of(tablename, insert));
 		} else if (op == Envelope.Operation.DELETE) {
-			Row delete = extractBeforeRow(value, valueSchema, physicalConverter);
-			delete.setKind(RowKind.DELETE);
-			setMetadatas(delete, record);
-			out.collect(Tuple2.of(tablename, delete));
+			if (convertDeleteToUpdate) {
+				Row before = extractBeforeRow(value, valueSchema, physicalConverter);
+				before.setKind(RowKind.UPDATE_BEFORE);
+				setMetadatas(tablename, before, record);
+				out.collect(Tuple2.of(tablename, before));
+
+				int arity = before.getArity();
+				Row after = new Row(RowKind.UPDATE_AFTER, arity);
+				for (int i = 0; i < arity; i++) {
+					after.setField(i, before.getField(i));
+				}
+				out.collect(Tuple2.of(tablename, after));
+			} else {
+				Row delete = extractBeforeRow(value, valueSchema, physicalConverter);
+				delete.setKind(RowKind.DELETE);
+				setMetadatas(tablename, delete, record);
+				out.collect(Tuple2.of(tablename, delete));
+			}
+
 		} else {
 			Row before = extractBeforeRow(value, valueSchema, physicalConverter);
 			before.setKind(RowKind.UPDATE_BEFORE);
-			setMetadatas(before, record);
+			setMetadatas(tablename, before, record);
 			out.collect(Tuple2.of(tablename, before));
 
 			Row after = extractAfterRow(value, valueSchema, physicalConverter);
 			after.setKind(RowKind.UPDATE_AFTER);
-			setMetadatas(after, record);
+			setMetadatas(tablename, after, record);
 			out.collect(Tuple2.of(tablename, after));
 		}
 	}
@@ -133,9 +151,10 @@ public class MultiTableDebeziumDeserializationSchema implements DebeziumDeserial
 		return (Row) physicalConverter.convert(before, beforeSchema);
 	}
 
-	private void setMetadatas(Row row, SourceRecord record) {
+	private void setMetadatas(String tableName, Row row, SourceRecord record) {
 		Entry<Integer, MetadataConverter> entry;
-		for (Iterator<Entry<Integer, MetadataConverter>> it = metadataConverters.entrySet().iterator(); it.hasNext();) {
+		for (Iterator<Entry<Integer, MetadataConverter>> it = metadataConverters.get(tableName).entrySet()
+				.iterator(); it.hasNext();) {
 			entry = it.next();
 			row.setField(entry.getKey(), entry.getValue().read(record));
 		}
@@ -215,7 +234,7 @@ public class MultiTableDebeziumDeserializationSchema implements DebeziumDeserial
 		case MULTISET:
 		case RAW:
 		default:
-			throw new UnsupportedTypeException("Unsupported type: " + type);
+			throw new UnsupportedOperationException("Unsupported type: " + type);
 		}
 	}
 
@@ -450,7 +469,7 @@ public class MultiTableDebeziumDeserializationSchema implements DebeziumDeserial
 					byteBuffer.get(bytes);
 					return bytes;
 				} else {
-					throw new UnsupportedTypeException(
+					throw new UnsupportedOperationException(
 							"Unsupported BYTES value type: " + dbzObj.getClass().getSimpleName());
 				}
 			}
@@ -458,10 +477,12 @@ public class MultiTableDebeziumDeserializationSchema implements DebeziumDeserial
 	}
 
 	private static DeserializationRuntimeConverter createRowConverter(RowType rowType) {
-		final DeserializationRuntimeConverter[] fieldConverters = rowType.getFields().stream()
-				.map(RowType.RowField::getType).map(logicType -> createNotNullConverter(logicType))
-				.toArray(DeserializationRuntimeConverter[]::new);
-
+		List<RowField> fields = rowType.getFields();
+		int size = fields.size();
+		final DeserializationRuntimeConverter[] fieldConverters = new DeserializationRuntimeConverter[size];
+		for (int i = 0; i < size; i++) {
+			fieldConverters[i] = createNotNullConverter(fields.get(i).getType());
+		}
 		final String[] fieldNames = rowType.getFieldNames().toArray(new String[0]);
 
 		return new DeserializationRuntimeConverter() {

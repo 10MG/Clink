@@ -6,13 +6,15 @@
 	<description>Flink流批一体数据处理快速集成开发框架</description>
 	<groupId>cn.tenmg</groupId>
 	<artifactId>clink-parent</artifactId>
-	<version>1.6.0</version>
+	<version>1.6.0-SNAPSHOT</version>
 	<packaging>pom</packaging>
 
 	<modules>
-		<module>clink-core</module>
-		<module>clink-config</module>
+		<module>clink-cdc-mysql</module>
 		<module>clink-clients</module>
+		<module>clink-config</module>
+		<module>clink-core</module>
+		<module>clink-runtime</module>
 	</modules>
 
 	<name>Clink</name>
@@ -69,13 +71,159 @@
 
 	<properties>
 		<encoding>UTF-8</encoding>
-		<flink.version>1.17.1</flink.version>
-		<scala.binary.version>2.12</scala.binary.version>
-		<slf4j-api.version>2.0.7</slf4j-api.version>
-		<log4j.version>2.20.0</log4j.version>
+		<dsl.version>1.4.0</dsl.version>
 		<fastjson.version>2.0.35</fastjson.version>
 		<nacos-client.version>2.2.4</nacos-client.version>
+		<mysql-connector-j.version>8.0.33</mysql-connector-j.version>
+		<jakarta.xml.bind-api.version>3.0.1</jakarta.xml.bind-api.version>
+		<flink-cdc.version>2.4.1</flink-cdc.version>
+		<bsh.version>2.0b6</bsh.version>
+		<flink.version>1.17.1</flink.version>
+		<flink-connector-jdbc.version>3.1.1-1.17</flink-connector-jdbc.version>
+		<scala.binary.version>2.12</scala.binary.version>
+		<log4j.version>2.20.0</log4j.version>
+		<jaxb-runtime.version>3.0.2</jaxb-runtime.version>
+		<junit-jupiter.version>5.9.3</junit-jupiter.version>
+		<junit-platform-launcher.version>1.9.3</junit-platform-launcher.version>
+		<slf4j-api.version>2.0.7</slf4j-api.version>
 	</properties>
+
+	<dependencyManagement>
+		<dependencies>
+			<!-- https://mvnrepository.com/artifact/cn.tenmg/dsl -->
+			<dependency>
+				<groupId>cn.tenmg</groupId>
+				<artifactId>dsl</artifactId>
+				<version>${dsl.version}</version>
+			</dependency>
+			<!-- https://mvnrepository.com/artifact/cn.tenmg/clink-cdc-mysql -->
+			<dependency>
+				<groupId>cn.tenmg</groupId>
+				<artifactId>clink-cdc-mysql</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<!-- https://mvnrepository.com/artifact/cn.tenmg/clink-runtime -->
+			<dependency>
+				<groupId>cn.tenmg</groupId>
+				<artifactId>clink-runtime</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<!-- https://mvnrepository.com/artifact/com.alibaba/fastjson -->
+			<dependency>
+				<groupId>com.alibaba</groupId>
+				<artifactId>fastjson</artifactId>
+				<version>${fastjson.version}</version>
+			</dependency>
+			<!-- https://mvnrepository.com/artifact/com.alibaba.nacos/nacos-client -->
+			<dependency>
+				<groupId>com.alibaba.nacos</groupId>
+				<artifactId>nacos-client</artifactId>
+				<version>${nacos-client.version}</version>
+			</dependency>
+			<!-- https://mvnrepository.com/artifact/com.mysql/mysql-connector-j -->
+			<dependency>
+				<groupId>com.mysql</groupId>
+				<artifactId>mysql-connector-j</artifactId>
+				<version>${mysql-connector-j.version}</version>
+			</dependency>
+			<!-- https://mvnrepository.com/artifact/com.ververica/flink-sql-connector-mysql-cdc -->
+			<dependency>
+				<groupId>com.ververica</groupId>
+				<artifactId>flink-sql-connector-mysql-cdc</artifactId>
+				<version>${flink-cdc.version}</version>
+			</dependency>
+			<!-- https://mvnrepository.com/artifact/jakarta.xml.bind/jakarta.xml.bind-api -->
+			<dependency>
+				<groupId>jakarta.xml.bind</groupId>
+				<artifactId>jakarta.xml.bind-api</artifactId>
+				<version>${jakarta.xml.bind-api.version}</version>
+			</dependency>
+			<!-- https://mvnrepository.com/artifact/org.apache-extras.beanshell/bsh -->
+			<dependency>
+				<groupId>org.apache-extras.beanshell</groupId>
+				<artifactId>bsh</artifactId>
+				<version>${bsh.version}</version>
+			</dependency>
+			<!-- https://mvnrepository.com/artifact/org.apache.flink/flink-clients -->
+			<dependency>
+				<groupId>org.apache.flink</groupId>
+				<artifactId>flink-clients</artifactId>
+				<version>${flink.version}</version>
+			</dependency>
+			<!-- https://mvnrepository.com/artifact/org.apache.flink/flink-core -->
+			<dependency>
+				<groupId>org.apache.flink</groupId>
+				<artifactId>flink-core</artifactId>
+				<version>${flink.version}</version>
+			</dependency>
+			<!-- https://mvnrepository.com/artifact/org.apache.flink/flink-connector-kafka -->
+			<dependency>
+				<groupId>org.apache.flink</groupId>
+				<artifactId>flink-connector-kafka</artifactId>
+				<version>${flink.version}</version>
+			</dependency>
+			<!-- https://mvnrepository.com/artifact/org.apache.flink/flink-connector-jdbc -->
+			<dependency>
+				<groupId>org.apache.flink</groupId>
+				<artifactId>flink-connector-jdbc</artifactId>
+				<version>${flink-connector-jdbc.version}</version>
+			</dependency>
+			<!-- https://mvnrepository.com/artifact/org.apache.flink/flink-json -->
+			<dependency>
+				<groupId>org.apache.flink</groupId>
+				<artifactId>flink-json</artifactId>
+				<optional>true</optional>
+			</dependency>
+			<!-- https://mvnrepository.com/artifact/org.apache.flink/flink-table-common -->
+			<dependency>
+				<groupId>org.apache.flink</groupId>
+				<artifactId>flink-table-common</artifactId>
+				<version>${flink.version}</version>
+			</dependency>
+			<!-- https://mvnrepository.com/artifact/org.apache.flink/flink-table-planner -->
+			<dependency>
+				<groupId>org.apache.flink</groupId>
+				<artifactId>flink-table-planner_${scala.binary.version}</artifactId>
+				<version>${flink.version}</version>
+			</dependency>
+			<!-- https://mvnrepository.com/artifact/org.apache.flink/flink-streaming-java -->
+			<dependency>
+				<groupId>org.apache.flink</groupId>
+				<artifactId>flink-streaming-java</artifactId>
+				<version>${flink.version}</version>
+			</dependency>
+			<!-- https://mvnrepository.com/artifact/org.apache.logging.log4j/log4j-slf4j-impl -->
+			<dependency>
+				<groupId>org.apache.logging.log4j</groupId>
+				<artifactId>log4j-slf4j-impl</artifactId>
+				<version>${log4j.version}</version>
+			</dependency>
+			<!-- https://mvnrepository.com/artifact/org.glassfish.jaxb/jaxb-runtime -->
+			<dependency>
+				<groupId>org.glassfish.jaxb</groupId>
+				<artifactId>jaxb-runtime</artifactId>
+				<version>${jaxb-runtime.version}</version>
+			</dependency>
+			<!-- https://mvnrepository.com/artifact/org.junit.jupiter/junit-jupiter -->
+			<dependency>
+				<groupId>org.junit.jupiter</groupId>
+				<artifactId>junit-jupiter</artifactId>
+				<version>${junit-jupiter.version}</version>
+			</dependency>
+			<!-- https://mvnrepository.com/artifact/org.junit.platform/junit-platform-launcher -->
+			<dependency>
+				<groupId>org.junit.platform</groupId>
+				<artifactId>junit-platform-launcher</artifactId>
+				<version>${junit-platform-launcher.version}</version>
+			</dependency>
+			<!-- https://mvnrepository.com/artifact/org.slf4j/slf4j-api -->
+			<dependency>
+				<groupId>org.slf4j</groupId>
+				<artifactId>slf4j-api</artifactId>
+				<version>${slf4j-api.version}</version>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
 
 	<build>
 		<plugins>

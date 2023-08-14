@@ -40,13 +40,13 @@ import cn.tenmg.dsl.utils.StringUtils;
 public abstract class AbstractDataSyncJobGenerator implements DataSyncJobGenerator {
 
 	protected static final String TOPIC_KEY = "topic", GROUP_ID_KEY = "properties.group.id",
-			TIMESTAMP_COLUMNS = "data.sync.timestamp.columns", TIMESTAMP_COLUMNS_SPLIT = ",",
+			AUTO_COLUMNS = "data.sync.auto-columns", AUTO_COLUMNS_SPLIT = ",",
 			TYPE_KEY_PREFIX = "data.sync" + ClinkContext.CONFIG_SPLITER,
 			SCRIPT_KEY_SUFFIX = ClinkContext.CONFIG_SPLITER + "script",
 			STRATEGY_KEY_SUFFIX = ClinkContext.CONFIG_SPLITER + "strategy", COLUMN_NAME = "columnName";
 
-	protected static final boolean TO_LOWERCASE = !Boolean.valueOf(ClinkContext.getProperty(
-			Arrays.asList("data.sync.timestamp.case_sensitive", "data.sync.timestamp.case-sensitive"), "true"));// 不区分大小写，统一转为小写
+	protected static final boolean TO_LOWERCASE = !Boolean
+			.valueOf(ClinkContext.getProperty("data.sync.case-sensitive", "true"));// 不区分大小写，统一转为小写
 
 	protected static final Map<String, ColumnConvert> columnConverts = MapUtils.newHashMap();
 
@@ -216,7 +216,7 @@ public abstract class AbstractDataSyncJobGenerator implements DataSyncJobGenerat
 	}
 
 	protected static void addSmartLoadColumns(String connector, List<Column> columns,
-			Map<String, ColumnType> columnTypes, Map<String, Object> params, Map<String, String> timestamps) {
+			Map<String, ColumnType> columnTypes, Map<String, Object> params, Map<String, String> autoColumnses) {
 		String toName, toType, columnName, strategy;
 		Entry<String, ColumnType> entry;
 		for (Iterator<Entry<String, ColumnType>> it = columnTypes.entrySet().iterator(); it.hasNext();) {
@@ -228,17 +228,17 @@ public abstract class AbstractDataSyncJobGenerator implements DataSyncJobGenerat
 			column.setToName(toName);
 			column.setToType(toType);
 			columnName = TO_LOWERCASE ? toName.toLowerCase() : toName;// 不区分大小写，统一转为小写
-			if (timestamps.containsKey(columnName)) {// 时间戳列
-				strategy = getDefaultColumnStrategy(columnName);
-				column.setStrategy(strategy);// 设置时间戳列的同步策略
+			if (autoColumnses.containsKey(columnName)) {// 自动添加列
+				strategy = getDefaultStrategy(columnName);
+				column.setStrategy(strategy);// 设置自动添加列的同步策略
 				if (!Strategy.TO.equals(strategy)) {// 非仅创建目标列
 					column.setFromName(toName);// 来源列名和目标列名相同
-					column.setFromType(getDefaultTimestampFromType(columnName));
+					column.setFromType(getDefaultFromType(columnName));
 				}
 				if (!Strategy.FROM.equals(strategy) && StringUtils.isBlank(column.getScript())) {
-					column.setScript(getDefaultTimestampScript(columnName));
+					column.setScript(getDefaultScript(columnName));
 				}
-				timestamps.remove(columnName);
+				autoColumnses.remove(columnName);
 			} else {
 				column.setFromName(toName);// 来源列名和目标列名相同
 				ColumnConvert columnConvert = columnConverts.get(getDataType(toType).toUpperCase());
@@ -255,35 +255,35 @@ public abstract class AbstractDataSyncJobGenerator implements DataSyncJobGenerat
 	}
 
 	protected static void collationPartlyCustom(String connector, List<Column> columns, Map<String, Object> params,
-			Map<String, ColumnType> columnsTypes, Map<String, String> timestamps) {
+			Map<String, ColumnType> columnsTypes, Map<String, String> autoColumnses) {
 		String strategy;
 		for (int i = 0, size = columns.size(); i < size; i++) {
 			Column column = columns.get(i);
 			strategy = column.getStrategy();
 			if (Strategy.FROM.equals(strategy)) {// 仅创建来源列
-				collationPartlyCustomFromStrategy(column, params, columnsTypes, timestamps);
+				collationPartlyCustomFromStrategy(column, params, columnsTypes, autoColumnses);
 			} else if (Strategy.TO.equals(strategy)) {// 仅创建目标列
-				collationPartlyCustomToStratagy(connector, column, params, columnsTypes, timestamps);
+				collationPartlyCustomToStratagy(connector, column, params, columnsTypes, autoColumnses);
 			} else {
-				collationPartlyCustomBothStratagy(connector, column, params, columnsTypes, timestamps);
+				collationPartlyCustomBothStratagy(connector, column, params, columnsTypes, autoColumnses);
 			}
 			wrapColumnName(column);// SQL保留关键字包装
 		}
-		addSmartLoadColumns(connector, columns, columnsTypes, params, timestamps);
+		addSmartLoadColumns(connector, columns, columnsTypes, params, autoColumnses);
 	}
 
 	protected static void collationCustom(List<Column> columns, Map<String, Object> params,
-			Map<String, String> timestamps) {
+			Map<String, String> autoColumnses) {
 		String strategy;
 		for (int i = 0, size = columns.size(); i < size; i++) {
 			Column column = columns.get(i);
 			strategy = column.getStrategy();
 			if (Strategy.FROM.equals(strategy)) {// 仅创建来源列
-				collationCustomFromStrategy(column, params, timestamps);
+				collationCustomFromStrategy(column, params, autoColumnses);
 			} else if (Strategy.TO.equals(strategy)) {// 仅创建目标列
-				collationCustomToStrategy(column, params, timestamps);
+				collationCustomToStrategy(column, params, autoColumnses);
 			} else {
-				collationCustomBothStrategy(column, params, timestamps);
+				collationCustomBothStrategy(column, params, autoColumnses);
 			}
 			wrapColumnName(column);// SQL保留关键字包装
 		}
@@ -350,15 +350,46 @@ public abstract class AbstractDataSyncJobGenerator implements DataSyncJobGenerat
 
 	}
 
+	protected static String getDefaultAutoColumns() {
+		return ClinkContext.getProperty(AUTO_COLUMNS);
+	}
+
+	protected static String getDefaultStrategy(String columnName) {
+		return ClinkContext.getProperty(StringUtils.concat(TYPE_KEY_PREFIX, columnName, STRATEGY_KEY_SUFFIX));
+	}
+
+	protected static String getDefaultFromType(String columnName) {
+		String prefix = StringUtils.concat(TYPE_KEY_PREFIX, columnName, ClinkContext.CONFIG_SPLITER),
+				fromType = ClinkContext
+						.getProperty(Arrays.asList(prefix.concat("from_type"), prefix.concat("from-type")));// 兼容老的配置
+		if (fromType == null) {
+			return ClinkContext.getProperty("data.sync.from-type");
+		}
+		return fromType;
+	}
+
+	protected static String getDefaultScript(String columnName) {
+		return ClinkContext.getProperty(StringUtils.concat(TYPE_KEY_PREFIX, columnName, SCRIPT_KEY_SUFFIX));
+	}
+
+	protected static String getDefaultToType(String columnName) {
+		String prefix = StringUtils.concat(TYPE_KEY_PREFIX, columnName, ClinkContext.CONFIG_SPLITER),
+				toType = ClinkContext.getProperty(Arrays.asList(prefix.concat("to_type"), prefix.concat("to-type")));// 兼容老的配置
+		if (toType == null) {
+			return ClinkContext.getProperty("data.sync.to-type");
+		}
+		return toType;
+	}
+
 	private static void collationPartlyCustomFromStrategy(Column column, Map<String, Object> params,
-			Map<String, ColumnType> columnsTypes, Map<String, String> timestamps) {
+			Map<String, ColumnType> columnsTypes, Map<String, String> autoColumnses) {
 		String fromName = column.getFromName(), fromType = column.getFromType(),
 				columnName = TO_LOWERCASE ? fromName.toLowerCase() : fromName;// 不区分大小写，统一转为小写
-		if (timestamps.containsKey(columnName)) {// 时间戳列
+		if (autoColumnses.containsKey(columnName)) {// 自动添加列
 			if (StringUtils.isBlank(fromType)) {
-				column.setFromType(getDefaultTimestampFromType(columnName));// 更新时间戳列来源类型
+				column.setFromType(getDefaultFromType(columnName));// 更新自动添加列来源类型
 			}
-			timestamps.remove(columnName);
+			autoColumnses.remove(columnName);
 		} else if (StringUtils.isBlank(fromType)) {
 			throw new IllegalJobConfigException(StringUtils.concat(
 					"Due to the 'strategy' is 'from', the property 'fromType' of the column wich 'fromName' is '",
@@ -368,7 +399,7 @@ public abstract class AbstractDataSyncJobGenerator implements DataSyncJobGenerat
 	}
 
 	private static void collationPartlyCustomToStratagy(String connector, Column column, Map<String, Object> params,
-			Map<String, ColumnType> columnsTypes, Map<String, String> timestamps) {
+			Map<String, ColumnType> columnsTypes, Map<String, String> autoColumnses) {
 		String toName = column.getToName();
 		if (StringUtils.isBlank(toName)) {
 			throw new IllegalJobConfigException(StringUtils.concat(
@@ -377,15 +408,15 @@ public abstract class AbstractDataSyncJobGenerator implements DataSyncJobGenerat
 		}
 		String columnName = TO_LOWERCASE ? toName.toLowerCase() : toName;// 不区分大小写，统一转为小写
 		ColumnType columnType = columnsTypes.get(toName);
-		if (timestamps.containsKey(columnName)) {// 时间戳列
+		if (autoColumnses.containsKey(columnName)) {// 自动添加列
 			if (StringUtils.isBlank(column.getToType())) {
-				column.setToType(columnType == null ? getDefaultTimestampToType(columnName)
-						: SQLUtils.toSQLType(connector, columnType));
+				column.setToType(
+						columnType == null ? getDefaultToType(columnName) : SQLUtils.toSQLType(connector, columnType));
 			}
 			if (StringUtils.isBlank(column.getScript())) {
-				column.setScript(getDefaultTimestampScript(columnName));
+				column.setScript(getDefaultScript(columnName));
 			}
-			timestamps.remove(columnName);
+			autoColumnses.remove(columnName);
 		} else {
 			if (columnType == null && StringUtils.isBlank(column.getToType())) {
 				throw new IllegalJobConfigException(StringUtils.concat(
@@ -401,7 +432,7 @@ public abstract class AbstractDataSyncJobGenerator implements DataSyncJobGenerat
 	}
 
 	private static void collationPartlyCustomBothStratagy(String connector, Column column, Map<String, Object> params,
-			Map<String, ColumnType> columnTypes, Map<String, String> timestamps) {
+			Map<String, ColumnType> columnTypes, Map<String, String> autoColumnses) {
 		String fromName = column.getFromName(), toName = column.getToName();
 		if (StringUtils.isBlank(fromName)) {
 			column.setFromName(toName);
@@ -410,17 +441,17 @@ public abstract class AbstractDataSyncJobGenerator implements DataSyncJobGenerat
 		}
 		String columnName = TO_LOWERCASE ? column.getToName().toLowerCase() : column.getToName();// 不区分大小写，统一转为小写
 		String fromType, toType = SQLUtils.toSQLType(connector, columnTypes.get(column.getToName()));
-		if (timestamps.containsKey(columnName)) {// 时间戳列
+		if (autoColumnses.containsKey(columnName)) {// 自动添加列
 			if (StringUtils.isBlank(column.getFromType())) {
-				column.setFromType(getDefaultTimestampFromType(columnName));
+				column.setFromType(getDefaultFromType(columnName));
 			}
 			if (StringUtils.isBlank(column.getToType())) {
-				column.setToType(toType == null ? getDefaultTimestampToType(columnName) : toType);
+				column.setToType(toType == null ? getDefaultToType(columnName) : toType);
 			}
 			if (StringUtils.isBlank(column.getScript())) {
-				column.setScript(getDefaultTimestampScript(columnName));
+				column.setScript(getDefaultScript(columnName));
 			}
-			timestamps.remove(columnName);
+			autoColumnses.remove(columnName);
 		} else {
 			if (toType == null) {// 类型补全
 				fromType = column.getFromType();
@@ -466,14 +497,14 @@ public abstract class AbstractDataSyncJobGenerator implements DataSyncJobGenerat
 	}
 
 	private static void collationCustomFromStrategy(Column column, Map<String, Object> params,
-			Map<String, String> timestamps) {
+			Map<String, String> autoColumnses) {
 		String fromName = column.getFromName(), fromType = column.getFromType(),
 				columnName = TO_LOWERCASE ? fromName.toLowerCase() : fromName;// 不区分大小写，统一转为小写
-		if (timestamps.containsKey(columnName)) {// 时间戳列
+		if (autoColumnses.containsKey(columnName)) {// 自动添加列
 			if (StringUtils.isBlank(fromType)) {
-				column.setFromType(getDefaultTimestampFromType(columnName));// 更新时间戳列来源类型
+				column.setFromType(getDefaultFromType(columnName));// 更新自动添加列来源类型
 			}
-			timestamps.remove(columnName);
+			autoColumnses.remove(columnName);
 		} else if (StringUtils.isBlank(fromType)) {
 			throw new IllegalJobConfigException(StringUtils.concat(
 					"Due to the 'strategy' is 'from', the property 'fromType' of the column wich 'fromName' is '",
@@ -482,7 +513,7 @@ public abstract class AbstractDataSyncJobGenerator implements DataSyncJobGenerat
 	}
 
 	private static void collationCustomToStrategy(Column column, Map<String, Object> params,
-			Map<String, String> timestamps) {
+			Map<String, String> autoColumnses) {
 		String toName = column.getToName();
 		if (StringUtils.isBlank(toName)) {
 			throw new IllegalJobConfigException(StringUtils.concat(
@@ -490,14 +521,14 @@ public abstract class AbstractDataSyncJobGenerator implements DataSyncJobGenerat
 					column.getFromName(), "' cannot be blank"));
 		}
 		String columnName = TO_LOWERCASE ? toName.toLowerCase() : toName;// 不区分大小写，统一转为小写
-		if (timestamps.containsKey(columnName)) {// 时间戳列
+		if (autoColumnses.containsKey(columnName)) {// 自动添加列
 			if (StringUtils.isBlank(column.getToType())) {
-				column.setToType(getDefaultTimestampToType(columnName));
+				column.setToType(getDefaultToType(columnName));
 			}
 			if (StringUtils.isBlank(column.getScript())) {
-				column.setScript(getDefaultTimestampScript(columnName));
+				column.setScript(getDefaultScript(columnName));
 			}
-			timestamps.remove(columnName);
+			autoColumnses.remove(columnName);
 		} else if (StringUtils.isBlank(column.getToType())) {
 			throw new IllegalJobConfigException(StringUtils.concat(
 					"Due to the 'strategy' is 'to', the property 'toType' of the column wich 'fromName' is '",
@@ -506,7 +537,7 @@ public abstract class AbstractDataSyncJobGenerator implements DataSyncJobGenerat
 	}
 
 	private static void collationCustomBothStrategy(Column column, Map<String, Object> params,
-			Map<String, String> timestamps) {
+			Map<String, String> autoColumnses) {
 		String fromName = column.getFromName(), toName = column.getToName();
 		if (StringUtils.isBlank(fromName)) {
 			column.setFromName(toName);
@@ -514,17 +545,17 @@ public abstract class AbstractDataSyncJobGenerator implements DataSyncJobGenerat
 			column.setToName(fromName);
 		}
 		String columnName = TO_LOWERCASE ? column.getToName().toLowerCase() : column.getToName();// 不区分大小写，统一转为小写
-		if (timestamps.containsKey(columnName)) {// 时间戳列
+		if (autoColumnses.containsKey(columnName)) {// 自动添加列
 			if (StringUtils.isBlank(column.getFromType())) {
-				column.setFromType(getDefaultTimestampFromType(columnName));
+				column.setFromType(getDefaultFromType(columnName));
 			}
 			if (StringUtils.isBlank(column.getToType())) {
-				column.setToType(getDefaultTimestampToType(columnName));
+				column.setToType(getDefaultToType(columnName));
 			}
 			if (StringUtils.isBlank(column.getScript())) {
-				column.setScript(getDefaultTimestampScript(columnName));
+				column.setScript(getDefaultScript(columnName));
 			}
-			timestamps.remove(columnName);
+			autoColumnses.remove(columnName);
 		} else {
 			String fromType = column.getFromType(), toType = column.getToType();
 			if (StringUtils.isBlank(fromType)) {
@@ -550,40 +581,8 @@ public abstract class AbstractDataSyncJobGenerator implements DataSyncJobGenerat
 		}
 	}
 
-	protected static String getDefaultTimestamp() {
-		return ClinkContext.getProperty(TIMESTAMP_COLUMNS);
-	}
-
 	private static String getDataType(String type) {
 		return type.split("\\s", 2)[0];
-	}
-
-	private static String getDefaultColumnStrategy(String columnName) {
-		return ClinkContext.getProperty(TYPE_KEY_PREFIX + columnName + STRATEGY_KEY_SUFFIX);
-	}
-
-	protected static String getDefaultTimestampFromType(String columnName) {
-		String prefix = TYPE_KEY_PREFIX + columnName + ClinkContext.CONFIG_SPLITER,
-				fromType = ClinkContext.getProperty(Arrays.asList(prefix + "from_type", prefix + "from-type"));// 兼容老的配置
-		if (fromType == null) {
-			return ClinkContext
-					.getProperty(Arrays.asList("data.sync.timestamp.from_type", "data.sync.timestamp.from-type"));// 兼容老的配置
-		}
-		return fromType;
-	}
-
-	protected static String getDefaultTimestampToType(String columnName) {
-		String prefix = TYPE_KEY_PREFIX + columnName + ClinkContext.CONFIG_SPLITER,
-				toType = ClinkContext.getProperty(Arrays.asList(prefix + "to_type", prefix + "to-type"));// 兼容老的配置
-		if (toType == null) {
-			return ClinkContext
-					.getProperty(Arrays.asList("data.sync.timestamp.to_type", "data.sync.timestamp.to-type"));// 兼容老的配置
-		}
-		return toType;
-	}
-
-	private static String getDefaultTimestampScript(String columnName) {
-		return ClinkContext.getProperty(TYPE_KEY_PREFIX + columnName + SCRIPT_KEY_SUFFIX);
 	}
 
 	// 包装SQL保留关键字

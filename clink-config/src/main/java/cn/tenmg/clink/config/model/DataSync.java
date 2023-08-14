@@ -61,10 +61,10 @@ public class DataSync implements Operate, Serializable {
 	private String primaryKey;
 
 	/**
-	 * 时间戳字段名，多个字段名使用“,”分隔。设置这个值后，会使用这些字段名创建源表和目标表，并在数据同步时写入这些字段值。
+	 * 自动添加的列，多个列名使用“,”分隔。设置这个值后，会使用这些列名创建源表和目标表，并在数据同步时写入这些列的值。
 	 */
 	@XmlAttribute
-	private String timestamp;
+	private String autoColumns;
 
 	/**
 	 * 智能模式状态。`true`表示开启智能模式，即自动查询列名和数据类型信息，`false`则表示仅使用指定的列执行数据同步，不设置表示使用配置文件的配置，如果配置文件未指定则默认为`true`。
@@ -154,12 +154,12 @@ public class DataSync implements Operate, Serializable {
 		this.primaryKey = primaryKey;
 	}
 
-	public String getTimestamp() {
-		return timestamp;
+	public String getAutoColumns() {
+		return autoColumns;
 	}
 
-	public void setTimestamp(String timestamp) {
-		this.timestamp = timestamp;
+	public void setAutoColumns(String autoColumns) {
+		this.autoColumns = autoColumns;
 	}
 
 	public Boolean getSmart() {

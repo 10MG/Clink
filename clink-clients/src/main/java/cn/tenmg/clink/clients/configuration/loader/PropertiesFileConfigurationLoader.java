@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.util.Properties;
 
 import cn.tenmg.clink.clients.exception.ConfigurationLoadException;
-import cn.tenmg.clink.clients.utils.PropertiesLoaderUtils;
+import cn.tenmg.dsl.utils.PropertiesLoaderUtils;
 
 /**
  * .properties 文件配置加载器
