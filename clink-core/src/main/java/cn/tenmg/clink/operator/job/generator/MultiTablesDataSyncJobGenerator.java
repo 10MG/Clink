@@ -142,28 +142,27 @@ public class MultiTablesDataSyncJobGenerator extends AbstractDataSyncJobGenerato
 			List<TypeInformation<?>> typeInformations = new ArrayList<TypeInformation<?>>();
 			metadata = MapUtils.newHashMap();
 			for (Column column : columns) {
-				if (Strategy.TO.equals(column.getStrategy())) {// 跳过无来源的列，例如直接写入当前时间的列
-					continue;
-				}
-				fromNames.add(decodeKeyword(column.getFromName()));
-				fromType = column.getFromType();
-				Matcher matcher = METADATA_PATTERN.matcher(fromType);
-				if (matcher.find()) {
-					int start = matcher.start(), end = matcher.end();
-					if (end < fromType.length() - 1) {
-						fromType = StringUtils.concat(fromType.substring(0, start), fromType.substring(end + 1));
-					} else {
-						fromType = fromType.substring(0, matcher.start());
+				if (!Strategy.TO.equals(column.getStrategy())) {// 跳过无来源的列，例如直接写入当前时间的列
+					fromNames.add(decodeKeyword(column.getFromName()));
+					fromType = column.getFromType();
+					Matcher matcher = METADATA_PATTERN.matcher(fromType);
+					if (matcher.find()) {
+						int start = matcher.start(), end = matcher.end();
+						if (end < fromType.length() - 1) {
+							fromType = StringUtils.concat(fromType.substring(0, start), fromType.substring(end + 1));
+						} else {
+							fromType = fromType.substring(0, matcher.start());
+						}
+						String group = matcher.group();
+						metadata.put(columnIndex, group.substring(group.indexOf(SQLUtils.SINGLE_QUOTATION_MARK) + 1,
+								group.lastIndexOf(SQLUtils.SINGLE_QUOTATION_MARK)));
 					}
-					String group = matcher.group();
-					metadata.put(columnIndex, group.substring(group.indexOf(SQLUtils.SINGLE_QUOTATION_MARK) + 1,
-							group.lastIndexOf(SQLUtils.SINGLE_QUOTATION_MARK)));
+					DataType dataType = DataTypeUtils.fromFlinkSQLType(fromType);
+					logicalType = dataType.getLogicalType();
+					logicalTypes.add(logicalType);
+					typeInformations.add(InternalTypeInfo.of(logicalType));
+					columnIndex++;
 				}
-				DataType dataType = DataTypeUtils.fromFlinkSQLType(fromType);
-				logicalType = dataType.getLogicalType();
-				logicalTypes.add(logicalType);
-				typeInformations.add(InternalTypeInfo.of(logicalType));
-				columnIndex++;
 			}
 			columnses.put(table, columns);
 			metadatas.put(table, metadata);
