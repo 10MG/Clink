@@ -11,6 +11,7 @@
 
 	<modules>
 		<module>clink-cdc-mysql</module>
+		<module>clink-cdc-sqlserver</module>
 		<module>clink-clients</module>
 		<module>clink-config</module>
 		<module>clink-core</module>
@@ -96,18 +97,6 @@
 				<artifactId>dsl</artifactId>
 				<version>${dsl.version}</version>
 			</dependency>
-			<!-- https://mvnrepository.com/artifact/cn.tenmg/clink-cdc-mysql -->
-			<dependency>
-				<groupId>cn.tenmg</groupId>
-				<artifactId>clink-cdc-mysql</artifactId>
-				<version>${project.version}</version>
-			</dependency>
-			<!-- https://mvnrepository.com/artifact/cn.tenmg/clink-runtime -->
-			<dependency>
-				<groupId>cn.tenmg</groupId>
-				<artifactId>clink-runtime</artifactId>
-				<version>${project.version}</version>
-			</dependency>
 			<!-- https://mvnrepository.com/artifact/com.alibaba/fastjson -->
 			<dependency>
 				<groupId>com.alibaba</groupId>
@@ -126,10 +115,22 @@
 				<artifactId>mysql-connector-j</artifactId>
 				<version>${mysql-connector-j.version}</version>
 			</dependency>
+			<!-- https://mvnrepository.com/artifact/com.ververica/flink-connector-debezium -->
+			<dependency>
+				<groupId>com.ververica</groupId>
+				<artifactId>flink-connector-debezium</artifactId>
+				<version>${flink-cdc.version}</version>
+			</dependency>
 			<!-- https://mvnrepository.com/artifact/com.ververica/flink-sql-connector-mysql-cdc -->
 			<dependency>
 				<groupId>com.ververica</groupId>
 				<artifactId>flink-sql-connector-mysql-cdc</artifactId>
+				<version>${flink-cdc.version}</version>
+			</dependency>
+			<!-- https://mvnrepository.com/artifact/com.ververica/flink-sql-connector-sqlserver-cdc -->
+			<dependency>
+				<groupId>com.ververica</groupId>
+				<artifactId>flink-sql-connector-sqlserver-cdc</artifactId>
 				<version>${flink-cdc.version}</version>
 			</dependency>
 			<!-- https://mvnrepository.com/artifact/jakarta.xml.bind/jakarta.xml.bind-api -->

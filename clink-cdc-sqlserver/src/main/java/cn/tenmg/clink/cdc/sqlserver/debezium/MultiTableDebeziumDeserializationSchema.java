@@ -1,4 +1,4 @@
-package cn.tenmg.clink.cdc.mysql.debezium;
+package cn.tenmg.clink.cdc.sqlserver.debezium;
 
 import java.math.BigDecimal;
 import java.nio.ByteBuffer;
