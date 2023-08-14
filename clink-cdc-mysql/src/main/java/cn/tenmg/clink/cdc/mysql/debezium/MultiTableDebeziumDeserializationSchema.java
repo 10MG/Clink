@@ -1,4 +1,4 @@
-package cn.tenmg.clink.cdc.debezium;
+package cn.tenmg.clink.cdc.mysql.debezium;
 
 import java.math.BigDecimal;
 import java.nio.ByteBuffer;
@@ -123,7 +123,6 @@ public class MultiTableDebeziumDeserializationSchema implements DebeziumDeserial
 				setMetadatas(tablename, delete, record);
 				out.collect(Tuple2.of(tablename, delete));
 			}
-
 		} else {
 			Row before = extractBeforeRow(value, valueSchema, physicalConverter);
 			before.setKind(RowKind.UPDATE_BEFORE);

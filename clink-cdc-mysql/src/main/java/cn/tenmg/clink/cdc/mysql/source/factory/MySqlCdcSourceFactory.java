@@ -1,4 +1,4 @@
-package cn.tenmg.clink.cdc.source.factory;
+package cn.tenmg.clink.cdc.mysql.source.factory;
 
 import java.time.Duration;
 import java.util.Arrays;
@@ -31,7 +31,7 @@ import com.ververica.cdc.connectors.shaded.org.apache.kafka.connect.source.Sourc
 import com.ververica.cdc.debezium.table.DebeziumOptions;
 import com.ververica.cdc.debezium.table.MetadataConverter;
 
-import cn.tenmg.clink.cdc.debezium.MultiTableDebeziumDeserializationSchema;
+import cn.tenmg.clink.cdc.mysql.debezium.MultiTableDebeziumDeserializationSchema;
 import cn.tenmg.clink.source.SourceFactory;
 import cn.tenmg.clink.utils.ConfigurationUtils;
 import cn.tenmg.dsl.utils.MapUtils;
@@ -60,7 +60,7 @@ public class MySqlCdcSourceFactory implements SourceFactory<MySqlSource<Tuple2<S
 	@Override
 	public MySqlSource<Tuple2<String, Row>> create(Map<String, String> config, Map<String, RowType> rowTypes,
 			Map<String, Map<Integer, String>> metadatas) {
-		String databaseName = config.get(MySqlSourceOptions.DATABASE_NAME.key()), parts[];
+		String databaseName = getOrDefault(config, MySqlSourceOptions.DATABASE_NAME), parts[];
 		Set<String> databases = new HashSet<String>(), tables;
 		if (StringUtils.isBlank(databaseName)) {
 			tables = rowTypes.keySet();
@@ -101,42 +101,40 @@ public class MySqlCdcSourceFactory implements SourceFactory<MySqlSource<Tuple2<S
 		if (config.containsKey(MySqlSourceOptions.SERVER_TIME_ZONE.key())) {
 			builder.serverTimeZone(config.get(MySqlSourceOptions.SERVER_TIME_ZONE.key()));
 		}
-		if (getBooleanOrDefault(config, MySqlSourceOptions.SCAN_INCREMENTAL_SNAPSHOT_ENABLED)) {
-			validateStartupOptionIfEnableParallel(startupOptions);
+		validateStartupOptionIfEnableParallel(startupOptions);
 
-			int splitSize = getIntegerOrDefault(config, MySqlSourceOptions.SCAN_INCREMENTAL_SNAPSHOT_CHUNK_SIZE);
-			validateIntegerOption(MySqlSourceOptions.SCAN_INCREMENTAL_SNAPSHOT_CHUNK_SIZE, splitSize, 1);
-			builder.splitSize(splitSize);
+		int splitSize = getIntegerOrDefault(config, MySqlSourceOptions.SCAN_INCREMENTAL_SNAPSHOT_CHUNK_SIZE);
+		validateIntegerOption(MySqlSourceOptions.SCAN_INCREMENTAL_SNAPSHOT_CHUNK_SIZE, splitSize, 1);
+		builder.splitSize(splitSize);
 
-			int fetchSize = getIntegerOrDefault(config, MySqlSourceOptions.SCAN_SNAPSHOT_FETCH_SIZE);
-			validateIntegerOption(MySqlSourceOptions.SCAN_SNAPSHOT_FETCH_SIZE, fetchSize, 1);
-			builder.fetchSize(fetchSize);
+		int fetchSize = getIntegerOrDefault(config, MySqlSourceOptions.SCAN_SNAPSHOT_FETCH_SIZE);
+		validateIntegerOption(MySqlSourceOptions.SCAN_SNAPSHOT_FETCH_SIZE, fetchSize, 1);
+		builder.fetchSize(fetchSize);
 
-			int splitMetaGroupSize = getIntegerOrDefault(config, MySqlSourceOptions.CHUNK_META_GROUP_SIZE);
-			validateIntegerOption(MySqlSourceOptions.CHUNK_META_GROUP_SIZE, splitMetaGroupSize, 1);
-			builder.splitMetaGroupSize(splitMetaGroupSize);
+		int splitMetaGroupSize = getIntegerOrDefault(config, MySqlSourceOptions.CHUNK_META_GROUP_SIZE);
+		validateIntegerOption(MySqlSourceOptions.CHUNK_META_GROUP_SIZE, splitMetaGroupSize, 1);
+		builder.splitMetaGroupSize(splitMetaGroupSize);
 
-			int connectionPoolSize = getIntegerOrDefault(config, MySqlSourceOptions.CONNECTION_POOL_SIZE);
-			validateIntegerOption(MySqlSourceOptions.CONNECTION_POOL_SIZE, connectionPoolSize, 1);
-			builder.connectionPoolSize(connectionPoolSize);
+		int connectionPoolSize = getIntegerOrDefault(config, MySqlSourceOptions.CONNECTION_POOL_SIZE);
+		validateIntegerOption(MySqlSourceOptions.CONNECTION_POOL_SIZE, connectionPoolSize, 1);
+		builder.connectionPoolSize(connectionPoolSize);
 
-			int connectMaxRetries = getIntegerOrDefault(config, MySqlSourceOptions.CONNECT_MAX_RETRIES);
-			validateIntegerOption(MySqlSourceOptions.CONNECT_MAX_RETRIES, connectMaxRetries, 0);
-			builder.connectMaxRetries(connectMaxRetries);
+		int connectMaxRetries = getIntegerOrDefault(config, MySqlSourceOptions.CONNECT_MAX_RETRIES);
+		validateIntegerOption(MySqlSourceOptions.CONNECT_MAX_RETRIES, connectMaxRetries, 0);
+		builder.connectMaxRetries(connectMaxRetries);
 
-			builder.distributionFactorLower(Double
-					.parseDouble(getOrDefault(config, Arrays.asList("chunk-key.even-distribution.factor.lower-bound",
-							"split-key.even-distribution.factor.lower-bound"), "0.05")));
-			builder.distributionFactorUpper(Double
-					.parseDouble(getOrDefault(config, Arrays.asList("chunk-key.even-distribution.factor.upper-bound",
-							"split-key.even-distribution.factor.upper-bound"), "1000")));
-			builder.connectTimeout(getDurationOrDefault(config, MySqlSourceOptions.CONNECT_TIMEOUT));
-			builder.scanNewlyAddedTableEnabled(
-					getBooleanOrDefault(config, MySqlSourceOptions.SCAN_NEWLY_ADDED_TABLE_ENABLED));
-			builder.heartbeatInterval(getDurationOrDefault(config, MySqlSourceOptions.HEARTBEAT_INTERVAL));
-			if (config.containsKey(INCLUDE_SCHEMA_CHANGES)) {
-				builder.includeSchemaChanges(Boolean.valueOf(config.get(INCLUDE_SCHEMA_CHANGES)));
-			}
+		builder.distributionFactorLower(
+				Double.parseDouble(getOrDefault(config, Arrays.asList("chunk-key.even-distribution.factor.lower-bound",
+						"split-key.even-distribution.factor.lower-bound"), "0.05")));
+		builder.distributionFactorUpper(
+				Double.parseDouble(getOrDefault(config, Arrays.asList("chunk-key.even-distribution.factor.upper-bound",
+						"split-key.even-distribution.factor.upper-bound"), "1000")));
+		builder.connectTimeout(getDurationOrDefault(config, MySqlSourceOptions.CONNECT_TIMEOUT));
+		builder.scanNewlyAddedTableEnabled(
+				getBooleanOrDefault(config, MySqlSourceOptions.SCAN_NEWLY_ADDED_TABLE_ENABLED));
+		builder.heartbeatInterval(getDurationOrDefault(config, MySqlSourceOptions.HEARTBEAT_INTERVAL));
+		if (config.containsKey(INCLUDE_SCHEMA_CHANGES)) {
+			builder.includeSchemaChanges(Boolean.valueOf(config.get(INCLUDE_SCHEMA_CHANGES)));
 		}
 		String convertDeleteToUpdate = config.get(CONVERT_DELETE_TO_UPDATE);
 		return builder

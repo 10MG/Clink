@@ -24,6 +24,7 @@
 		<dependency>
 			<groupId>cn.tenmg</groupId>
 			<artifactId>clink-runtime</artifactId>
+			<version>${project.version}</version>
 		</dependency>
 		<!-- https://mvnrepository.com/artifact/com.alibaba/fastjson -->
 		<dependency>

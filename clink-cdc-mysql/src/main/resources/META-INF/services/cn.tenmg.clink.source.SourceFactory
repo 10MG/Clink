@@ -1,1 +1,1 @@
-cn.tenmg.clink.cdc.source.factory.MySqlCdcSourceFactory
+cn.tenmg.clink.cdc.mysql.source.factory.MySqlCdcSourceFactory

@@ -15,8 +15,9 @@
 	<dependencies>
 		<!-- https://mvnrepository.com/artifact/cn.tenmg/clink-runtime -->
 		<dependency>
-			<groupId>cn.tenmg</groupId>
+			<groupId>${project.groupId}</groupId>
 			<artifactId>clink-runtime</artifactId>
+			<version>${project.version}</version>
 			<scope>provided</scope>
 		</dependency>
 		<!-- https://mvnrepository.com/artifact/org.apache.flink/flink-table-common -->
