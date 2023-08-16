@@ -14,7 +14,7 @@ import org.apache.flink.table.types.logical.DecimalType;
 public class DecimalDataTypeFactory extends AccurateDataTypeFactory {
 
 	@Override
-	DataType create(int scale, int precision) {
+	DataType create(int precision, int scale) {
 		return DataTypes.DECIMAL(precision, scale);
 	}
 

@@ -78,8 +78,8 @@ public abstract class AbstractJDBCMetaDataGetter implements MetaDataGetter {
 				columnName = columnsSet.getString(COLUMN_NAME);
 				columns.put(columnName,
 						ColumnType.builder().typeName(columnsSet.getString("TYPE_NAME").toUpperCase())
-								.dataType(columnsSet.getInt(DATA_TYPE)).scale(columnsSet.getInt(COLUMN_SIZE))
-								.precision(columnsSet.getInt(DECIMAL_DIGITS))
+								.dataType(columnsSet.getInt(DATA_TYPE)).scale(columnsSet.getInt(DECIMAL_DIGITS))
+								.precision(columnsSet.getInt(COLUMN_SIZE))
 								.isNotNull(NO.equals(columnsSet.getString(IS_NULLABLE))).build());
 			}
 			if (MapUtils.isEmpty(columns)) {

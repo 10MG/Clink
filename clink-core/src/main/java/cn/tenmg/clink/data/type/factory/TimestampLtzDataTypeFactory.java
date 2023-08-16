@@ -10,11 +10,11 @@ import org.apache.flink.table.types.DataType;
  * 
  * @since 1.6.0
  */
-public class TimestampLtzDataTypeFactory extends ScalableDataTypeFactory {
+public class TimestampLtzDataTypeFactory extends PrecisionDataTypeFactory {
 
 	@Override
-	DataType create(int scale) {
-		return DataTypes.TIMESTAMP_LTZ(scale);
+	DataType create(int precision) {
+		return DataTypes.TIMESTAMP_LTZ(precision);
 	}
 
 	@Override

@@ -11,11 +11,11 @@ import org.apache.flink.table.types.logical.BinaryType;
  * 
  * @since 1.6.0
  */
-public class BinaryDataTypeFactory extends ScalableDataTypeFactory {
+public class BinaryDataTypeFactory extends PrecisionDataTypeFactory {
 
 	@Override
-	DataType create(int scale) {
-		return DataTypes.BINARY(scale);
+	DataType create(int precision) {
+		return DataTypes.BINARY(precision);
 	}
 
 	@Override

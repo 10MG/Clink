@@ -11,11 +11,11 @@ import org.apache.flink.table.types.logical.CharType;
  * 
  * @since 1.6.0
  */
-public class CharDataTypeFactory extends ScalableDataTypeFactory {
+public class CharDataTypeFactory extends PrecisionDataTypeFactory {
 
 	@Override
-	DataType create(int scale) {
-		return DataTypes.CHAR(scale);
+	DataType create(int precision) {
+		return DataTypes.CHAR(precision);
 	}
 
 	@Override

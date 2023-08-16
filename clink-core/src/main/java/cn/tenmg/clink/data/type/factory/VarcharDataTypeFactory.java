@@ -11,11 +11,11 @@ import org.apache.flink.table.types.logical.VarCharType;
  * 
  * @since 1.6.0
  */
-public class VarcharDataTypeFactory extends ScalableDataTypeFactory {
+public class VarcharDataTypeFactory extends PrecisionDataTypeFactory {
 
 	@Override
-	DataType create(int scale) {
-		return DataTypes.VARCHAR(scale);
+	DataType create(int precision) {
+		return DataTypes.VARCHAR(precision);
 	}
 
 	@Override

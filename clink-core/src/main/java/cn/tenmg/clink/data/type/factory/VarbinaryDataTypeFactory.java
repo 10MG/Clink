@@ -11,11 +11,11 @@ import org.apache.flink.table.types.logical.VarBinaryType;
  * 
  * @since 1.6.0
  */
-public class VarbinaryDataTypeFactory extends ScalableDataTypeFactory {
+public class VarbinaryDataTypeFactory extends PrecisionDataTypeFactory {
 
 	@Override
-	DataType create(int scale) {
-		return DataTypes.VARBINARY(scale);
+	DataType create(int precision) {
+		return DataTypes.VARBINARY(precision);
 	}
 
 	@Override

@@ -265,15 +265,15 @@ public abstract class SQLUtils {
 		String type = getPossibleType(connector, typeName, scale, precision);// 根据类型名称找对应的类型
 		if (StringUtils.isBlank(type)) {
 			String jdbcType = JDBC_TYPES.get(columnType.getDataType());
-			type = getPossibleType(connector, jdbcType, scale, precision);// 根据 JDBC 类型枚举找对应的类型
+			type = getPossibleType(connector, jdbcType, precision, scale);// 根据 JDBC 类型枚举找对应的类型
 			if (StringUtils.isBlank(type)) {
-				type = getDefaultType(jdbcType, scale, precision);// 使用默认的类型
+				type = getDefaultType(jdbcType, precision, scale);// 使用默认的类型
 			}
 		}
 		if (columnType.isNotNull()) {
-			return wrapType(type, scale, precision).concat(" NOT NULL");
+			return wrapType(type, precision, scale).concat(" NOT NULL");
 		} else {
-			return wrapType(type, scale, precision);
+			return wrapType(type, precision, scale);
 		}
 	}
 
@@ -415,20 +415,20 @@ public abstract class SQLUtils {
 		}
 	}
 
-	private static String wrapType(String type, int scale, int precision) {
+	private static String wrapType(String type, int precision, int scale) {
 		String typeUpperCase = type.toUpperCase();
 		if (WITH_PRECISION.contains(typeUpperCase)) {// 类型含精度
-			return StringUtils.concat(type, LEFT_BRACKET, scale, ",", precision, RIGTH_BRACKET);
+			return StringUtils.concat(type, LEFT_BRACKET, precision, ",", scale, RIGTH_BRACKET);
 		} else if (WITH_SIZE.contains(typeUpperCase)) {// 类型含长度
 			String prefix = StringUtils.concat(TYPE_PREFFIX, type, ClinkContext.CONFIG_SPLITER),
 					sizeOffset = ClinkContext
 							.getProperty(Arrays.asList(prefix.concat("size_offset"), prefix.concat("size-offset")));// 兼容老的配置
 			if (StringUtils.isBlank(sizeOffset)) {
-				return StringUtils.concat(type, LEFT_BRACKET, scale, RIGTH_BRACKET);
+				return StringUtils.concat(type, LEFT_BRACKET, precision, RIGTH_BRACKET);
 			} else {
 				int offset = Integer.parseInt(sizeOffset);
 				if (scale >= offset) {
-					return StringUtils.concat(type, LEFT_BRACKET, (scale - offset), RIGTH_BRACKET);
+					return StringUtils.concat(type, LEFT_BRACKET, (precision - offset), RIGTH_BRACKET);
 				}
 			}
 		}
