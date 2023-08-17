@@ -2,7 +2,6 @@ package cn.tenmg.clink.operator.job.generator;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -52,8 +51,7 @@ public class SingleTableDataSyncJobGenerator extends AbstractDataSyncJobGenerato
 	public Object generate(StreamExecutionEnvironment env, StreamTableEnvironment tableEnv, DataSync dataSync,
 			Map<String, Object> params) throws Exception {
 		String from = dataSync.getFrom(), to = dataSync.getTo(), table = dataSync.getTable(),
-				fromTable = ClinkContext.getProperty(
-						Arrays.asList("data.sync.from_table_prefix", "data.sync.from-table-prefix")) + table, // 兼容老的配置
+				fromTable = ClinkContext.getProperty("data.sync.from-table-prefix") + table,
 				fromConfig = dataSync.getFromConfig();
 		TableConfig tableConfig = tableEnv.getConfig();
 		if (tableConfig != null) {
@@ -219,10 +217,7 @@ public class SingleTableDataSyncJobGenerator extends AbstractDataSyncJobGenerato
 		}
 		if (ConfigurationUtils.isKafka(dataSource)) {
 			if (!dataSource.containsKey(GROUP_ID_KEY)) {
-				dataSource.put(GROUP_ID_KEY,
-						ClinkContext
-								.getProperty(Arrays.asList("data.sync.group_id_prefix", "data.sync.group-id-prefix"))// 兼容老的配置
-								+ table);// 设置properties.group.id
+				dataSource.put(GROUP_ID_KEY, ClinkContext.getProperty("data.sync.group-id-prefix") + table);// 设置properties.group.id
 			}
 			if (topic != null) {
 				dataSource.put(TOPIC_KEY, topic);

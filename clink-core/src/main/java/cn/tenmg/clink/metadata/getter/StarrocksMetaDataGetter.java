@@ -4,7 +4,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -21,11 +20,8 @@ import cn.tenmg.clink.utils.JDBCUtils;
 public class StarrocksMetaDataGetter extends AbstractJDBCMetaDataGetter {
 
 	private static final boolean UK_AS_PK = Boolean
-			.valueOf(ClinkContext.getProperty(Arrays.asList("metadata.starrocks.unique_key_as_primary_key",
-					"metadata.starrocks.unique-key-as-primary-key"), "true")),
-			CAL_AS_SCM = Boolean.valueOf(ClinkContext.getProperty(
-					Arrays.asList("metadata.starrocks.catalog_as_schema", "metadata.starrocks.catalog-as-schema"),
-					"true"));// 兼容老的配置
+			.valueOf(ClinkContext.getProperty("metadata.starrocks.unique-key-as-primary-key", "true")),
+			CAL_AS_SCM = Boolean.valueOf(ClinkContext.getProperty("metadata.starrocks.catalog-as-schema", "true"));
 
 	@Override
 	protected Set<String> getPrimaryKeys(Connection con, String catalog, String schema, String tableName)

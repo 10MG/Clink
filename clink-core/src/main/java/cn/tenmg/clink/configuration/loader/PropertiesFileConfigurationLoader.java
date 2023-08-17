@@ -1,11 +1,9 @@
 package cn.tenmg.clink.configuration.loader;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Properties;
 
 import cn.tenmg.clink.exception.ConfigurationLoadException;
-import cn.tenmg.clink.utils.ConfigurationUtils;
 import cn.tenmg.dsl.utils.PropertiesLoaderUtils;
 
 /**
@@ -21,8 +19,7 @@ public class PropertiesFileConfigurationLoader extends AbstractConfigurationLoad
 
 	@Override
 	protected void loadConfig(Properties config) throws ConfigurationLoadException {
-		String pathInClassPath = ConfigurationUtils.getProperty(config,
-				Arrays.asList("clink.configuration-file", "config.location"), DEFAULT_CONFIG_LOCATION);
+		String pathInClassPath = config.getProperty("clink.configuration-file", DEFAULT_CONFIG_LOCATION);
 		try {
 			PropertiesLoaderUtils.load(config, pathInClassPath);
 		} catch (IOException e) {

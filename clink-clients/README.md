@@ -29,15 +29,20 @@ clink-clients是[Clink](https://gitee.com/tenmg/clink)应用程序客户端类�
 
 ### 添加配置
 
-clink-clients.properties
+clink.properties
 
 ```
-# RPC configuration
-jobmanager.rpc.address=192.168.100.11,192.168.100.12,192.168.100.13
-# The default jar that the clink-clients submits for execution, it is recommended but not required.
-clink.default.jar=/yourpath/your-clink-app-1.0.0.jar
-# The default class that the clink-clients submits for execution, it is not required. You can also specify the main class in jar
-#clink.default.class=yourpackage.App
+# REST 配置，用“,”分隔不同的地址使用“:”分隔地址和端口号，端口号可省略默认为8081
+rest.addresses=192.168.100.11,192.168.100.12,192.168.100.13
+# 或者也允许使用 rest.address
+# rest.address=192.168.100.11,192.168.100.12,192.168.100.13
+# 只重试一次（默认值为20），以避免某些节点挂了后重试时间过长
+rest.retry.max-attempts=1
+
+# Clink客户端提交执行的默认 jar，它不是必需的，可以是项目中的任何一个主类
+# clink.default.jar=/yourpath/your-clink-app-1.0.0.jar
+# Clink客户端提交执行的默认类名，它不是必需的，默认为 cn.tenmg.clink.ClinkPortal，也可以实现和配置自己的类或者在 jar 中指定主类
+# clink.default.class=cn.tenmg.clink.ClinkPortal
 ```
 
 ### 提交作业
@@ -175,7 +180,7 @@ java代码。采用文本表示，如：`<java>java code</java>`或`<option><![C
 -----------------|----------|----|--------
 saveAs           | `String` | 否 | 操作结果另存为一个新的变量的名称。变量的值是flink的`tableEnv.executeSql(statement);`的返回值。
 when             | `String` | 否 | 操作的条件，当且仅当该条件满足时，才执行该操作。不指定时，默认表示条件成立。
-dataSource       | `String` | 否 | 使用的数据源名称。这里的数据源是在[Clink](https://gitee.com/tenmg/Clink)应用程序的配置文件中配置，并非在clink-clients应用程序的配置文件中配置。详见[Clink数据源配置](https://gitee.com/tenmg/Clink#%E6%95%B0%E6%8D%AE%E6%BA%90%E9%85%8D%E7%BD%AE)。
+dataSource       | `String` | 否 | 使用的数据源名称。详见[Clink数据源配置](https://gitee.com/tenmg/Clink#%E6%95%B0%E6%8D%AE%E6%BA%90%E9%85%8D%E7%BD%AE)。
 dataSourceFilter | `String` | 否 | 使用的数据源过滤器。内置两种数据源过滤器（source/sink），如果内置过滤器无法满足使用要求，也可使用自定义类名（该类需实现`cn.tenmg.clink.datasource.DataSourceFilter`接口）。
 catalog          | `String` | 否 | 执行SQL使用的Flink SQL的catalog名称。
 script           | `String` | 否 | 基于[DSL](https://gitee.com/tenmg/dsl)的SQL脚本。使用标签内文本表示，如：`<execute-sql>SQL code</execute-sql>`或`<execute-sql><![CDATA[SQL code]]></execute-sql>`。由于Flink SQL不支持DELETE、UPDATE语句，因此如果配置的SQL脚本是DELETE或者UPDATE语句，该语句将在程序main函数中采用JDBC执行。
@@ -199,7 +204,7 @@ script     | `String` | 否 | 基于[DSL](https://gitee.com/tenmg/dsl)的SQL脚�
 -----------|----------|----|--------
 saveAs     | `String` | 否 | 执行结果另存为一个新的变量的名称。变量的值是执行JDBC指定方法的返回值。
 when       | `String` | 否 | 操作的条件，当且仅当该条件满足时，才执行该操作。不指定时，默认表示条件成立。
-dataSource | `String` | 是 | 使用的数据源名称。这里的数据源是在Clink应用程序的配置文件中配置，并非在clink-clients应用程序的配置文件中配置。详见[Clink数据源配置](#%E6%95%B0%E6%8D%AE%E6%BA%90%E9%85%8D%E7%BD%AE)。
+dataSource | `String` | 是 | 使用的数据源名称。详见[Clink数据源配置](https://gitee.com/tenmg/Clink#%E6%95%B0%E6%8D%AE%E6%BA%90%E9%85%8D%E7%BD%AE)。
 method     | `String` | 否 | 调用的JDBC方法，支持"get"/"select"/"execute"/"executeUpdate"/"executeLargeUpdate"，默认是"executeUpdate"（1.4.0及之前版本默认值为"executeLargeUpdate"，由于很多数据库连接池或者JDBC驱动未实现该方法，因此1.4.1版本开始改为"executeUpdate"）。可在配置文件中使用`jdbc.default-method`配置项修改默认值。
 script     | `String` | 是 | 基于[DSL](https://gitee.com/tenmg/dsl)的SQL脚本。使用标签内文本表示。
 
@@ -520,7 +525,11 @@ type | `String` | 是 | 数据类型。使用标签内文本表示。
 
 ## 配置文件
 
-默认的配置文件为`clink-clients.properties`（注意：需在`classpath`下），可通过`clink-clients-context-loader.properties`配置文件的`config.location`修改配置文件路径和名称。
+默认的配置文件为`clink.properties`（注意：需在`classpath`下），也可在实例化客户端实现类时指定。如：
+
+```
+StandaloneRestClusterClient client = new StandaloneRestClusterClient("my.properties");
+```
 
 ### 通用配置
 

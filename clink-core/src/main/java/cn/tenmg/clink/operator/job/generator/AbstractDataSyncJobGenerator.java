@@ -1,7 +1,6 @@
 package cn.tenmg.clink.operator.job.generator;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -360,8 +359,7 @@ public abstract class AbstractDataSyncJobGenerator implements DataSyncJobGenerat
 
 	protected static String getDefaultFromType(String columnName) {
 		String prefix = StringUtils.concat(TYPE_KEY_PREFIX, columnName, ClinkContext.CONFIG_SPLITER),
-				fromType = ClinkContext
-						.getProperty(Arrays.asList(prefix.concat("from_type"), prefix.concat("from-type")));// 兼容老的配置
+				fromType = ClinkContext.getProperty(prefix.concat("from-type"));
 		if (fromType == null) {
 			return ClinkContext.getProperty("data.sync.from-type");
 		}
@@ -374,7 +372,7 @@ public abstract class AbstractDataSyncJobGenerator implements DataSyncJobGenerat
 
 	protected static String getDefaultToType(String columnName) {
 		String prefix = StringUtils.concat(TYPE_KEY_PREFIX, columnName, ClinkContext.CONFIG_SPLITER),
-				toType = ClinkContext.getProperty(Arrays.asList(prefix.concat("to_type"), prefix.concat("to-type")));// 兼容老的配置
+				toType = ClinkContext.getProperty(prefix.concat("to-type"));
 		if (toType == null) {
 			return ClinkContext.getProperty("data.sync.to-type");
 		}

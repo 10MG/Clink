@@ -4,7 +4,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -88,8 +87,7 @@ public class JdbcOperator extends AbstractOperator<Jdbc> {
 		} else {
 			String method = jdbc.getMethod();
 			if (!sqlExecuterKeys.contains(method)) {
-				method = ClinkContext.getProperty(Arrays.asList("jdbc.default_method", "jdbc.default-method"),
-						"execute");// 兼容老的配置
+				method = ClinkContext.getProperty("jdbc.default-method", "execute");
 			}
 			SQLExecuter<?> executer = sqlExecuters.get(method);
 			if (executer == null) {

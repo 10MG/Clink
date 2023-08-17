@@ -38,7 +38,8 @@ import cn.tenmg.dsl.utils.StringUtils;
  */
 public abstract class AbstractClinkClient<T extends ClusterClient<?>> implements ClinkClient<T> {
 
-	protected static final String FLINK_JOBS_DEFAULT_JAR_KEY = "clink.default.jar",
+	protected static final String DEFAULT_STRATEGIES_PATH = "clink-context-loader.properties",
+			DEFAULT_CONFIG_LOCATION = "clink.properties", FLINK_JOBS_DEFAULT_JAR_KEY = "clink.default.jar",
 			FLINK_JOBS_DEFAULT_CLASS_KEY = "clink.default.class", NACOS_CONFIG_PREFIX = "nacos.config.",
 			EMPTY_ARGUMENTS = "{}";
 	protected static final Set<String> EXCLUDES = SetUtils.newHashSet("options", "mainClass", "jar", "allwaysNewJob");
@@ -46,11 +47,16 @@ public abstract class AbstractClinkClient<T extends ClusterClient<?>> implements
 	protected Logger log = LoggerFactory.getLogger(getClass());
 
 	protected Properties config = new Properties();
+	{
+		config.putAll(System.getenv());// 系统环境变量
+		config.putAll(System.getProperties());// JVM环境变量
+		PropertiesLoaderUtils.loadIgnoreException(config, DEFAULT_STRATEGIES_PATH);
+	}
 
 	protected final Queue<Configuration> configurations = new LinkedList<Configuration>();
 
 	public AbstractClinkClient() {
-		init("clink-clients.properties");
+		init(config.getProperty("clink.configuration-file", DEFAULT_CONFIG_LOCATION));
 	}
 
 	public AbstractClinkClient(String pathInClassPath) {
@@ -66,8 +72,6 @@ public abstract class AbstractClinkClient<T extends ClusterClient<?>> implements
 	}
 
 	protected void init(Properties properties) {
-		config.putAll(System.getenv());// 系统环境变量
-		config.putAll(System.getProperties());// JVM环境变量
 		config.putAll(properties);
 		String className = config.getProperty("clink.clients.configuration-loader");
 		if (StringUtils.isNotBlank(className)) {

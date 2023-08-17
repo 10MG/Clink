@@ -1,7 +1,6 @@
 package cn.tenmg.clink.context;
 
 import java.lang.reflect.InvocationTargetException;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -23,6 +22,7 @@ import cn.tenmg.clink.exception.IllegalConfigurationException;
 import cn.tenmg.clink.utils.ConfigurationUtils;
 import cn.tenmg.dsl.utils.MapUtils;
 import cn.tenmg.dsl.utils.PropertiesLoaderUtils;
+import cn.tenmg.dsl.utils.StringUtils;
 
 /**
  * Clink上下文
@@ -85,8 +85,7 @@ public abstract class ClinkContext {
 		config.putAll(System.getenv());// 系统环境变量
 		config.putAll(System.getProperties());// JVM环境变量
 		PropertiesLoaderUtils.loadIgnoreException(config, DEFAULT_STRATEGIES_PATH);
-		String contextFile = getProperty(Arrays.asList("context.location", CONTEXT_LOCATION_KEY),
-				DEFAULT_CONTEXT_LOCATION);// 兼容老的配置
+		String contextFile = config.getProperty(CONTEXT_LOCATION_KEY, DEFAULT_CONTEXT_LOCATION);
 		try {
 			PropertiesLoaderUtils.load(config, contextFile);
 		} catch (Exception e) {
@@ -294,7 +293,7 @@ public abstract class ClinkContext {
 	 * @return 默认JDBC驱动类名
 	 */
 	public static String getDefaultJDBCDriver(String productName) {
-		return getProperty("jdbc" + CONFIG_SPLITER + productName + CONFIG_SPLITER + "driver");
+		return getProperty(StringUtils.concat("jdbc", CONFIG_SPLITER, productName, CONFIG_SPLITER, "driver"));
 	}
 
 	/**

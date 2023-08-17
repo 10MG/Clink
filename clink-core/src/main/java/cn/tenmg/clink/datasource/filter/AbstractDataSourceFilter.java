@@ -48,7 +48,7 @@ public abstract class AbstractDataSourceFilter implements DataSourceFilter {
 		for (int i = 0; i < VERSION_IGNORE_CONNECTORS.length; i++) {
 			versionIgnoreConnector = VERSION_IGNORE_CONNECTORS[i];
 			if (connector.startsWith(versionIgnoreConnector)) {
-				return ClinkContext.getProperty(keyPrefix + versionIgnoreConnector);
+				return ClinkContext.getProperty(keyPrefix.concat(versionIgnoreConnector));
 			}
 		}
 		return null;

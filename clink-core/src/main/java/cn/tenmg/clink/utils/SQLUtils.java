@@ -1,7 +1,6 @@
 package cn.tenmg.clink.utils;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
@@ -376,10 +375,8 @@ public abstract class SQLUtils {
 			.put(java.sql.Types.BLOB, "java.sql.Types.BLOB").put(java.sql.Types.CLOB, "java.sql.Types.CLOB")
 			.put(java.sql.Types.NCLOB, "java.sql.Types.NCLOB").build(java.sql.Types.STRUCT, "java.sql.Types.STRUCT");
 
-	private static Set<String> WITH_PRECISION = uppercaseSet(
-			ClinkContext.getProperty(Arrays.asList("flink.sql.type.with_precision", "flink.sql.type.with-precision"))),
-			WITH_SIZE = uppercaseSet(
-					ClinkContext.getProperty(Arrays.asList("flink.sql.type.with_size", "flink.sql.type.with-size")));// 兼容老的配置
+	private static Set<String> WITH_PRECISION = uppercaseSet(ClinkContext.getProperty("flink.sql.type.with-precision")),
+			WITH_SIZE = uppercaseSet(ClinkContext.getProperty("flink.sql.type.with-size"));
 
 	private static String getPossibleType(String connector, String typeName, int scale, int precision) {
 		String type = ClinkContext.getProperty(StringUtils.concat(TYPE_PREFFIX, connector, ClinkContext.CONFIG_SPLITER,
@@ -421,8 +418,7 @@ public abstract class SQLUtils {
 			return StringUtils.concat(type, LEFT_BRACKET, precision, ",", scale, RIGTH_BRACKET);
 		} else if (WITH_SIZE.contains(typeUpperCase)) {// 类型含长度
 			String prefix = StringUtils.concat(TYPE_PREFFIX, type, ClinkContext.CONFIG_SPLITER),
-					sizeOffset = ClinkContext
-							.getProperty(Arrays.asList(prefix.concat("size_offset"), prefix.concat("size-offset")));// 兼容老的配置
+					sizeOffset = ClinkContext.getProperty(prefix.concat("size-offset"));
 			if (StringUtils.isBlank(sizeOffset)) {
 				return StringUtils.concat(type, LEFT_BRACKET, precision, RIGTH_BRACKET);
 			} else {

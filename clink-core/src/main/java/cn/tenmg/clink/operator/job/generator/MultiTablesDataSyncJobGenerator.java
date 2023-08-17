@@ -1,7 +1,6 @@
 package cn.tenmg.clink.operator.job.generator;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -218,8 +217,7 @@ public class MultiTablesDataSyncJobGenerator extends AbstractDataSyncJobGenerato
 
 		StatementSet statementSet = tableEnv.createStatementSet();
 		// stream 转 Table，创建临时视图，插入sink表
-		String primaryKeys[], fromTable, prefix = ClinkContext
-				.getProperty(Arrays.asList("data.sync.from_table_prefix", "data.sync.from-table-prefix")); // 兼容老的配置
+		String primaryKeys[], fromTable, prefix = ClinkContext.getProperty("data.sync.from-table-prefix");
 		SingleOutputStreamOperator<Row> dataStream;
 		for (Map.Entry<String, RowTypeInfo> entry : rowTypeInfos.entrySet()) {
 			String tableName = entry.getKey();
