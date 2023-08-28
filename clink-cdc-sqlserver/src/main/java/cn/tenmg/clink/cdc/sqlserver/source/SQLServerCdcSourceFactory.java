@@ -48,7 +48,7 @@ import io.debezium.data.Envelope;
  */
 public class SQLServerCdcSourceFactory implements SourceFactory<JdbcIncrementalSource<Tuple2<String, Row>>> {
 
-	public static final String IDENTIFIER = "mysql-cdc", SINGLE_QUOTATION_MARK = "'",
+	public static final String IDENTIFIER = "sqlserver-cdc", SINGLE_QUOTATION_MARK = "'",
 			JDBC_PROPERTIES_PREFIX = "jdbc.properties.", INCLUDE_SCHEMA_CHANGES = "include-schema-changes",
 			CONVERT_DELETE_TO_UPDATE = "convert-delete-to-update";
 
