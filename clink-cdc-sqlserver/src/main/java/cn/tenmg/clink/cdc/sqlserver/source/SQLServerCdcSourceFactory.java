@@ -48,7 +48,7 @@ import io.debezium.data.Envelope;
  */
 public class SQLServerCdcSourceFactory implements SourceFactory<JdbcIncrementalSource<Tuple2<String, Row>>> {
 
-	public static final String IDENTIFIER = "sqlserver-cdc", SINGLE_QUOTATION_MARK = "'",
+	public static final String IDENTIFIER = "sqlserver-cdc", TABLES = "tables", SINGLE_QUOTATION_MARK = "'",
 			JDBC_PROPERTIES_PREFIX = "jdbc.properties.", INCLUDE_SCHEMA_CHANGES = "include-schema-changes",
 			CONVERT_DELETE_TO_UPDATE = "convert-delete-to-update";
 
@@ -114,7 +114,8 @@ public class SQLServerCdcSourceFactory implements SourceFactory<JdbcIncrementalS
 				.<Tuple2<String, Row>>builder().hostname(getOrDefault(config, HOSTNAME))
 				.port(getIntegerOrDefault(config, PORT)).username(getOrDefault(config, USERNAME))
 				.password(getOrDefault(config, PASSWORD)).databaseList(String.join(",", databases))
-				.tableList(String.join(",", tables)).debeziumProperties(DebeziumOptions.getDebeziumProperties(config));
+				.tableList(config.containsKey(TABLES) ? config.get(TABLES) : String.join(",", tables))
+				.debeziumProperties(DebeziumOptions.getDebeziumProperties(config));
 
 		if (config.containsKey(SERVER_TIME_ZONE.key())) {
 			builder.serverTimeZone(config.get(SERVER_TIME_ZONE.key()));

@@ -243,6 +243,12 @@ public abstract class ConfigurationUtils {
 		if (k.charAt(0) == DSLUtils.SINGLE_QUOTATION_MARK && k.charAt(last) == DSLUtils.SINGLE_QUOTATION_MARK) {
 			k = k.substring(1, last);
 		}
+		if (StringUtils.isNotBlank(v)) {
+			last = v.length() - 1;
+			if (v.charAt(0) == DSLUtils.SINGLE_QUOTATION_MARK && v.charAt(last) == DSLUtils.SINGLE_QUOTATION_MARK) {
+				v = v.substring(1, last);
+			}
+		}
 		map.put(k, v);
 	}
 
