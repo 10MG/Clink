@@ -1127,54 +1127,51 @@ java.sql.Types.STRUCT=STRUCT
 完整的类型映射配置默认值为：
 
 ```
-# JDBC types to Flink SQL types configuration
+## JDBC types to Flink SQL types configuration
 # Default Flink SQL type when unexpected
 flink.sql.type.default=STRING
 # Flink SQL types with precision
-flink.sql.type.with_precision=DECIMAL,NUMERIC
+flink.sql.type.with-precision=DECIMAL,NUMERIC
 # Flink SQL types with size
-flink.sql.type.with_size=TIME,TIMESTAMP
+flink.sql.type.with-size=BINARY,CHAR,TIME,TIMESTAMP,TIMESTAMP_LTZ,VARBINARY,VARCHAR
 # Size offset for Convert JDBC type to Flink SQL type TIME
-flink.sql.type.TIME.size_offset=9
+flink.sql.type.TIME.size-offset=9
 # Size offset for Convert JDBC type to Flink SQL type TIMESTAMP
-flink.sql.type.TIMESTAMP.size_offset=20
+flink.sql.type.TIMESTAMP.size-offset=20
 # Starrocks JDBC type java.sql.Types.OTHER to Flink SQL type DECIMAL
 flink.sql.type.starrocks.java.sql.Types.OTHER=DECIMAL
 
 # Specific JDBC type to Flink SQL type configuration
-java.sql.Types.VARCHAR=STRING
-java.sql.Types.CHAR=STRING
-java.sql.Types.NVARCHAR=STRING
-java.sql.Types.NCHAR=STRING
-java.sql.Types.LONGNVARCHAR=STRING
-java.sql.Types.LONGVARCHAR=STRING
-java.sql.Types.BIGINT=BIGINT
-java.sql.Types.BOOLEAN=BOOLEAN
-java.sql.Types.BIT(1)=BOOLEAN
-java.sql.Types.BIT=TINYINT
-java.sql.Types.DECIMAL=DECIMAL
-java.sql.Types.DOUBLE=DOUBLE
-java.sql.Types.FLOAT=FLOAT
-java.sql.Types.REAL=FLOAT
-java.sql.Types.INTEGER=INT
-java.sql.Types.NUMERIC=NUMERIC
-java.sql.Types.SMALLINT=SMALLINT
-java.sql.Types.TINYINT=TINYINT
-java.sql.Types.DATE=DATE
-java.sql.Types.TIME=TIME
-java.sql.Types.TIME_WITH_TIMEZONE=TIME
-java.sql.Types.TIMESTAMP=TIMESTAMP
-java.sql.Types.TIMESTAMP_WITH_TIMEZONE=TIMESTAMP
-java.sql.Types.BINARY=BYTES
-java.sql.Types.LONGVARBINARY=BYTES
-java.sql.Types.VARBINARY=BYTES
-java.sql.Types.REF=REF
-java.sql.Types.DATALINK=DATALINK
-java.sql.Types.ARRAY=ARRAY
-java.sql.Types.BLOB=BLOB
-java.sql.Types.CLOB=CLOB
-java.sql.Types.NCLOB=CLOB
-java.sql.Types.STRUCT=STRUCT
+flink.sql.type.java.sql.Types.VARCHAR=VARCHAR
+flink.sql.type.java.sql.Types.CHAR=CHAR
+flink.sql.type.java.sql.Types.NVARCHAR=VARCHAR
+flink.sql.type.java.sql.Types.NCHAR=CHAR
+flink.sql.type.java.sql.Types.LONGNVARCHAR=STRING
+flink.sql.type.java.sql.Types.LONGVARCHAR=STRING
+flink.sql.type.java.sql.Types.BIGINT=BIGINT
+flink.sql.type.java.sql.Types.BOOLEAN=BOOLEAN
+flink.sql.type.java.sql.Types.BIT(1)=BOOLEAN
+flink.sql.type.java.sql.Types.BIT=TINYINT
+flink.sql.type.java.sql.Types.DECIMAL=DECIMAL
+flink.sql.type.java.sql.Types.DOUBLE=DOUBLE
+flink.sql.type.java.sql.Types.FLOAT=FLOAT
+flink.sql.type.java.sql.Types.REAL=FLOAT
+flink.sql.type.java.sql.Types.INTEGER=INT
+flink.sql.type.java.sql.Types.NUMERIC=NUMERIC
+flink.sql.type.java.sql.Types.SMALLINT=SMALLINT
+flink.sql.type.java.sql.Types.TINYINT=TINYINT
+flink.sql.type.java.sql.Types.DATE=DATE
+flink.sql.type.java.sql.Types.TIME=TIME
+flink.sql.type.java.sql.Types.TIME_WITH_TIMEZONE=TIME
+flink.sql.type.java.sql.Types.TIMESTAMP=TIMESTAMP
+flink.sql.type.java.sql.Types.TIMESTAMP_WITH_TIMEZONE=TIMESTAMP
+flink.sql.type.java.sql.Types.BINARY=BYTES
+flink.sql.type.java.sql.Types.LONGVARBINARY=BYTES
+flink.sql.type.java.sql.Types.VARBINARY=BYTES
+flink.sql.type.java.sql.Types.ARRAY=ARRAY
+flink.sql.type.java.sql.Types.BLOB=BYTES
+flink.sql.type.java.sql.Types.CLOB=BYTES
+flink.sql.type.java.sql.Types.NCLOB=BYTES
 ```
 ## 关键词配置
 
