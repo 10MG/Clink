@@ -72,8 +72,8 @@
 
 	<properties>
 		<encoding>UTF-8</encoding>
-		<dsl.version>1.4.0</dsl.version>
-		<fastjson.version>2.0.35</fastjson.version>
+		<dsl.version>1.4.1</dsl.version>
+		<fastjson.version>2.0.39</fastjson.version>
 		<nacos-client.version>2.2.4</nacos-client.version>
 		<mysql-connector-j.version>8.0.33</mysql-connector-j.version>
 		<jakarta.xml.bind-api.version>3.0.1</jakarta.xml.bind-api.version>
