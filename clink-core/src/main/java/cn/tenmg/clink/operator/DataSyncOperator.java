@@ -9,9 +9,14 @@ import cn.tenmg.clink.context.ClinkContext;
 import cn.tenmg.clink.exception.IllegalJobConfigException;
 import cn.tenmg.clink.model.DataSync;
 import cn.tenmg.clink.model.data.sync.Column;
+import cn.tenmg.clink.operator.job.DataSyncJobGenerator;
 import cn.tenmg.clink.operator.job.generator.MultiTablesDataSyncJobGenerator;
 import cn.tenmg.clink.operator.job.generator.SingleTableDataSyncJobGenerator;
+import cn.tenmg.clink.utils.ConfigurationUtils;
+import cn.tenmg.clink.utils.DataSourceFilterUtils;
+import cn.tenmg.clink.utils.SQLUtils;
 import cn.tenmg.dsl.utils.CollectionUtils;
+import cn.tenmg.dsl.utils.DSLUtils;
 import cn.tenmg.dsl.utils.StringUtils;
 
 /**
@@ -41,10 +46,23 @@ public class DataSyncOperator extends AbstractOperator<DataSync> {
 				}
 			}
 		}
-		return (table.contains(",")
-				|| "true".equals(ClinkContext.getDatasource(dataSync.getFrom()).get(CONVERT_DELETE_TO_UPDATE))
-						? MultiTablesDataSyncJobGenerator.getInstance()
-						: SingleTableDataSyncJobGenerator.getInstance()).generate(env, dataSync, params);
+		Map<String, String> sourceDataSource = DataSourceFilterUtils.filter("source", ClinkContext.getDatasource(from)),
+				sinkDataSource = DataSourceFilterUtils.filter("sink", ClinkContext.getDatasource(to));
+		String fromConfig = dataSync.getFromConfig(), toConfig = dataSync.getToConfig();
+		if (StringUtils.isNotBlank(fromConfig)) {
+			sourceDataSource.putAll(ConfigurationUtils.load(SQLUtils.toSQL(DSLUtils.parse(fromConfig, params))));// 解析其中的参数并加载配置
+		}
+		if (StringUtils.isNotBlank(toConfig)) {
+			sinkDataSource.putAll(ConfigurationUtils.load(SQLUtils.toSQL(DSLUtils.parse(toConfig, params))));// 解析其中的参数并加载配置
+		}
+		DataSyncJobGenerator dataSyncJobGenerator;
+		if (table.contains(",") || "true".equals(sourceDataSource.get(CONVERT_DELETE_TO_UPDATE))) {
+			dataSyncJobGenerator = MultiTablesDataSyncJobGenerator.getInstance();
+		} else {
+			sourceDataSource.remove(CONVERT_DELETE_TO_UPDATE);
+			dataSyncJobGenerator = SingleTableDataSyncJobGenerator.getInstance();
+		}
+		return dataSyncJobGenerator.generate(env, dataSync, sourceDataSource, sinkDataSource, params);
 	}
 
 }

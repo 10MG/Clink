@@ -22,12 +22,17 @@ public interface DataSyncJobGenerator {
 	 *            流执行环境
 	 * @param dataSync
 	 *            同步配置对象
+	 * @param sourceDataSource
+	 *            源数据源
+	 * @param sinkDataSource
+	 *            汇数据源
 	 * @param params
 	 *            参数查找表
 	 * @return 生成数据同步任务的结果
 	 * @throws Exception
 	 *             发生异常
 	 */
-	Object generate(StreamExecutionEnvironment env, DataSync dataSync, Map<String, Object> params) throws Exception;
+	Object generate(StreamExecutionEnvironment env, DataSync dataSync, Map<String, String> sourceDataSource,
+			Map<String, String> sinkDataSource, Map<String, Object> params) throws Exception;
 
 }

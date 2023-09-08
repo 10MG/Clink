@@ -24,7 +24,6 @@ import cn.tenmg.clink.metadata.MetaDataGetterFactory;
 import cn.tenmg.clink.model.DataSync;
 import cn.tenmg.clink.model.data.sync.Column;
 import cn.tenmg.clink.utils.ConfigurationUtils;
-import cn.tenmg.clink.utils.DataSourceFilterUtils;
 import cn.tenmg.clink.utils.SQLUtils;
 import cn.tenmg.dsl.utils.DSLUtils;
 import cn.tenmg.dsl.utils.StringUtils;
@@ -49,10 +48,10 @@ public class SingleTableDataSyncJobGenerator extends AbstractDataSyncJobGenerato
 
 	@Override
 	public Object generate(StreamExecutionEnvironment env, StreamTableEnvironment tableEnv, DataSync dataSync,
-			Map<String, Object> params) throws Exception {
+			Map<String, String> sourceDataSource, Map<String, String> sinkDataSource, Map<String, Object> params)
+			throws Exception {
 		String from = dataSync.getFrom(), to = dataSync.getTo(), table = dataSync.getTable(),
-				fromTable = ClinkContext.getProperty("data.sync.from-table-prefix") + table,
-				fromConfig = dataSync.getFromConfig();
+				fromTable = ClinkContext.getProperty("data.sync.from-table-prefix") + table;
 		TableConfig tableConfig = tableEnv.getConfig();
 		if (tableConfig != null) {
 			Configuration configuration = tableConfig.getConfiguration();
@@ -62,20 +61,18 @@ public class SingleTableDataSyncJobGenerator extends AbstractDataSyncJobGenerato
 						+ String.join(ClinkContext.CONFIG_SPLITER, String.join("-", from, "to", to), table));
 			}
 		}
-		Map<String, String> fromDataSource = DataSourceFilterUtils.filter("source", ClinkContext.getDatasource(from)),
-				toDataSource = DataSourceFilterUtils.filter("sink", ClinkContext.getDatasource(to));
 
-		Set<String> primaryKeys = collation(dataSync, toDataSource, params);
+		Set<String> primaryKeys = collation(dataSync, sinkDataSource, params);
 		List<Column> columns = dataSync.getColumns();
 
-		String sql = fromCreateTableSQL(fromDataSource, dataSync.getTopic(), table, fromTable, columns, primaryKeys,
-				fromConfig, params);
+		String sql = sourceTableSQL(sourceDataSource, dataSync.getTopic(), table, fromTable, columns, primaryKeys,
+				params);
 		if (log.isInfoEnabled()) {
 			log.info("Create source table by Flink SQL: " + SQLUtils.hiddePassword(sql));
 		}
 		tableEnv.executeSql(sql);
 
-		sql = sinkTableSQL(toDataSource, table, columns, primaryKeys, dataSync.getToConfig(), params);
+		sql = sinkTableSQL(sinkDataSource, table, columns, primaryKeys, params);
 		if (log.isInfoEnabled()) {
 			log.info("Create sink table by Flink SQL: " + SQLUtils.hiddePassword(sql));
 		}
@@ -93,15 +90,15 @@ public class SingleTableDataSyncJobGenerator extends AbstractDataSyncJobGenerato
 	 * 
 	 * @param dataSync
 	 *            数据同步配置对象
-	 * @param toDataSource
-	 *            目标数据源
+	 * @param sinkDataSource
+	 *            汇数据源
 	 * @param params
 	 *            参数查找表
 	 * @return 返回主键
 	 * @throws Exception
 	 *             发生异常
 	 */
-	private static Set<String> collation(DataSync dataSync, Map<String, String> toDataSource,
+	private static Set<String> collation(DataSync dataSync, Map<String, String> sinkDataSource,
 			Map<String, Object> params) throws Exception {
 		List<Column> columns = dataSync.getColumns();
 		if (columns == null) {
@@ -126,12 +123,12 @@ public class SingleTableDataSyncJobGenerator extends AbstractDataSyncJobGenerato
 		Map<String, String> autoColumns = StringUtils.isBlank(autoColumnsStr) ? Collections.emptyMap()
 				: toMap(TO_LOWERCASE, autoColumnsStr.split(AUTO_COLUMNS_SPLIT));// 不区分大小写，统一转为小写
 		if (Boolean.TRUE.equals(smart)) {// 智能模式，自动查询列名、数据类型
-			MetaDataGetter metaDataGetter = MetaDataGetterFactory.getMetaDataGetter(toDataSource);
-			TableMetaData tableMetaData = metaDataGetter.getTableMetaData(toDataSource, dataSync.getTable());
+			MetaDataGetter metaDataGetter = MetaDataGetterFactory.getMetaDataGetter(sinkDataSource);
+			TableMetaData tableMetaData = metaDataGetter.getTableMetaData(sinkDataSource, dataSync.getTable());
 			if (primaryKey == null) {
 				primaryKeys = tableMetaData.getPrimaryKeys();
 			}
-			String connector = toDataSource.get("connector");
+			String connector = sinkDataSource.get("connector");
 			Map<String, ColumnType> columnTypes = tableMetaData.getColumns();
 			if (columns.isEmpty()) {// 没有用户自定义列
 				addSmartLoadColumns(connector, columns, columnTypes, params, autoColumns);
@@ -178,9 +175,8 @@ public class SingleTableDataSyncJobGenerator extends AbstractDataSyncJobGenerato
 		return primaryKeys;
 	}
 
-	private static String fromCreateTableSQL(Map<String, String> dataSource, String topic, String table,
-			String fromTable, List<Column> columns, Set<String> primaryKeys, String fromConfig,
-			Map<String, Object> params) throws IOException {
+	private static String sourceTableSQL(Map<String, String> dataSource, String topic, String table, String fromTable,
+			List<Column> columns, Set<String> primaryKeys, Map<String, Object> params) throws IOException {
 		Set<String> actualPrimaryKeys = newSet(primaryKeys);
 		StringBuffer sqlBuffer = new StringBuffer();
 		sqlBuffer.append("CREATE TABLE ").append(SQLUtils.wrapIfReservedKeywords(fromTable)).append("(");
@@ -212,9 +208,6 @@ public class SingleTableDataSyncJobGenerator extends AbstractDataSyncJobGenerato
 					.append(String.join(", ", actualPrimaryKeys)).append(") NOT ENFORCED");
 		}
 		sqlBuffer.append(") ").append("WITH (");
-		if (StringUtils.isNotBlank(fromConfig)) {
-			dataSource.putAll(ConfigurationUtils.load(SQLUtils.toSQL(DSLUtils.parse(fromConfig, params))));
-		}
 		if (ConfigurationUtils.isKafka(dataSource)) {
 			if (!dataSource.containsKey(GROUP_ID_KEY)) {
 				dataSource.put(GROUP_ID_KEY, ClinkContext.getProperty("data.sync.group-id-prefix") + table);// 设置properties.group.id

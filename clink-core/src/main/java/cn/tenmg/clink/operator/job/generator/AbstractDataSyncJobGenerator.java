@@ -21,7 +21,6 @@ import cn.tenmg.clink.model.DataSync;
 import cn.tenmg.clink.model.data.sync.Column;
 import cn.tenmg.clink.operator.job.DataSyncJobGenerator;
 import cn.tenmg.clink.parser.FlinkSQLParamsParser;
-import cn.tenmg.clink.utils.ConfigurationUtils;
 import cn.tenmg.clink.utils.SQLUtils;
 import cn.tenmg.clink.utils.StreamTableEnvironmentUtils;
 import cn.tenmg.dsl.NamedScript;
@@ -104,6 +103,10 @@ public abstract class AbstractDataSyncJobGenerator implements DataSyncJobGenerat
 	 *            流表执行环境
 	 * @param dataSync
 	 *            同步配置对象
+	 * @param sourceDataSource
+	 *            源数据源
+	 * @param sinkDataSource
+	 *            汇数据源
 	 * @param params
 	 *            参数查找表
 	 * @return 生成数据同步任务的结果
@@ -111,14 +114,15 @@ public abstract class AbstractDataSyncJobGenerator implements DataSyncJobGenerat
 	 *             发生异常
 	 */
 	abstract Object generate(StreamExecutionEnvironment env, StreamTableEnvironment tableEnv, DataSync dataSync,
-			Map<String, Object> params) throws Exception;
+			Map<String, String> sourceDataSource, Map<String, String> sinkDataSource, Map<String, Object> params)
+			throws Exception;
 
 	@Override
-	public Object generate(StreamExecutionEnvironment env, DataSync dataSync, Map<String, Object> params)
-			throws Exception {
+	public Object generate(StreamExecutionEnvironment env, DataSync dataSync, Map<String, String> sourceDataSource,
+			Map<String, String> sinkDataSource, Map<String, Object> params) throws Exception {
 		StreamTableEnvironment tableEnv = ClinkContext.getOrCreateStreamTableEnvironment(env);
 		StreamTableEnvironmentUtils.useCatalogOrDefault(tableEnv, null);
-		return generate(env, tableEnv, dataSync, params);
+		return generate(env, tableEnv, dataSync, sourceDataSource, sinkDataSource, params);
 	}
 
 	/**
@@ -132,8 +136,6 @@ public abstract class AbstractDataSyncJobGenerator implements DataSyncJobGenerat
 	 *            列
 	 * @param primaryKeys
 	 *            主键
-	 * @param toConfig
-	 *            数据汇扩展配置
 	 * @param params
 	 *            运行参数
 	 * @return 创建数据汇表的 Flink SQL
@@ -141,24 +143,21 @@ public abstract class AbstractDataSyncJobGenerator implements DataSyncJobGenerat
 	 *             I/O 异常
 	 */
 	protected static String sinkTableSQL(Map<String, String> dataSource, String table, List<Column> columns,
-			Set<String> primaryKeys, String toConfig, Map<String, Object> params) throws IOException {
-		return sinkTableSQL(dataSource, table, columns, primaryKeys, toConfig, params,
-				DefaultPrimaryKeysCollector.getInstance());
+			Set<String> primaryKeys, Map<String, Object> params) throws IOException {
+		return sinkTableSQL(dataSource, table, columns, primaryKeys, params, DefaultPrimaryKeysCollector.getInstance());
 	}
 
 	/**
 	 * 生成创建数据汇表的 Flink SQL
 	 * 
-	 * @param dataSource
-	 *            数据源
+	 * @param sinkDataSource
+	 *            汇数据源
 	 * @param table
 	 *            表名
 	 * @param columns
 	 *            列
 	 * @param primaryKeys
 	 *            主键
-	 * @param toConfig
-	 *            数据汇扩展配置
 	 * @param params
 	 *            运行参数
 	 * @param collector
@@ -167,9 +166,8 @@ public abstract class AbstractDataSyncJobGenerator implements DataSyncJobGenerat
 	 * @throws IOException
 	 *             I/O 异常
 	 */
-	protected static String sinkTableSQL(Map<String, String> dataSource, String table, List<Column> columns,
-			Set<String> primaryKeys, String toConfig, Map<String, Object> params, PrimaryKeysCollector collector)
-			throws IOException {
+	protected static String sinkTableSQL(Map<String, String> sinkDataSource, String table, List<Column> columns,
+			Set<String> primaryKeys, Map<String, Object> params, PrimaryKeysCollector collector) throws IOException {
 		Set<String> actualPrimaryKeys = newSet(primaryKeys);
 		StringBuffer sqlBuffer = new StringBuffer();
 		sqlBuffer.append("CREATE TABLE ").append(SQLUtils.wrapIfReservedKeywords(table)).append("(");
@@ -204,12 +202,7 @@ public abstract class AbstractDataSyncJobGenerator implements DataSyncJobGenerat
 					.append(String.join(", ", actualPrimaryKeys)).append(") NOT ENFORCED");
 		}
 		sqlBuffer.append(") ").append("WITH (");
-		if (StringUtils.isBlank(toConfig)) {
-			SQLUtils.appendDataSource(sqlBuffer, dataSource, table);
-		} else {
-			SQLUtils.appendDataSource(sqlBuffer, MapUtils.toHashMapBuilder(dataSource)
-					.build(ConfigurationUtils.load(SQLUtils.toSQL(DSLUtils.parse(toConfig, params)))), table);
-		}
+		SQLUtils.appendDataSource(sqlBuffer, sinkDataSource, table);
 		sqlBuffer.append(")");
 		return sqlBuffer.toString();
 	}
