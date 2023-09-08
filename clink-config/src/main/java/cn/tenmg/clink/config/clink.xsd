@@ -380,7 +380,7 @@
 					<xsd:documentation>自动添加的列，多个列名使用“,”分隔。设置这个值后，会使用这些列名创建源表和目标表，并在数据同步时写入这些列的值。如果没有设置，则使用全局配置“data.sync.auto-columns”的值</xsd:documentation>
 				</xsd:annotation>
 			</xsd:attribute>
-			<xsd:attribute name="smart" type="xsd:boolean">
+			<xsd:attribute name="smart" type="xsd:boolean" default="false">
 				<xsd:annotation>
 					<xsd:documentation>是否开启智能模式。不设置时，根据Clink应用程序的全局配置确定是否开启智能模式，Clink应用程序的全局默认配置为`clink.smart=true`。
 					</xsd:documentation>
@@ -453,7 +453,7 @@
 					</xsd:documentation>
 				</xsd:annotation>
 			</xsd:attribute>
-			<xsd:attribute name="smart" type="xsd:boolean">
+			<xsd:attribute name="smart" type="xsd:boolean" default="false">
 				<xsd:annotation>
 					<xsd:documentation>是否开启智能模式。不设置时，根据Clink应用程序的全局配置确定是否开启智能模式，Clink应用程序的全局默认配置为`clink.smart=true`。
 					</xsd:documentation>
@@ -564,18 +564,30 @@
 			<xsd:documentation>常用数据类型枚举</xsd:documentation>
 		</xsd:annotation>
 		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="CHAR"></xsd:enumeration>
+			<xsd:enumeration value="VARCHAR"></xsd:enumeration>
 			<xsd:enumeration value="STRING"></xsd:enumeration>
 			<xsd:enumeration value="BOOLEAN"></xsd:enumeration>
+			<xsd:enumeration value="BINARY"></xsd:enumeration>
+			<xsd:enumeration value="VARBINARY"></xsd:enumeration>
+			<xsd:enumeration value="BYTES"></xsd:enumeration>
+			<xsd:enumeration value="DECIMAL"></xsd:enumeration>
 			<xsd:enumeration value="TINYINT"></xsd:enumeration>
 			<xsd:enumeration value="SMALLINT"></xsd:enumeration>
 			<xsd:enumeration value="INT"></xsd:enumeration>
+			<xsd:enumeration value="INTEGER"></xsd:enumeration>
 			<xsd:enumeration value="BIGINT"></xsd:enumeration>
 			<xsd:enumeration value="FLOAT"></xsd:enumeration>
 			<xsd:enumeration value="DOUBLE"></xsd:enumeration>
 			<xsd:enumeration value="DATE"></xsd:enumeration>
 			<xsd:enumeration value="TIME"></xsd:enumeration>
 			<xsd:enumeration value="TIMESTAMP"></xsd:enumeration>
-			<xsd:enumeration value="BYTES"></xsd:enumeration>
+			<xsd:enumeration value="TIMESTAMP_LTZ"></xsd:enumeration>
+			<xsd:enumeration value="ARRAY"></xsd:enumeration>
+			<xsd:enumeration value="MULTISET"></xsd:enumeration>
+			<xsd:enumeration value="MAP"></xsd:enumeration>
+			<xsd:enumeration value="ROW"></xsd:enumeration>
+			<xsd:enumeration value="RAW"></xsd:enumeration>
 		</xsd:restriction>
 	</xsd:simpleType>
 
