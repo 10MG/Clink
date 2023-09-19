@@ -11,7 +11,7 @@
     </a>
 </p>
 
-Clink为基于Flink的Java应用程序提供快速集成的能力，可通过继承ClinkRunner快速构建基于Java的Flink流批一体应用程序，实现异构数据库实时同步和ETL。Clink提供了数据源管理模块，通过Clink运行Flink SQL会变得极其简单。使用clink-clients可以实现基于Java API启动Clink应用程序，还可以将flink任务实现通过XML配置文件来管理。一个典型的Clink部署架构如下：
+Clink 为基于 Java 的 Flink 应用程序提供快速集成的能力，可通过 Clink 快速构建 Flink 流批一体应用程序，实现异构数据库实时同步和 ETL。Clink 提供了数据源管理模块，通过 Clink 运行 Flink SQL 会变得极其简单。使用 clink-clients 可以实现基于 Java API 启动 Clink 应用程序，还可以将 flink 任务实现通过 XML 配置文件来管理。一个典型的Clink部署架构如下：
 
 ![典型的Clink部署架构](%E5%85%B8%E5%9E%8B%E6%9E%B6%E6%9E%84.png)
 
