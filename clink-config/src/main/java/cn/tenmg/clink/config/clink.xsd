@@ -468,10 +468,10 @@
 			<xsd:documentation>常用运行选项键枚举</xsd:documentation>
 		</xsd:annotation>
 		<xsd:restriction base="xsd:string">
-			<xsd:enumeration value="classpath" />
-			<xsd:enumeration value="allowNonRestoredState" />
-			<xsd:enumeration value="parallelism" />
-			<xsd:enumeration value="fromSavepoint" />
+			<xsd:enumeration value="classpath"><xsd:annotation><xsd:documentation>类路径</xsd:documentation></xsd:annotation></xsd:enumeration>
+			<xsd:enumeration value="parallelism"><xsd:annotation><xsd:documentation>并行度</xsd:documentation></xsd:annotation></xsd:enumeration>
+			<xsd:enumeration value="fromSavepoint"><xsd:annotation><xsd:documentation>恢复的保存点位置</xsd:documentation></xsd:annotation></xsd:enumeration>
+			<xsd:enumeration value="allowNonRestoredState"><xsd:annotation><xsd:documentation>是否允许无法恢复的状态</xsd:documentation></xsd:annotation></xsd:enumeration>
 		</xsd:restriction>
 	</xsd:simpleType>
 
