@@ -669,7 +669,6 @@ data.sync.OP.from-type=CHAR(1) METADATA FROM 'op' VIRTUAL
 	xsi:schemaLocation="http://www.10mg.cn/schema/clink http://www.10mg.cn/schema/clink.xsd">
 	<data-sync from="test-cdc" to="test"
 		table="test.test_table1,test.test_table2">
-<!-- 推荐指定 server-id -->
 <!-- 目前一些数仓对删除支持不是很好（比如StarRocks的更新模型），增加指定 convert-delete-to-update 为 true 是指将删除记录转化为更新记录，这时通常会同时记录操作类型 OP。OP 是元数据，需在同步的表中添加 OP 列（列名可根据需要更改，与配置对应即可），并添加如下配置：
 
 # 数据同步自动添加的列
@@ -679,7 +678,7 @@ data.sync.OP.from-type=CHAR(1) METADATA FROM 'op' VIRTUAL
 
 -->
 <!-- 注意，由于 SQLServer 数据库既有 catalog，又有 schema，因为封装针对目前多数 OLAP 仅有 catalog 的场景，目前没有自动生成表名，因此需增加 table-name 配置 -->
-		<from-config><![CDATA[server-id=5402,convert-delete-to-update=true,table-name='dbo.test_table1,dbo.test_table2']]></from-config>
+		<from-config><![CDATA[convert-delete-to-update=true,table-name='dbo.test_table1,dbo.test_table2']]></from-config>
 	</data-sync>
 </clink>
 ```
