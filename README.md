@@ -1,8 +1,8 @@
 # Clink简介
 ![Logo](logo.png)
 <p align="left">
-    <a href="https://mvnrepository.com/artifact/cn.tenmg/clink">
-        <img alt="maven" src="https://img.shields.io/maven-central/v/cn.tenmg/clink.svg?style=flat-square">
+    <a href="https://mvnrepository.com/artifact/cn.tenmg/clink-parent">
+        <img alt="maven" src="https://img.shields.io/maven-central/v/cn.tenmg/clink-parent.svg?style=flat-square">
     </a>
     <a target="_blank" href="LICENSE"><img src="https://img.shields.io/:license-Apache%202.0-blue.svg"></a>
     <a target="_blank" href="https://jq.qq.com/?_wv=1027&k=wOOIp0CR"><img src="https://img.shields.io/badge/QQ群-531812227-blue"></a>
