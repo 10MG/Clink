@@ -357,7 +357,7 @@ type | `String` | 是 | 数据类型。使用标签内文本表示。
 
 为了更好的理解Clink的XML配置文件，以下提供几种常见场景的XML配置文件示例：
 
-#### 运行普通flink程序
+#### 普通Flink程序
 
 ```
 <?xml version="1.0" encoding="UTF-8"?>
@@ -368,7 +368,7 @@ type | `String` | 是 | 数据类型。使用标签内文本表示。
 </clink>
 ```
 
-#### 运行自定义服务
+#### 自定义服务
 
 以下为一个自定义服务任务XML配置文件：
 
@@ -381,7 +381,7 @@ type | `String` | 是 | 数据类型。使用标签内文本表示。
 </clink>
 ```
 
-#### 运行批处理SQL
+#### 批处理SQL
 
 以下为一个简单订单量统计SQL批处理任务XML配置文件：
 
@@ -447,7 +447,7 @@ type | `String` | 是 | 数据类型。使用标签内文本表示。
 </clink>
 ```
 
-#### 运行流处理SQL
+#### 流处理SQL
 
 以下为通过Debezium实现异构数据库同步任务XML配置文件：
 
@@ -593,7 +593,9 @@ type | `String` | 是 | 数据类型。使用标签内文本表示。
 </clink>
 ```
 
-#### 运行数据同步任务
+#### 数据同步
+
+##### Kafka
 
 以下为通过Debezium实现异构数据库同步任务XML配置文件：
 
@@ -608,6 +610,76 @@ type | `String` | 是 | 数据类型。使用标签内文本表示。
 		<!-- 在数据源和目标库表结构不同（字段名或类型不同）的情况，需要自定义列的差异信息，例如自定来源类型和转换函数： -->
 		<column fromName="UPDATE_TIME" fromType="BIGINT">TO_TIMESTAMP(FROM_UNIXTIME(UPDATE_TIME/1000, 'yyyy-MM-dd HH:mm:ss'))</column>
 		<!-- 另外，如果关闭智能模式，需要列出所有列的详细信息。 -->
+	</data-sync>
+</clink>
+```
+
+##### Flink CDC 单表数据同步
+
+```
+<?xml version="1.0" encoding="UTF-8"?>
+<clink xmlns="http://www.10mg.cn/schema/clink"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.10mg.cn/schema/clink http://www.10mg.cn/schema/clink.xsd">
+	<data-sync from="test-cdc" to="test" table="test_table">
+                <!-- 推荐指定 server-id -->
+		<from-config><![CDATA[server-id=5400]]></from-config>
+	</data-sync>
+</clink>
+```
+
+##### Flink CDC 多表数据同步
+
+目前已支持多表同步的源连接器有：
+
+| 产品            | 适配版本 | 支持版本 |
+|---------------|------|------|
+| mysql-cdc     | 2.2+ | 1.6+ |
+| sqlserver-cdc | 2.4+ | 1.6+ |
+
+##### mysql-cdc
+
+```
+<?xml version="1.0" encoding="UTF-8"?>
+<clink xmlns="http://www.10mg.cn/schema/clink"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.10mg.cn/schema/clink http://www.10mg.cn/schema/clink.xsd">
+	<data-sync from="test-cdc" to="test"
+		table="test.test_table1,test.test_table2">
+<!-- 推荐指定 server-id -->
+<!-- 目前一些数仓对删除支持不是很好（比如StarRocks的更新模型），增加指定 convert-delete-to-update 为 true 是指将删除记录转化为更新记录，这时通常会同时记录操作类型 OP。OP 是元数据，需在同步的表中添加 OP 列（列名可根据需要更改，与配置对应即可），并添加如下配置：
+
+# 数据同步自动添加的列
+data.sync.auto-columns=OP
+# 来源列的类型，定义取元数据的方式
+data.sync.OP.from-type=CHAR(1) METADATA FROM 'op' VIRTUAL
+
+-->
+		<from-config><![CDATA[server-id=5401,convert-delete-to-update=true]]></from-config>
+	</data-sync>
+</clink>
+```
+
+##### sqlserver-cdc
+
+```
+<?xml version="1.0" encoding="UTF-8"?>
+<clink xmlns="http://www.10mg.cn/schema/clink"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.10mg.cn/schema/clink http://www.10mg.cn/schema/clink.xsd">
+	<data-sync from="test-cdc" to="test"
+		table="test.test_table1,test.test_table2">
+<!-- 推荐指定 server-id -->
+<!-- 目前一些数仓对删除支持不是很好（比如StarRocks的更新模型），增加指定 convert-delete-to-update 为 true 是指将删除记录转化为更新记录，这时通常会同时记录操作类型 OP。OP 是元数据，需在同步的表中添加 OP 列（列名可根据需要更改，与配置对应即可），并添加如下配置：
+
+# 数据同步自动添加的列
+data.sync.auto-columns=OP
+# 来源列的类型，定义取元数据的方式
+data.sync.OP.from-type=CHAR(1) METADATA FROM 'op' VIRTUAL
+
+-->
+<!-- 注意，由于 SQLServer 数据库既有 catalog，又有 schema，因为封装针对目前多数 OLAP 仅有 catalog 的场景，目前没有自动生成表名，因此需增加 table-name 配置 -->
+		<from-config><![CDATA[server-id=5402,convert-delete-to-update=true,table-name='dbo.test_table1,dbo.test_table2']]></from-config>
 	</data-sync>
 </clink>
 ```
