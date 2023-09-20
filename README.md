@@ -622,7 +622,7 @@ type | `String` | 是 | 数据类型。使用标签内文本表示。
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://www.10mg.cn/schema/clink http://www.10mg.cn/schema/clink.xsd">
 	<data-sync from="test-cdc" to="test" table="test_table">
-                <!-- 推荐指定 server-id -->
+		<!-- 推荐指定 server-id -->
 		<from-config><![CDATA[server-id=5400]]></from-config>
 	</data-sync>
 </clink>
