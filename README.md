@@ -656,6 +656,10 @@ data.sync.OP.from-type=CHAR(1) METADATA FROM 'op' VIRTUAL
 
 -->
 		<from-config><![CDATA[server-id=5401,convert-delete-to-update=true]]></from-config>
+                <!-- 如果在 MySQL 源表中存在类型为 TIMESTAMP 的列，则可能需要将该列的来源数据类型配置为 TIMESTAMP_LTZ 以避免时区不同导致时间差异，这与服务器时区也有直接的关系。 -->
+                <column fromName="test.test_table1.UPDATE_TIME" fromType="TIMESTAMP_LTZ"/>
+                <!-- 当然，同样的问题也可以通过转换函数的方式来解决 -->
+                <column fromName="test.test_table2.UPDATE_TIME">TIMESTAMPADD(HOUR, 8, UPDATE_TIME)</column>
 	</data-sync>
 </clink>
 ```
