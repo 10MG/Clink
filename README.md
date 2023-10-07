@@ -469,6 +469,8 @@ type | `String` | 是 | 数据类型。使用标签内文本表示。
 		]]>
 	</execute-sql> -->
 	<!-- 上述两步操作是非必须的，只是为了Flink自动生成的作业名称更容易识别 -->
+        <!-- 也可以使用 pipeline.name 直接指定作业名称 -->
+        <!-- <configuration><![CDATA[pipeline.name=customJobName]]></configuration> -->
 	<!-- 定义名为kafka数据源的订单明细表 -->
 	<execute-sql dataSource="kafka">
 		<![CDATA[
