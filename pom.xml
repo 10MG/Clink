@@ -29,17 +29,17 @@
 	<developers>
 		<developer>
 			<name>June</name>
-			<email>wjzhao@aliyun.com</email>
+			<email><![CDATA[wjzhao@aliyun.com]]></email>
 			<organization>10MG</organization>
 		</developer>
 		<developer>
 			<name>cbb</name>
-			<email>2545095524@qq.com</email>
+			<email><![CDATA[2545095524@qq.com]]></email>
 			<organization>10MG</organization>
 		</developer>
 		<developer>
 			<name>dufeng</name>
-			<email>dufeng1010@126.com</email>
+			<email><![CDATA[dufeng1010@126.com]]></email>
 			<organization>10MG</organization>
 		</developer>
 	</developers>
