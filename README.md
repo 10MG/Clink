@@ -1,5 +1,4 @@
-# Clink简介
-![Logo](logo.png)
+![Clink](logo.png)
 <p align="left">
     <a href="https://mvnrepository.com/artifact/cn.tenmg/clink-parent">
         <img alt="maven" src="https://img.shields.io/maven-central/v/cn.tenmg/clink-parent.svg?style=flat-square">
