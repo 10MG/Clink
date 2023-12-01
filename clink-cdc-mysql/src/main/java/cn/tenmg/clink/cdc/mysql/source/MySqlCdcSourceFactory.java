@@ -101,7 +101,7 @@ public class MySqlCdcSourceFactory implements SourceFactory<MySqlSource<Tuple2<S
 		if (config.containsKey(MySqlSourceOptions.SERVER_TIME_ZONE.key())) {
 			builder.serverTimeZone(config.get(MySqlSourceOptions.SERVER_TIME_ZONE.key()));
 		}
-		validateStartupOptionIfEnableParallel(startupOptions);
+		validateStartupOption(startupOptions);
 
 		int splitSize = getIntegerOrDefault(config, MySqlSourceOptions.SCAN_INCREMENTAL_SNAPSHOT_CHUNK_SIZE);
 		validateIntegerOption(MySqlSourceOptions.SCAN_INCREMENTAL_SNAPSHOT_CHUNK_SIZE, splitSize, 1);
@@ -227,7 +227,7 @@ public class MySqlCdcSourceFactory implements SourceFactory<MySqlSource<Tuple2<S
 		}
 	}
 
-	private void validateStartupOptionIfEnableParallel(StartupOptions startupOptions) {
+	private void validateStartupOption(StartupOptions startupOptions) {
 		Preconditions.checkState(
 				startupOptions.startupMode == StartupMode.INITIAL
 						|| startupOptions.startupMode == StartupMode.LATEST_OFFSET,

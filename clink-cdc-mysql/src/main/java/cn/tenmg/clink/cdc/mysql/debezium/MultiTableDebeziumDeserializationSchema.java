@@ -482,7 +482,7 @@ public class MultiTableDebeziumDeserializationSchema implements DebeziumDeserial
 		for (int i = 0; i < size; i++) {
 			fieldConverters[i] = createNotNullConverter(fields.get(i).getType());
 		}
-		final String[] fieldNames = rowType.getFieldNames().toArray(new String[0]);
+		final String[] fieldNames = rowType.getFieldNames().toArray(new String[size]);
 
 		return new DeserializationRuntimeConverter() {
 

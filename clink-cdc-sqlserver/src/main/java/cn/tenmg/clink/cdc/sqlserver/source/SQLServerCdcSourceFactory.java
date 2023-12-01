@@ -121,7 +121,7 @@ public class SQLServerCdcSourceFactory implements SourceFactory<JdbcIncrementalS
 			builder.serverTimeZone(config.get(SERVER_TIME_ZONE.key()));
 		}
 		StartupOptions startupOptions = getStartupOptions(config);
-		validateStartupOptionIfEnableParallel(startupOptions);
+		validateStartupOption(startupOptions);
 		builder.startupOptions(startupOptions);
 
 		int splitSize = getIntegerOrDefault(config, SourceOptions.SCAN_INCREMENTAL_SNAPSHOT_CHUNK_SIZE);
@@ -223,11 +223,11 @@ public class SQLServerCdcSourceFactory implements SourceFactory<JdbcIncrementalS
 		}
 	}
 
-	private void validateStartupOptionIfEnableParallel(StartupOptions startupOptions) {
+	private void validateStartupOption(StartupOptions startupOptions) {
 		Preconditions.checkState(
 				startupOptions.startupMode == StartupMode.INITIAL
 						|| startupOptions.startupMode == StartupMode.LATEST_OFFSET,
-				String.format("MySql Parallel Source only supports startup mode 'initial' and 'latest-offset',"
+				String.format("SQLServer Parallel Source only supports startup mode 'initial' and 'latest-offset',"
 						+ " but actual is %s", startupOptions.startupMode));
 	}
 

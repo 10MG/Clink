@@ -114,7 +114,7 @@
 		</xsd:annotation>
 		<xsd:complexType>
 			<xsd:choice>
-				<xsd:element name="param" type="ParamType" />
+				<xsd:element minOccurs="1" maxOccurs="unbounded" name="param" type="ParamType" />
 			</xsd:choice>
 		</xsd:complexType>
 	</xsd:element>
@@ -126,7 +126,7 @@
 		<xsd:complexType>
 			<xsd:complexContent>
 				<xsd:extension base="OperateType">
-					<xsd:choice>
+					<xsd:choice minOccurs="1" maxOccurs="unbounded">
 						<xsd:element name="var" minOccurs="0"
 							maxOccurs="unbounded" type="VarType" />
 						<xsd:element name="java" type="xsd:string"
@@ -377,10 +377,12 @@
 			</xsd:attribute>
 			<xsd:attribute name="autoColumns" type="xsd:string">
 				<xsd:annotation>
-					<xsd:documentation>自动添加的列，多个列名使用“,”分隔。设置这个值后，会使用这些列名创建源表和目标表，并在数据同步时写入这些列的值。如果没有设置，则使用全局配置“data.sync.auto-columns”的值</xsd:documentation>
+					<xsd:documentation>自动添加的列，多个列名使用“,”分隔。设置这个值后，会使用这些列名创建源表和目标表，并在数据同步时写入这些列的值。如果没有设置，则使用全局配置“data.sync.auto-columns”的值
+					</xsd:documentation>
 				</xsd:annotation>
 			</xsd:attribute>
-			<xsd:attribute name="smart" type="xsd:boolean" default="false">
+			<xsd:attribute name="smart" type="xsd:boolean"
+				default="false">
 				<xsd:annotation>
 					<xsd:documentation>是否开启智能模式。不设置时，根据Clink应用程序的全局配置确定是否开启智能模式，Clink应用程序的全局默认配置为`clink.smart=true`。
 					</xsd:documentation>
@@ -453,7 +455,8 @@
 					</xsd:documentation>
 				</xsd:annotation>
 			</xsd:attribute>
-			<xsd:attribute name="smart" type="xsd:boolean" default="false">
+			<xsd:attribute name="smart" type="xsd:boolean"
+				default="false">
 				<xsd:annotation>
 					<xsd:documentation>是否开启智能模式。不设置时，根据Clink应用程序的全局配置确定是否开启智能模式，Clink应用程序的全局默认配置为`clink.smart=true`。
 					</xsd:documentation>
@@ -468,10 +471,26 @@
 			<xsd:documentation>常用运行选项键枚举</xsd:documentation>
 		</xsd:annotation>
 		<xsd:restriction base="xsd:string">
-			<xsd:enumeration value="classpath"><xsd:annotation><xsd:documentation>类路径</xsd:documentation></xsd:annotation></xsd:enumeration>
-			<xsd:enumeration value="parallelism"><xsd:annotation><xsd:documentation>并行度</xsd:documentation></xsd:annotation></xsd:enumeration>
-			<xsd:enumeration value="fromSavepoint"><xsd:annotation><xsd:documentation>恢复的保存点位置</xsd:documentation></xsd:annotation></xsd:enumeration>
-			<xsd:enumeration value="allowNonRestoredState"><xsd:annotation><xsd:documentation>是否允许无法恢复的状态</xsd:documentation></xsd:annotation></xsd:enumeration>
+			<xsd:enumeration value="classpath">
+				<xsd:annotation>
+					<xsd:documentation>类路径</xsd:documentation>
+				</xsd:annotation>
+			</xsd:enumeration>
+			<xsd:enumeration value="parallelism">
+				<xsd:annotation>
+					<xsd:documentation>并行度</xsd:documentation>
+				</xsd:annotation>
+			</xsd:enumeration>
+			<xsd:enumeration value="fromSavepoint">
+				<xsd:annotation>
+					<xsd:documentation>恢复的保存点位置</xsd:documentation>
+				</xsd:annotation>
+			</xsd:enumeration>
+			<xsd:enumeration value="allowNonRestoredState">
+				<xsd:annotation>
+					<xsd:documentation>是否允许无法恢复的状态</xsd:documentation>
+				</xsd:annotation>
+			</xsd:enumeration>
 		</xsd:restriction>
 	</xsd:simpleType>
 

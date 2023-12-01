@@ -22,7 +22,7 @@ public class XMLConfigLoader implements ConfigLoader {
 
 	private static final XMLConfigLoader INSTANCE = new XMLConfigLoader();
 
-	private static JAXBContext context;
+	private static volatile JAXBContext context;
 
 	private XMLConfigLoader() {
 		super();
