@@ -4,7 +4,7 @@
 	<parent>
 		<groupId>cn.tenmg</groupId>
 		<artifactId>flink-jobs</artifactId>
-		<version>1.5.6</version>
+		<version>1.5.7</version>
 	</parent>
 
 	<modelVersion>4.0.0</modelVersion>
@@ -14,10 +14,10 @@
 	<packaging>jar</packaging>
 
 	<properties>
-		<nacos-client.version>2.2.1</nacos-client.version>
-		<dsl.version>1.3.4</dsl.version>
+		<nacos-client.version>2.3.0</nacos-client.version>
+		<dsl.version>1.4.2</dsl.version>
 		<bsh.version>2.0b6</bsh.version>
-		<mysql-connector-j.version>8.0.33</mysql-connector-j.version>
+		<mysql-connector-j.version>8.2.0</mysql-connector-j.version>
 	</properties>
 
 	<dependencies>
@@ -49,15 +49,18 @@
 			<version>${flink.version}</version>
 			<scope>provided</scope>
 		</dependency>
-		<!-- https://mvnrepository.com/artifact/org.apache.flink/flink-streaming-java -->
+		<!--
+		https://mvnrepository.com/artifact/org.apache.flink/flink-streaming-java -->
 		<dependency>
 			<groupId>org.apache.flink</groupId>
 			<artifactId>flink-streaming-java</artifactId>
 			<version>${flink.version}</version>
 			<scope>provided</scope>
 		</dependency>
-		<!-- https://mvnrepository.com/artifact/org.apache.flink/flink-table-api-java-bridge -->
-		<!-- <dependency> <groupId>org.apache.flink</groupId> <artifactId>flink-table-api-java-bridge</artifactId> 
+		<!--
+		https://mvnrepository.com/artifact/org.apache.flink/flink-table-api-java-bridge -->
+		<!-- <dependency> <groupId>org.apache.flink</groupId>
+		<artifactId>flink-table-api-java-bridge</artifactId> 
 			<version>${flink.version}</version> <scope>provided</scope> </dependency> -->
 
 		<!-- https://mvnrepository.com/artifact/com.alibaba.nacos/nacos-client -->
@@ -74,12 +77,21 @@
 			<version>${bsh.version}</version>
 			<optional>true</optional>
 		</dependency>
+		<!--
+		https://mvnrepository.com/artifact/org.apache.flink/flink-connector-base -->
+		<dependency>
+			<groupId>org.apache.flink</groupId>
+			<artifactId>flink-connector-base</artifactId>
+			<version>${flink.version}</version>
+			<optional>true</optional>
+		</dependency>
 
-		<!-- https://mvnrepository.com/artifact/org.apache.flink/flink-connector-kafka -->
+		<!--
+		https://mvnrepository.com/artifact/org.apache.flink/flink-connector-kafka -->
 		<dependency>
 			<groupId>org.apache.flink</groupId>
 			<artifactId>flink-connector-kafka</artifactId>
-			<version>${flink.version}</version>
+			<version>3.0.2-1.18</version>
 			<optional>true</optional>
 		</dependency>
 		<!-- https://mvnrepository.com/artifact/org.apache.flink/flink-json -->
@@ -89,14 +101,16 @@
 			<version>${flink.version}</version>
 			<optional>true</optional>
 		</dependency>
-		<!-- https://mvnrepository.com/artifact/org.apache.flink/flink-table-common -->
+		<!--
+		https://mvnrepository.com/artifact/org.apache.flink/flink-table-common -->
 		<dependency>
 			<groupId>org.apache.flink</groupId>
 			<artifactId>flink-table-common</artifactId>
 			<version>${flink.version}</version>
 			<optional>true</optional>
 		</dependency>
-		<!-- https://mvnrepository.com/artifact/org.apache.flink/flink-table-planner -->
+		<!--
+		https://mvnrepository.com/artifact/org.apache.flink/flink-table-planner -->
 		<dependency>
 			<groupId>org.apache.flink</groupId>
 			<artifactId>flink-table-planner_${scala.binary.version}</artifactId>
@@ -119,17 +133,19 @@
 			<version>${flink.version}</version>
 			<scope>test</scope>
 		</dependency>
-		<!-- https://mvnrepository.com/artifact/org.apache.flink/flink-connector-jdbc -->
+		<!--
+		https://mvnrepository.com/artifact/org.apache.flink/flink-connector-jdbc -->
 		<dependency>
 			<groupId>org.apache.flink</groupId>
 			<artifactId>flink-connector-jdbc</artifactId>
-			<version>3.1.0-1.17</version>
+			<version>3.1.1-1.17</version>
 			<scope>test</scope>
 		</dependency>
-		<!-- https://mvnrepository.com/artifact/org.apache.logging.log4j/log4j-slf4j-impl -->
+		<!--
+		https://mvnrepository.com/artifact/org.apache.logging.log4j/log4j-slf4j-impl -->
 		<dependency>
 			<groupId>org.apache.logging.log4j</groupId>
-			<artifactId>log4j-slf4j-impl</artifactId>
+			<artifactId>log4j-slf4j2-impl</artifactId>
 			<version>${log4j.version}</version>
 			<scope>test</scope>
 		</dependency>

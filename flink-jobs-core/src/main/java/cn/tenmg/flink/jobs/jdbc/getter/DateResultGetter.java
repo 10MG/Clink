@@ -2,6 +2,7 @@ package cn.tenmg.flink.jobs.jdbc.getter;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.util.Date;
 
 /**
@@ -15,12 +16,14 @@ public class DateResultGetter extends AbstractResultGetter<Date> {
 
 	@Override
 	public Date getValue(ResultSet rs, int columnIndex) throws SQLException {
-		return rs.getDate(columnIndex);
+		Timestamp t = rs.getTimestamp(columnIndex);
+		return t == null ? null : new Date(t.getTime());
 	}
 
 	@Override
 	public Date getValue(ResultSet rs, String columnLabel) throws SQLException {
-		return rs.getDate(columnLabel);
+		Timestamp t = rs.getTimestamp(columnLabel);
+		return t == null ? null : new Date(t.getTime());
 	}
 
 }
