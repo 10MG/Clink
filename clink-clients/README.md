@@ -550,7 +550,6 @@ rest.*                     |    略    | 略 | Flink 集群的其他配置参见
 ~~jobmanager.rpc.address~~ | `String` | 否 | Flink 集群远程调用地址，只能配置一个主机地址。配置`jobmanager.rpc.servers`后，该配置失效。已不推荐使用，请使用 REST 配置。
 ~~jobmanager.rpc.port~~    | `int`    | 否 | Flink 集群远程调用端口号，默认值为 `6123`。已不推荐使用，请使用 REST 配置。
 jobmanager.*               |    略    | 略 | Flink 集群的其他配置参见 [Flink官网](https://flink.apache.org) 对应版本的文档。
-/ 
 
 ## 参与贡献
 
