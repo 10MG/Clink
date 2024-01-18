@@ -540,13 +540,17 @@ clink.default.class | `String` | 否 | 启动时默认向Flink提交运行的主
 
 ### StandaloneRestClusterClient
 
-属性                     | 类型     | 必需 | 说明
--------------------------|----------|----|--------
-jobmanager.rpc.servers   | `String` | 是 | Flink集群远程调用地址，格式为`host1:port1,host2:port2,…`，其中端口号(`port`)可以缺省，缺省时所有端口号均为`jobmanager.rpc.port`的值。
-jobmanager.rpc.address   | `String` | 否 | Flink集群远程调用地址，只能配置一个主机地址，已不推荐使用。配置`jobmanager.rpc.servers`后，该配置失效。
-jobmanager.rpc.port      | `int`    | 否 | Flink集群远程调用端口号，默认值为`6123`。
-jobmanager.*             |    略    | 略 | Flink集群的其他配置参见[Flink官网](https://flink.apache.org)对应版本的文档。
-rest.*                   |    略    | 略 | Flink集群的其他配置参见[Flink官网](https://flink.apache.org)对应版本的文档。
+属性                       | 类型     | 必需 | 说明
+---------------------------|----------|----|--------
+rest.address               | `String` | 是 | Flink REST API 的地址，格式为`host1:port1,host2:port2,…`，其中端口号(`port`)可以缺省，缺省时所有端口号均为`rest.port`的值。
+rest.addresses             | `String` | 否 | `rest.address` 的同义词。
+rest.port                  | `int`    | 否 | Flink REST API 的端口，默认为 `8081`。
+rest.*                     |    略    | 略 | Flink 集群的其他配置参见 [Flink官网](https://flink.apache.org) 对应版本的文档。
+~~jobmanager.rpc.servers~~ | `String` | 否 | Flink 集群远程调用地址，格式为`host1:port1,host2:port2,…`，其中端口号(`port`)可以缺省，缺省时所有端口号均为`jobmanager.rpc.port`的值。已不推荐使用，请使用 REST 配置。
+~~jobmanager.rpc.address~~ | `String` | 否 | Flink 集群远程调用地址，只能配置一个主机地址。配置`jobmanager.rpc.servers`后，该配置失效。已不推荐使用，请使用 REST 配置。
+~~jobmanager.rpc.port~~    | `int`    | 否 | Flink 集群远程调用端口号，默认值为 `6123`。已不推荐使用，请使用 REST 配置。
+jobmanager.*               |    略    | 略 | Flink 集群的其他配置参见 [Flink官网](https://flink.apache.org) 对应版本的文档。
+/ 
 
 ## 参与贡献
 
