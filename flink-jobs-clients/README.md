@@ -520,7 +520,7 @@ type | `String` | 是 | 数据类型。使用标签内文本表示。
 
 ## 配置文件
 
-默认的配置文件为`flink-jobs-clients.properties`（注意：需在 `classpath` 下），或在实例化 `FlinkJobsClient` 对象时指定配置文件在 `classpath` 路径和名称。
+默认的配置文件为`flink-jobs-clients.properties`（注意：需在 `classpath` 下），或在实例化 `FlinkJobsClient` 对象时指定配置文件在 `classpath` 下的路径和名称。
 
 ### 通用配置
 
