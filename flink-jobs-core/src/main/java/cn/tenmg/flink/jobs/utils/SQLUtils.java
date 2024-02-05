@@ -29,13 +29,13 @@ public abstract class SQLUtils {
 	public static final String SINGLE_QUOTATION_MARK = "'", SPACE_EQUALS_SPACE = " = ", TABLE_NAME = "table-name",
 			RESERVED_KEYWORD_WRAP_PREFIX = "`", RESERVED_KEYWORD_WRAP_SUFFIX = "`";
 
-	private static final Pattern passwordPattern = Pattern.compile("\\'password\\'[\\s]*\\=[\\s]*\\'[^']*[^,]*\\'"),
+	private static final Pattern PASSWORD_PATTERN = Pattern.compile("\\'password\\'[\\s]*\\=[\\s]*\\'[^']*[^,]*\\'"),
 			WITH_CLAUSE_PATTERN = Pattern.compile("[W|w][I|i][T|t][H|h][\\s]*\\([\\s\\S]*\\)[\\s]*$"),
 			CREATE_CLAUSE_PATTERN = Pattern
 					.compile("[C|c][R|r][E|e][A|a][T|t][E|e][\\s]+[T|t][A|a][B|b][L|l][E|e][\\s]+[^\\s\\(]+");
 
-	private static final Set<String> sqlReservedKeywords = new HashSet<String>(),
-			smartTableMameConnectors = new HashSet<String>();
+	private static final Set<String> SQL_RESERVED_KEYWORDS = new HashSet<String>(),
+			SMART_TABLE_NAME_CONNECTORS = new HashSet<String>();
 
 	static {
 		addReservedKeywords(FlinkJobsContext.getProperty("flink.sql.reserved.keywords"));
@@ -44,7 +44,7 @@ public abstract class SQLUtils {
 		if (config != null) {
 			String[] connectors = config.split(",");
 			for (int i = 0; i < connectors.length; i++) {
-				smartTableMameConnectors.add(connectors[i].trim());
+				SMART_TABLE_NAME_CONNECTORS.add(connectors[i].trim());
 			}
 		}
 	}
@@ -52,8 +52,7 @@ public abstract class SQLUtils {
 	/**
 	 * 将使用命名参数的脚本对象模型转换为可运行的Flink SQL
 	 * 
-	 * @param namedScript
-	 *            使用命名参数的脚本对象模型
+	 * @param namedScript 使用命名参数的脚本对象模型
 	 * @return 返回可运行的Flink SQL
 	 */
 	public static String toSQL(NamedScript namedScript) {
@@ -63,10 +62,8 @@ public abstract class SQLUtils {
 	/**
 	 * 根据参数查找表将使用命名参数的脚本转换为可运行的Flink SQL
 	 * 
-	 * @param namedscript
-	 *            使用命名参数的脚本
-	 * @param params
-	 *            参数查找表
+	 * @param namedscript 使用命名参数的脚本
+	 * @param params      参数查找表
 	 * @return 返回可运行的Flink SQL
 	 */
 	public static String toSQL(String namedscript, Map<String, ?> params) {
@@ -76,10 +73,8 @@ public abstract class SQLUtils {
 	/**
 	 * 向SQL追加数据源配置
 	 * 
-	 * @param dataSource
-	 *            数据源配置查找表
-	 * @param sqlBuffer
-	 *            SQL缓冲器
+	 * @param dataSource 数据源配置查找表
+	 * @param sqlBuffer  SQL缓冲器
 	 */
 	public static void appendDataSource(StringBuffer sqlBuffer, Map<String, String> dataSource) {
 		Iterator<Entry<String, String>> it = dataSource.entrySet().iterator();
@@ -95,12 +90,9 @@ public abstract class SQLUtils {
 	/**
 	 * 向SQL追加数据源配置
 	 * 
-	 * @param sqlBuffer
-	 *            SQL缓冲器
-	 * @param dataSource
-	 *            数据源配置查找表
-	 * @param defaultTableName
-	 *            默认表名
+	 * @param sqlBuffer        SQL缓冲器
+	 * @param dataSource       数据源配置查找表
+	 * @param defaultTableName 默认表名
 	 */
 	public static void appendDataSource(StringBuffer sqlBuffer, Map<String, String> dataSource,
 			String defaultTableName) {
@@ -115,12 +107,9 @@ public abstract class SQLUtils {
 	/**
 	 * 向SQL追加数据源配置
 	 * 
-	 * @param script
-	 *            SQL脚本
-	 * @param dataSource
-	 *            数据源配置查找表
-	 * @param sqlBuffer
-	 *            SQL缓冲器
+	 * @param script     SQL脚本
+	 * @param dataSource 数据源配置查找表
+	 * @param sqlBuffer  SQL缓冲器
 	 */
 	private static void appendDataSource(String script, Map<String, String> dataSource, StringBuffer sqlBuffer) {
 		appendDataSource(sqlBuffer, dataSource);
@@ -132,8 +121,7 @@ public abstract class SQLUtils {
 	/**
 	 * 包装SQL字符串
 	 * 
-	 * @param value
-	 *            字符串
+	 * @param value 字符串
 	 * @return 返回包装后的SQL字符串
 	 */
 	public static String wrapString(String value) {
@@ -143,8 +131,7 @@ public abstract class SQLUtils {
 	/**
 	 * 追加空格等号空格
 	 * 
-	 * @param sqlBuffer
-	 *            SQL缓冲器
+	 * @param sqlBuffer SQL缓冲器
 	 */
 	public static void apppendEquals(StringBuffer sqlBuffer) {
 		sqlBuffer.append(SPACE_EQUALS_SPACE);
@@ -153,12 +140,11 @@ public abstract class SQLUtils {
 	/**
 	 * 隐藏密码
 	 * 
-	 * @param sql
-	 *            SQL
+	 * @param sql SQL
 	 * @return 隐藏密码的SQL
 	 */
 	public static String hiddePassword(String sql) {
-		Matcher matcher = passwordPattern.matcher(sql);
+		Matcher matcher = PASSWORD_PATTERN.matcher(sql);
 		StringBuffer sb = new StringBuffer();
 		while (matcher.find()) {
 			matcher.appendReplacement(sb, "'password' = <hidden>");
@@ -170,10 +156,8 @@ public abstract class SQLUtils {
 	/**
 	 * 包装数据源，即包装Flink SQL的CREATE TABLE语句的WITH子句
 	 * 
-	 * @param script
-	 *            SQL脚本
-	 * @throws IOException
-	 *             I/O异常
+	 * @param script SQL脚本
+	 * @throws IOException I/O异常
 	 */
 	public static String wrapDataSource(String script, Map<String, String> dataSource) throws IOException {
 		Matcher matcher = WITH_CLAUSE_PATTERN.matcher(script);
@@ -216,7 +200,7 @@ public abstract class SQLUtils {
 	}
 
 	public static String wrapIfReservedKeywords(String word) {
-		if (word != null && sqlReservedKeywords.contains(word.toUpperCase())) {
+		if (word != null && SQL_RESERVED_KEYWORDS.contains(word.toUpperCase())) {
 			return RESERVED_KEYWORD_WRAP_PREFIX + word + RESERVED_KEYWORD_WRAP_SUFFIX;
 		}
 		return word;
@@ -225,21 +209,18 @@ public abstract class SQLUtils {
 	/**
 	 * 判断一个数据源是否需要添加默认的table-name
 	 * 
-	 * @param dataSource
-	 *            数据源
+	 * @param dataSource 数据源
 	 * @return 如果数据源需要添加默认的table-name则返回true，否则返回false
 	 */
 	public static boolean needDefaultTableName(Map<String, String> dataSource) {
-		return MatchUtils.matchesAny(smartTableMameConnectors, dataSource.get("connector"));
+		return MatchUtils.matchesAny(SMART_TABLE_NAME_CONNECTORS, dataSource.get("connector"));
 	}
 
 	/**
 	 * 向SQL语句缓冲器中追加默认表名
 	 * 
-	 * @param sqlBuffer
-	 *            SQL语句缓冲器
-	 * @param defaultTableName
-	 *            默认表名
+	 * @param sqlBuffer        SQL语句缓冲器
+	 * @param defaultTableName 默认表名
 	 */
 	public static void apppendDefaultTableName(StringBuffer sqlBuffer, String defaultTableName) {
 		sqlBuffer.append(DSLUtils.COMMA).append(DSLUtils.BLANK_SPACE).append(wrapString(TABLE_NAME));
@@ -250,10 +231,8 @@ public abstract class SQLUtils {
 	/**
 	 * 从CREATE语句中提取并追加默认表名
 	 * 
-	 * @param sqlBuffer
-	 *            SQL语句缓冲器
-	 * @param script
-	 *            原SQL脚本
+	 * @param sqlBuffer SQL语句缓冲器
+	 * @param script    原SQL脚本
 	 */
 	private static void extractAndApppendDefaultTableName(StringBuffer sqlBuffer, String script) {
 		Matcher createMatcher = CREATE_CLAUSE_PATTERN.matcher(script);
@@ -297,8 +276,7 @@ public abstract class SQLUtils {
 	/**
 	 * 包装配置的值
 	 * 
-	 * @param value
-	 *            配置的值
+	 * @param value 配置的值
 	 * @return 返回包装后的配置值
 	 */
 	private static String wrapValue(String value) {
@@ -314,7 +292,7 @@ public abstract class SQLUtils {
 		if (StringUtils.isNotBlank(keywords)) {
 			String[] words = keywords.split(",");
 			for (int i = 0; i < words.length; i++) {
-				sqlReservedKeywords.add(words[i].trim().toUpperCase());
+				SQL_RESERVED_KEYWORDS.add(words[i].trim().toUpperCase());
 			}
 		}
 	}

@@ -20,7 +20,7 @@ import cn.tenmg.dsl.utils.StringUtils;
 @Deprecated
 public abstract class PlaceHolderUtils {
 
-	private static final Pattern paramPattern = Pattern.compile("\\$\\{[^}]+\\}");
+	private static final Pattern PARAM_PATTERN = Pattern.compile("\\$\\{[^}]+\\}");
 
 	private static final HashSet<Character> ENCODE_CHARACTERS = new HashSet<Character>() {
 
@@ -71,7 +71,7 @@ public abstract class PlaceHolderUtils {
 			return tpl;
 		} else {
 			StringBuffer sb = new StringBuffer();
-			Matcher m = paramPattern.matcher(tpl);
+			Matcher m = PARAM_PATTERN.matcher(tpl);
 			String name, s;
 			Object value;
 			boolean encode = false;

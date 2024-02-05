@@ -61,23 +61,23 @@ public class StandaloneRestClusterClient extends AbstractFlinkJobsClient<RestClu
 
 	private static Logger log = LoggerFactory.getLogger(StandaloneRestClusterClient.class);
 
-	private static final Set<String> localOperates = Sets.as("Bsh", "Jdbc");
+	private static final Set<String> LOCAL_OPERATES = Sets.as("Bsh", "Jdbc");
 
-	private static final Actuator<JobID, JobGraph> submitJobActuator = new Actuator<JobID, JobGraph>() {
+	private static final Actuator<JobID, JobGraph> SUBMIT_JOB_ACTUATOR = new Actuator<JobID, JobGraph>() {
 		@Override
 		public JobID execute(RestClusterClient<StandaloneClusterId> client, JobGraph jobGraph) throws Exception {
 			return client.submitJob(jobGraph).get();
 		}
 	};
 
-	private static final Actuator<Acknowledge, JobID> cancelJobActuator = new Actuator<Acknowledge, JobID>() {
+	private static final Actuator<Acknowledge, JobID> CANCEL_JOB_ACTUATOR = new Actuator<Acknowledge, JobID>() {
 		@Override
 		public Acknowledge execute(RestClusterClient<StandaloneClusterId> client, JobID jobId) throws Exception {
 			return client.cancel(jobId).get();
 		}
 	};
 
-	private static final Actuator<Collection<JobStatusMessage>, Void> listJobsActuator = new Actuator<Collection<JobStatusMessage>, Void>() {
+	private static final Actuator<Collection<JobStatusMessage>, Void> LIST_JOBS_ACTUATOR = new Actuator<Collection<JobStatusMessage>, Void>() {
 		@Override
 		public Collection<JobStatusMessage> execute(RestClusterClient<StandaloneClusterId> client, Void none)
 				throws Exception {
@@ -85,28 +85,28 @@ public class StandaloneRestClusterClient extends AbstractFlinkJobsClient<RestClu
 		}
 	};
 
-	private static final Actuator<JobDetailsInfo, JobID> getJobDetailsActuator = new Actuator<JobDetailsInfo, JobID>() {
+	private static final Actuator<JobDetailsInfo, JobID> GET_JOB_DETAILS_ACTUATOR = new Actuator<JobDetailsInfo, JobID>() {
 		@Override
 		public JobDetailsInfo execute(RestClusterClient<StandaloneClusterId> client, JobID jobId) throws Exception {
 			return client.getJobDetails(jobId).get();
 		}
 	};
 
-	private static final Actuator<JobStatus, JobID> getJobStatusActuator = new Actuator<JobStatus, JobID>() {
+	private static final Actuator<JobStatus, JobID> GET_JOB_STATUS_ACTUATOR = new Actuator<JobStatus, JobID>() {
 		@Override
 		public JobStatus execute(RestClusterClient<StandaloneClusterId> client, JobID jobId) throws Exception {
 			return client.getJobStatus(jobId).get();
 		}
 	};
 
-	private static final Actuator<JobResult, JobID> requestJobResultActuator = new Actuator<JobResult, JobID>() {
+	private static final Actuator<JobResult, JobID> REQUEST_JOB_RESULT_ACTUATOR = new Actuator<JobResult, JobID>() {
 		@Override
 		public JobResult execute(RestClusterClient<StandaloneClusterId> client, JobID jobId) throws Exception {
 			return client.requestJobResult(jobId).get();
 		}
 	};
 
-	private static final Actuator<String, JobStopParams> stopJobActuator = new Actuator<String, JobStopParams>() {
+	private static final Actuator<String, JobStopParams> STOP_JOB_ACTUATOR = new Actuator<String, JobStopParams>() {
 		@Override
 		public String execute(RestClusterClient<StandaloneClusterId> client, JobStopParams jobStopParams)
 				throws Exception {
@@ -179,7 +179,7 @@ public class StandaloneRestClusterClient extends AbstractFlinkJobsClient<RestClu
 			if (operates != null && !operates.isEmpty()) {
 				submit = false;
 				for (int i = 0, size = operates.size(); i < size; i++) {
-					if (!localOperates.contains(operates.get(i).getType())) {
+					if (!LOCAL_OPERATES.contains(operates.get(i).getType())) {
 						submit = true;
 						break;
 					}
@@ -192,7 +192,7 @@ public class StandaloneRestClusterClient extends AbstractFlinkJobsClient<RestClu
 			if (submit) {
 				JobGraph jobGraph = PackagedProgramUtils.createJobGraph(packagedProgram, configuration,
 						Integer.parseInt(parallelism), Boolean.valueOf(config.getProperty("suppress.output", "false")));
-				return retry(submitJobActuator, jobGraph, configuration, customConf);
+				return retry(SUBMIT_JOB_ACTUATOR, jobGraph, configuration, customConf);
 			} else {
 				final ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
 				Thread.currentThread().setContextClassLoader(packagedProgram.getUserCodeClassLoader());
@@ -213,31 +213,31 @@ public class StandaloneRestClusterClient extends AbstractFlinkJobsClient<RestClu
 
 	@Override
 	public Acknowledge cancel(JobID jobId) throws Exception {
-		return retry(cancelJobActuator, jobId, getConfiguration(), null);
+		return retry(CANCEL_JOB_ACTUATOR, jobId, getConfiguration(), null);
 	}
 
 	@Override
 	public Collection<JobStatusMessage> listJobs() throws Exception {
-		return retry(listJobsActuator, null, getConfiguration(), null);
+		return retry(LIST_JOBS_ACTUATOR, null, getConfiguration(), null);
 	}
 
 	public JobDetailsInfo getJobDetails(JobID jobId) throws Exception {
-		return retry(getJobDetailsActuator, jobId, getConfiguration(), null);
+		return retry(GET_JOB_DETAILS_ACTUATOR, jobId, getConfiguration(), null);
 	}
 
 	@Override
 	public JobStatus getJobStatus(JobID jobId) throws Exception {
-		return retry(getJobStatusActuator, jobId, getConfiguration(), null);
+		return retry(GET_JOB_STATUS_ACTUATOR, jobId, getConfiguration(), null);
 	}
 
 	@Override
 	public JobResult requestJobResult(JobID jobId) throws Exception {
-		return retry(requestJobResultActuator, jobId, getConfiguration(), null);
+		return retry(REQUEST_JOB_RESULT_ACTUATOR, jobId, getConfiguration(), null);
 	}
 
 	@Override
 	public String stop(JobID jobId) throws Exception {
-		return retry(stopJobActuator, new JobStopParams(jobId, config.getProperty("state.savepoints.dir")),
+		return retry(STOP_JOB_ACTUATOR, new JobStopParams(jobId, config.getProperty("state.savepoints.dir")),
 				getConfiguration(), null);
 	}
 
@@ -321,8 +321,7 @@ public class StandaloneRestClusterClient extends AbstractFlinkJobsClient<RestClu
 	/**
 	 * 加载字符串配置
 	 * 
-	 * @param config
-	 *            字符串配置
+	 * @param config 字符串配置
 	 * @return 返回配置查找表
 	 */
 	public static Properties load(String config) {
@@ -403,14 +402,10 @@ public class StandaloneRestClusterClient extends AbstractFlinkJobsClient<RestClu
 	 * 
 	 * 根据指定的三个前后相邻字符a、b和c及当前字符c之前的连续反斜杠数量，判断其是否为命名参数脚本字符串区的结束位置
 	 * 
-	 * @param a
-	 *            前第二个字符a
-	 * @param b
-	 *            前一个字符b
-	 * @param c
-	 *            当前字符c
-	 * @param backslashes
-	 *            当前字符c之前的连续反斜杠数量
+	 * @param a           前第二个字符a
+	 * @param b           前一个字符b
+	 * @param c           当前字符c
+	 * @param backslashes 当前字符c之前的连续反斜杠数量
 	 * @return 是动态脚本字符串区域结束位置返回true，否则返回false
 	 */
 	public static boolean isStringEnd(char a, char b, char c, int backslashes) {

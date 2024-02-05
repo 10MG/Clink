@@ -4,7 +4,7 @@
 	<parent>
 		<groupId>cn.tenmg</groupId>
 		<artifactId>flink-jobs</artifactId>
-		<version>1.5.7</version>
+		<version>1.5.7-SNAPSHOT</version>
 	</parent>
 
 	<modelVersion>4.0.0</modelVersion>
@@ -15,9 +15,9 @@
 
 	<properties>
 		<nacos-client.version>2.3.0</nacos-client.version>
-		<dsl.version>1.4.2</dsl.version>
+		<dsl.version>1.4.3</dsl.version>
 		<bsh.version>2.0b6</bsh.version>
-		<mysql-connector-j.version>8.2.0</mysql-connector-j.version>
+		<mysql-connector-j.version>8.3.0</mysql-connector-j.version>
 	</properties>
 
 	<dependencies>

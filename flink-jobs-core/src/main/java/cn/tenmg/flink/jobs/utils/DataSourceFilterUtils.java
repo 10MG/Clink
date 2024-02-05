@@ -19,14 +19,14 @@ import cn.tenmg.flink.jobs.exception.IllegalConfigurationException;
  */
 public abstract class DataSourceFilterUtils {
 
-	private static final Map<String, DataSourceFilter> filters = new HashMap<String, DataSourceFilter>();
+	private static final Map<String, DataSourceFilter> FILTERS = new HashMap<String, DataSourceFilter>();
 
 	static {
 		DataSourceFilter filter;
 		ServiceLoader<DataSourceFilter> loader = ServiceLoader.load(DataSourceFilter.class);
 		for (Iterator<DataSourceFilter> it = loader.iterator(); it.hasNext();) {
 			filter = it.next();
-			filters.put(StringUtils.toCamelCase(filter.getClass().getSimpleName().replace("DataSourceFilter", ""), null,
+			FILTERS.put(StringUtils.toCamelCase(filter.getClass().getSimpleName().replace("DataSourceFilter", ""), null,
 					false), filter);
 		}
 	}
@@ -34,12 +34,11 @@ public abstract class DataSourceFilterUtils {
 	/**
 	 * 根据数据源过滤器名称获取数据源过滤器
 	 * 
-	 * @param name
-	 *            数据源过滤器名称
+	 * @param name 数据源过滤器名称
 	 * @return 数据源过滤器
 	 */
 	public static DataSourceFilter getDataSourceFilter(String name) {
-		DataSourceFilter filter = filters.get(name);
+		DataSourceFilter filter = FILTERS.get(name);
 		if (filter == null) {
 			try {
 				filter = (DataSourceFilter) Class.forName(name).newInstance();
@@ -53,10 +52,8 @@ public abstract class DataSourceFilterUtils {
 	/**
 	 * 对数据源使用指定名称的数据源过滤器，并返回过滤后的数据源
 	 * 
-	 * @param name
-	 *            过滤器的名称
-	 * @param dataSource
-	 *            数据源
+	 * @param name       过滤器的名称
+	 * @param dataSource 数据源
 	 * @return 过滤后的数据源
 	 */
 	public static Map<String, String> filter(String name, Map<String, String> dataSource) {

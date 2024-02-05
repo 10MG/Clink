@@ -44,9 +44,8 @@ public abstract class FlinkJobsContext {
 		 * "http://jsecurity.markmail.org/search/?q=#query:+page:1+mid:xqi2yxurwmrpqrvj+state:results"
 		 * > user-reported issue</a>.
 		 * 
-		 * @param parentValue
-		 *            the parent value, a HashMap as defined in the
-		 *            {@link #initialValue()} method.
+		 * @param parentValue the parent value, a HashMap as defined in the
+		 *                    {@link #initialValue()} method.
 		 * @return the HashMap to be used by any parent-spawned child threads (a clone
 		 *         of the parent HashMap).
 		 */
@@ -61,14 +60,14 @@ public abstract class FlinkJobsContext {
 
 	public static final String CONFIG_SPLITER = ".", SMART_MODE_CONFIG_KEY = "flink.jobs.smart";
 
-	private static final ThreadLocal<Map<Object, Object>> resources = new InheritableThreadLocalMap<Map<Object, Object>>();
+	private static final ThreadLocal<Map<Object, Object>> RESOURCES = new InheritableThreadLocalMap<Map<Object, Object>>();
 
-	private static final Map<String, Map<String, String>> datasources = new HashMap<String, Map<String, String>>(),
-			datasourceCache = new HashMap<String, Map<String, String>>();
+	private static final Map<String, Map<String, String>> DATASOURCES = new HashMap<String, Map<String, String>>(),
+			DATASOURCE_CACHE = new HashMap<String, Map<String, String>>();
 
-	private static final Map<String, String> autoDatasource = new HashMap<String, String>();
+	private static final Map<String, String> AUTO_DATASOURCE = new HashMap<String, String>();
 
-	private static final Map<String, String> tableExecConfigs = new HashMap<String, String>();
+	private static final Map<String, String> TABLE_EXEC_CONFIGS = new HashMap<String, String>();
 
 	private static final String DEFAULT_STRATEGIES_PATH = "flink-jobs-context-loader.properties",
 			CONTEXT_LOCATION_KEY = "flink.jobs.context", DEFAULT_CONTEXT_LOCATION = "flink-jobs-context.properties",
@@ -125,18 +124,18 @@ public abstract class FlinkJobsContext {
 				if (index > 0) {
 					name = param.substring(0, index);
 					param = param.substring(index + configSpliterLen);
-					dataSource = datasources.get(name);
+					dataSource = DATASOURCES.get(name);
 					if (dataSource == null) {
 						dataSource = new LinkedHashMap<String, String>();
-						datasources.put(name, dataSource);
+						DATASOURCES.put(name, dataSource);
 					}
 					dataSource.put(param, value.toString());
 				}
 			} else if (key.startsWith(AUTO_DATASOURCE_PREFIX)) {
 				param = key.substring(autoDatasourcePrefixLen);
-				autoDatasource.put(param, value.toString());
+				AUTO_DATASOURCE.put(param, value.toString());
 			} else if (key.startsWith(TABLE_API_CONFIG_PREFIX)) {
-				tableExecConfigs.put(key, value.toString());
+				TABLE_EXEC_CONFIGS.put(key, value.toString());
 			} else if (ignoreCase && key.matches(DATA_SYNC_CONFIG_REGEX)) {
 				keyLowercase = key.toLowerCase();
 				if (!key.equals(keyLowercase) && !config.containsKey(keyLowercase)) {
@@ -173,8 +172,7 @@ public abstract class FlinkJobsContext {
 	 * 
 	 * 使用特定配置信息获取流运行环境
 	 * 
-	 * @param configuration
-	 *            配置信息
+	 * @param configuration 配置信息
 	 * @return 流运行环境
 	 */
 	public static StreamExecutionEnvironment getExecutionEnvironment(String configuration) {
@@ -203,8 +201,7 @@ public abstract class FlinkJobsContext {
 	 * 
 	 * 获取或创建流表环境
 	 * 
-	 * @param env
-	 *            流运行环境
+	 * @param env 流运行环境
 	 * @return 流表环境
 	 */
 	public static StreamTableEnvironment getOrCreateStreamTableEnvironment(StreamExecutionEnvironment env) {
@@ -226,8 +223,7 @@ public abstract class FlinkJobsContext {
 	/**
 	 * 获取默认目录。先从当前上下文中获取已缓存的默认目录，结果为null则从流表环境获取当前目录并缓存到当前上下文中
 	 * 
-	 * @param tableEnv
-	 *            流表环境
+	 * @param tableEnv 流表环境
 	 * @return 默认目录
 	 */
 	public static String getDefaultCatalog(StreamTableEnvironment tableEnv) {
@@ -242,8 +238,7 @@ public abstract class FlinkJobsContext {
 	/**
 	 * 根据键获取配置的属性
 	 * 
-	 * @param key
-	 *            键
+	 * @param key 键
 	 * @return 配置属性值或null
 	 */
 	public static String getProperty(String key) {
@@ -253,8 +248,7 @@ public abstract class FlinkJobsContext {
 	/**
 	 * 根据优先键依次获取配置的属性，一旦某一键存在则返回其对应的值，均不存在则返回 {@code null}
 	 * 
-	 * @param priorKeys
-	 *            优先键
+	 * @param priorKeys 优先键
 	 * @return 配置属性值或 {@code null}
 	 */
 	public static String getProperty(List<String> priorKeys) {
@@ -264,10 +258,8 @@ public abstract class FlinkJobsContext {
 	/**
 	 * 根据键获取配置的属性，不存在则返回默认值
 	 * 
-	 * @param key
-	 *            键
-	 * @param defaultValue
-	 *            默认值
+	 * @param key          键
+	 * @param defaultValue 默认值
 	 * @return 配置属性值或默认值
 	 */
 	public static String getProperty(String key, String defaultValue) {
@@ -277,10 +269,8 @@ public abstract class FlinkJobsContext {
 	/**
 	 * 根据优先键依次获取配置的属性，一旦某一键存在则返回其对应的值，均不存在则返回默认值
 	 * 
-	 * @param priorKeys
-	 *            优先键
-	 * @param defaultValue
-	 *            默认值
+	 * @param priorKeys    优先键
+	 * @param defaultValue 默认值
 	 * @return 配置属性值或默认值
 	 */
 	public static String getProperty(List<String> priorKeys, String defaultValue) {
@@ -290,8 +280,7 @@ public abstract class FlinkJobsContext {
 	/**
 	 * 根据数据库产品名称（小写）获取默认JDBC驱动类名
 	 * 
-	 * @param productName
-	 *            数据库产品名称（小写）
+	 * @param productName 数据库产品名称（小写）
 	 * @return 默认JDBC驱动类名
 	 */
 	public static String getDefaultJDBCDriver(String productName) {
@@ -304,26 +293,25 @@ public abstract class FlinkJobsContext {
 	 * @return 返回当前线程上下文资源(一个Map)
 	 */
 	public static Map<Object, Object> getResources() {
-		if (resources.get() == null) {
+		if (RESOURCES.get() == null) {
 			return Collections.emptyMap();
 		} else {
-			return new HashMap<Object, Object>(resources.get());
+			return new HashMap<Object, Object>(RESOURCES.get());
 		}
 	}
 
 	/**
 	 * 将指定资源放入当前线程上下文
 	 * 
-	 * @param newResources
-	 *            指定资源
+	 * @param newResources 指定资源
 	 */
 	public static void setResources(Map<Object, Object> newResources) {
 		if (newResources == null || newResources.isEmpty()) {
 			return;
 		}
 		ensureResourcesInitialized();
-		resources.get().clear();
-		resources.get().putAll(newResources);
+		RESOURCES.get().clear();
+		RESOURCES.get().putAll(newResources);
 	}
 
 	/**
@@ -332,7 +320,7 @@ public abstract class FlinkJobsContext {
 	 * @return 数据源查找表
 	 */
 	public static Map<String, Map<String, String>> getDatasources() {
-		return datasources;
+		return DATASOURCES;
 	}
 
 	/**
@@ -348,27 +336,26 @@ public abstract class FlinkJobsContext {
 	/**
 	 * 根据数据源名称获取数据源。如果指定数据源不存在将抛出cn.tenmg.flink.jobs.exception.DataSourceNotFoundException
 	 * 
-	 * @param name
-	 *            数据源名称
+	 * @param name 数据源名称
 	 * @return 数据源
 	 */
 	public static Map<String, String> getDatasource(String name) {
-		Map<String, String> dataSource = datasources.get(name);
+		Map<String, String> dataSource = DATASOURCES.get(name);
 		if (dataSource == null) {
-			if (autoDatasource.isEmpty()) {
+			if (AUTO_DATASOURCE.isEmpty()) {
 				throw new DataSourceNotFoundException(
 						"DataSource named " + name + " not found, Please check the configuration");
 			} else {
-				dataSource = datasourceCache.get(name);
+				dataSource = DATASOURCE_CACHE.get(name);
 				if (dataSource == null) {
-					synchronized (datasourceCache) {
-						dataSource = datasourceCache.get(name);
+					synchronized (DATASOURCE_CACHE) {
+						dataSource = DATASOURCE_CACHE.get(name);
 						if (dataSource == null) {
 							log.debug("Generated and cached the DataSource named " + name + " automatically");
-							dataSource = MapUtils.toHashMapBuilder(autoDatasource).build(autoDatasource.get(IDENTIFIER),
-									name);
+							dataSource = MapUtils.toHashMapBuilder(AUTO_DATASOURCE)
+									.build(AUTO_DATASOURCE.get(IDENTIFIER), name);
 							dataSource.remove(IDENTIFIER);
-							datasourceCache.put(name, dataSource);
+							DATASOURCE_CACHE.put(name, dataSource);
 						}
 					}
 				} else {
@@ -385,14 +372,13 @@ public abstract class FlinkJobsContext {
 	 * @return 返回Table API & SQL的运行配置
 	 */
 	public static Map<String, String> getTableExecConfigs() {
-		return tableExecConfigs;
+		return TABLE_EXEC_CONFIGS;
 	}
 
 	/**
 	 * 根据指定唯一标识获取当前线程上下文资源
 	 * 
-	 * @param key
-	 *            指定唯一标识
+	 * @param key 指定唯一标识
 	 * @return 返回指定唯一标识所对应的当前线程上下文资源
 	 */
 	public static Object get(Object key) {
@@ -402,10 +388,8 @@ public abstract class FlinkJobsContext {
 	/**
 	 * 用指定唯一标识设置指定对象为当前线程上下文资源
 	 * 
-	 * @param key
-	 *            指定唯一标识
-	 * @param value
-	 *            指定对象
+	 * @param key   指定唯一标识
+	 * @param value 指定对象
 	 */
 	public static void put(Object key, Object value) {
 		if (key == null) {
@@ -416,18 +400,17 @@ public abstract class FlinkJobsContext {
 			return;
 		}
 		ensureResourcesInitialized();
-		resources.get().put(key, value);
+		RESOURCES.get().put(key, value);
 	}
 
 	/**
 	 * 使用指定的唯一标识移除当前线程上下文资源
 	 * 
-	 * @param key
-	 *            指定的唯一标识
+	 * @param key 指定的唯一标识
 	 * @return 返回被移除的当前线程上下文资源
 	 */
 	public static Object remove(Object key) {
-		Map<Object, Object> perThreadResources = resources.get();
+		Map<Object, Object> perThreadResources = RESOURCES.get();
 		return perThreadResources != null ? perThreadResources.remove(key) : null;
 	}
 
@@ -439,18 +422,17 @@ public abstract class FlinkJobsContext {
 	 * 移除当前线程的上下文资源
 	 */
 	public static void remove() {
-		resources.remove();
+		RESOURCES.remove();
 	}
 
 	/**
 	 * 根据指定唯一标识获取当前线程上下文资源
 	 * 
-	 * @param key
-	 *            指定唯一标识
+	 * @param key 指定唯一标识
 	 * @return 返回指定唯一标识所对应的当前线程上下文资源
 	 */
 	private static Object getValue(Object key) {
-		Map<Object, Object> perThreadData = resources.get();
+		Map<Object, Object> perThreadData = RESOURCES.get();
 		return perThreadData != null ? perThreadData.get(key) : null;
 	}
 
@@ -458,8 +440,8 @@ public abstract class FlinkJobsContext {
 	 * 确保资源存储空间已初始化
 	 */
 	private static void ensureResourcesInitialized() {
-		if (resources.get() == null) {
-			resources.set(new HashMap<Object, Object>());
+		if (RESOURCES.get() == null) {
+			RESOURCES.set(new HashMap<Object, Object>());
 		}
 	}
 
