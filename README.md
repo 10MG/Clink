@@ -1,12 +1,17 @@
 ![Clink](logo.png)
 <p align="left">
-    <a href="https://mvnrepository.com/artifact/cn.tenmg/clink-parent">
-        <img alt="maven" src="https://img.shields.io/maven-central/v/cn.tenmg/clink-parent.svg?style=flat-square">
+    <a target="_blank" href="https://www.oracle.com/technetwork/java/javase/downloads/index.html">
+        <img src="https://img.shields.io/badge/JDK-1.8+-green.svg" />
     </a>
     <a target="_blank" href="LICENSE"><img src="https://img.shields.io/:license-Apache%202.0-blue.svg"></a>
-    <a target="_blank" href="https://jq.qq.com/?_wv=1027&k=wOOIp0CR"><img src="https://img.shields.io/badge/QQ群-531812227-blue"></a>
     <a target="_blank" href='https://gitee.com/tenmg/clink'>
         <img src="https://gitee.com/tenmg/Clink/badge/star.svg?theme=white" />
+    </a>
+    <a href="https://mvnrepository.com/artifact/cn.tenmg/clink-core">
+        <img alt="maven" src="https://img.shields.io/maven-central/v/cn.tenmg/clink-core.svg?style=flat-square">
+    </a>
+    <a target="_blank" href="https://jq.qq.com/?_wv=1027&k=wOOIp0CR">
+        <img src="https://img.shields.io/badge/QQ群-531812227-blue">
     </a>
 </p>
 
