@@ -7,7 +7,7 @@
     <a target="_blank" href='https://gitee.com/tenmg/clink'>
         <img src="https://gitee.com/tenmg/Clink/badge/star.svg?theme=white" />
     </a>
-    <a href="https://mvnrepository.com/artifact/cn.tenmg/clink-core">
+    <a href="https://mvnrepository.com/search?q=clink&d=cn.tenmg">
         <img alt="maven" src="https://img.shields.io/maven-central/v/cn.tenmg/clink-core.svg?style=flat-square">
     </a>
     <a target="_blank" href="https://jq.qq.com/?_wv=1027&k=wOOIp0CR">
