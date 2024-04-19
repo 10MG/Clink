@@ -48,9 +48,16 @@ import io.debezium.data.Envelope;
  */
 public class SQLServerCdcSourceFactory implements SourceFactory<JdbcIncrementalSource<Tuple2<String, Row>>> {
 
-	public static final String IDENTIFIER = "sqlserver-cdc", TABLE_NAME = "table-name", SINGLE_QUOTATION_MARK = "'",
-			JDBC_PROPERTIES_PREFIX = "jdbc.properties.", INCLUDE_SCHEMA_CHANGES = "include-schema-changes",
-			CONVERT_DELETE_TO_UPDATE = "convert-delete-to-update";
+	public static final String IDENTIFIER = "sqlserver-cdc";
+
+	private static final String TABLE_NAME = "table-name", SINGLE_QUOTATION_MARK = "'",
+			INCLUDE_SCHEMA_CHANGES = "include-schema-changes", CONVERT_DELETE_TO_UPDATE = "convert-delete-to-update",
+			SCAN_INCREMENTAL_SNAPSHOT_CHUNK_KEY_COLUMN = JdbcSourceOptions.SCAN_INCREMENTAL_SNAPSHOT_CHUNK_KEY_COLUMN
+					.key(),
+			SCAN_INCREMENTAL_CLOSE_IDLE_READER_ENABLED = "scan.incremental.close-idle-reader.enabled",
+			CLOSE_IDLE_READERS_METHOD_NAME = "closeIdleReaders",
+			SCAN_INCREMENTAL_SNAPSHOT_BACKFILL_SKIP = "scan.incremental.snapshot.backfill.skip",
+			SKIP_SNAPSHOT_BACKFILL_METHOD_NAME = "skipSnapshotBackfill", DBO_PREFIX = "dbo.";
 
 	private static final ConfigOption<String> HOSTNAME = ConfigOptions.key("hostname").stringType().noDefaultValue()
 			.withDescription("IP address or hostname of the SqlServer database server.");
@@ -67,10 +74,10 @@ public class SQLServerCdcSourceFactory implements SourceFactory<JdbcIncrementalS
 	private static final ConfigOption<String> DATABASE_NAME = ConfigOptions.key("database-name").stringType()
 			.noDefaultValue().withDescription("Database name of the SqlServer server to monitor.");
 
-	public static final ConfigOption<String> SERVER_TIME_ZONE = ConfigOptions.key("server-time-zone").stringType()
+	private static final ConfigOption<String> SERVER_TIME_ZONE = ConfigOptions.key("server-time-zone").stringType()
 			.defaultValue("UTC").withDescription("The session time zone in database server.");
 
-	public static final ConfigOption<String> SCAN_STARTUP_MODE = ConfigOptions.key("scan.startup.mode").stringType()
+	private static final ConfigOption<String> SCAN_STARTUP_MODE = ConfigOptions.key("scan.startup.mode").stringType()
 			.defaultValue("initial")
 			.withDescription("Optional startup mode for SqlServer CDC consumer, valid enumerations are "
 					+ "\"initial\", \"initial-only\", \"latest-offset\"");
@@ -105,7 +112,7 @@ public class SQLServerCdcSourceFactory implements SourceFactory<JdbcIncrementalS
 					databases.add(parts[0]);
 					tables.add(tableName);
 				} else {
-					tables.add(StringUtils.concat(databaseName, ".", tableName));
+					tables.add(StringUtils.concat(DBO_PREFIX, tableName));
 				}
 			}
 		}
@@ -115,7 +122,7 @@ public class SQLServerCdcSourceFactory implements SourceFactory<JdbcIncrementalS
 				.port(getIntegerOrDefault(config, PORT)).username(getOrDefault(config, USERNAME))
 				.password(getOrDefault(config, PASSWORD)).databaseList(String.join(",", databases))
 				.tableList(config.containsKey(TABLE_NAME) ? config.get(TABLE_NAME) : String.join(",", tables))
-				.debeziumProperties(DebeziumOptions.getDebeziumProperties(config));
+				.chunkKeyColumn(databaseName).debeziumProperties(DebeziumOptions.getDebeziumProperties(config));
 
 		if (config.containsKey(SERVER_TIME_ZONE.key())) {
 			builder.serverTimeZone(config.get(SERVER_TIME_ZONE.key()));
@@ -153,6 +160,18 @@ public class SQLServerCdcSourceFactory implements SourceFactory<JdbcIncrementalS
 		if (config.containsKey(INCLUDE_SCHEMA_CHANGES)) {
 			builder.includeSchemaChanges(Boolean.valueOf(config.get(INCLUDE_SCHEMA_CHANGES)));
 		}
+		if (config.containsKey(SCAN_INCREMENTAL_SNAPSHOT_CHUNK_KEY_COLUMN)) {
+			builder.chunkKeyColumn(config.get(SCAN_INCREMENTAL_SNAPSHOT_CHUNK_KEY_COLUMN));
+		}
+		if (config.containsKey(SCAN_INCREMENTAL_CLOSE_IDLE_READER_ENABLED)) {
+			setbooleanOptionIfPossible(builder, CLOSE_IDLE_READERS_METHOD_NAME,
+					Boolean.valueOf(config.get(SCAN_INCREMENTAL_CLOSE_IDLE_READER_ENABLED)));
+		}
+		if (config.containsKey(SCAN_INCREMENTAL_SNAPSHOT_BACKFILL_SKIP)) {
+			setbooleanOptionIfPossible(builder, SKIP_SNAPSHOT_BACKFILL_METHOD_NAME,
+					Boolean.valueOf(config.get(SCAN_INCREMENTAL_SNAPSHOT_BACKFILL_SKIP)));
+		}
+
 		String convertDeleteToUpdate = config.get(CONVERT_DELETE_TO_UPDATE);
 		return builder
 				.deserializer(new MultiTableDebeziumDeserializationSchema(rowTypes, toMetadataConverters(metadatas),
@@ -190,6 +209,13 @@ public class SQLServerCdcSourceFactory implements SourceFactory<JdbcIncrementalS
 			return TimeUtils.parseDuration(config.get(option.key()));
 		}
 		return option.defaultValue();
+	}
+
+	private void setbooleanOptionIfPossible(Object obj, String name, boolean value) {
+		try {
+			obj.getClass().getDeclaredMethod(name, boolean.class).invoke(obj, value);
+		} catch (Exception e) {
+		}
 	}
 
 	private static final String SCAN_STARTUP_MODE_VALUE_INITIAL = "initial";
