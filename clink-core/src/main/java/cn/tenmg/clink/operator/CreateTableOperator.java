@@ -16,9 +16,9 @@ import org.slf4j.LoggerFactory;
 import cn.tenmg.clink.context.ClinkContext;
 import cn.tenmg.clink.exception.IllegalJobConfigException;
 import cn.tenmg.clink.metadata.MetaDataGetter;
-import cn.tenmg.clink.metadata.MetaDataGetterFactory;
 import cn.tenmg.clink.metadata.MetaDataGetter.TableMetaData;
 import cn.tenmg.clink.metadata.MetaDataGetter.TableMetaData.ColumnType;
+import cn.tenmg.clink.metadata.MetaDataGetterFactory;
 import cn.tenmg.clink.model.CreateTable;
 import cn.tenmg.clink.model.create.table.Column;
 import cn.tenmg.clink.utils.DataSourceFilterUtils;
@@ -68,13 +68,10 @@ public class CreateTableOperator extends AbstractOperator<CreateTable> {
 	/**
 	 * 校对和整理列配置并返回主键列（多个列之间使用“,”分隔）
 	 * 
-	 * @param createTable
-	 *            建表配置对象
-	 * @param dataSource
-	 *            数据源
+	 * @param createTable 建表配置对象
+	 * @param dataSource  数据源
 	 * @return 返回主键
-	 * @throws Exception
-	 *             发生异常
+	 * @throws Exception 发生异常
 	 */
 	private static String collation(CreateTable createTable, Map<String, String> dataSource) throws Exception {
 		List<Column> columns = createTable.getColumns();
@@ -88,7 +85,9 @@ public class CreateTableOperator extends AbstractOperator<CreateTable> {
 		String primaryKey = createTable.getPrimaryKey();
 		if (Boolean.TRUE.equals(smart)) {// 智能模式，自动查询列名、数据类型
 			MetaDataGetter metaDataGetter = MetaDataGetterFactory.getMetaDataGetter(dataSource);
-			TableMetaData tableMetaData = metaDataGetter.getTableMetaData(dataSource, createTable.getTableName());
+			String tableName = createTable.getBindTableName();
+			TableMetaData tableMetaData = metaDataGetter.getTableMetaData(dataSource,
+					StringUtils.isBlank(tableName) ? createTable.getTableName() : tableName);
 			Set<String> primaryKeys = tableMetaData.getPrimaryKeys();
 			if (primaryKey == null && primaryKeys != null && !primaryKeys.isEmpty()) {
 				primaryKey = String.join(",", primaryKeys);
@@ -112,12 +111,9 @@ public class CreateTableOperator extends AbstractOperator<CreateTable> {
 	/**
 	 * 添加智能加载的列
 	 * 
-	 * @param connector
-	 *            连接器
-	 * @param columns
-	 *            列的列表
-	 * @param columnsMap
-	 *            智能加载的列
+	 * @param connector  连接器
+	 * @param columns    列的列表
+	 * @param columnsMap 智能加载的列
 	 */
 	private static void addSmartLoadColumns(String connector, List<Column> columns,
 			Map<String, ColumnType> columnsMap) {
@@ -134,8 +130,7 @@ public class CreateTableOperator extends AbstractOperator<CreateTable> {
 	/**
 	 * 整理自定义列
 	 * 
-	 * @param columns
-	 *            自定义列
+	 * @param columns 自定义列
 	 */
 	private static void collationCustom(List<Column> columns) {
 		for (int i = 0, size = columns.size(); i < size; i++) {

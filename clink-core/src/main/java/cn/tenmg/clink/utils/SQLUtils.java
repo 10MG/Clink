@@ -54,8 +54,7 @@ public abstract class SQLUtils {
 	/**
 	 * 将使用命名参数的脚本对象模型转换为可运行的Flink SQL
 	 * 
-	 * @param namedScript
-	 *            使用命名参数的脚本对象模型
+	 * @param namedScript 使用命名参数的脚本对象模型
 	 * @return 返回可运行的Flink SQL
 	 */
 	public static String toSQL(NamedScript namedScript) {
@@ -65,10 +64,8 @@ public abstract class SQLUtils {
 	/**
 	 * 根据参数查找表将使用命名参数的脚本转换为可运行的Flink SQL
 	 * 
-	 * @param namedscript
-	 *            使用命名参数的脚本
-	 * @param params
-	 *            参数查找表
+	 * @param namedscript 使用命名参数的脚本
+	 * @param params      参数查找表
 	 * @return 返回可运行的Flink SQL
 	 */
 	public static String toSQL(String namedscript, Map<String, ?> params) {
@@ -78,10 +75,8 @@ public abstract class SQLUtils {
 	/**
 	 * 向SQL追加数据源配置
 	 * 
-	 * @param dataSource
-	 *            数据源配置查找表
-	 * @param sqlBuffer
-	 *            SQL缓冲器
+	 * @param dataSource 数据源配置
+	 * @param sqlBuffer  SQL缓冲器
 	 */
 	public static void appendDataSource(StringBuffer sqlBuffer, Map<String, String> dataSource) {
 		Iterator<Entry<String, String>> it = dataSource.entrySet().iterator();
@@ -97,12 +92,9 @@ public abstract class SQLUtils {
 	/**
 	 * 向SQL追加数据源配置
 	 * 
-	 * @param sqlBuffer
-	 *            SQL缓冲器
-	 * @param dataSource
-	 *            数据源配置查找表
-	 * @param defaultTableName
-	 *            默认表名
+	 * @param sqlBuffer        SQL缓冲器
+	 * @param dataSource       数据源配置
+	 * @param defaultTableName 默认表名
 	 */
 	public static void appendDataSource(StringBuffer sqlBuffer, Map<String, String> dataSource,
 			String defaultTableName) {
@@ -117,12 +109,9 @@ public abstract class SQLUtils {
 	/**
 	 * 向SQL追加数据源配置
 	 * 
-	 * @param script
-	 *            SQL脚本
-	 * @param dataSource
-	 *            数据源配置查找表
-	 * @param sqlBuffer
-	 *            SQL缓冲器
+	 * @param script     SQL脚本
+	 * @param dataSource 数据源配置
+	 * @param sqlBuffer  SQL缓冲器
 	 */
 	private static void appendDataSource(String script, Map<String, String> dataSource, StringBuffer sqlBuffer) {
 		appendDataSource(sqlBuffer, dataSource);
@@ -132,10 +121,26 @@ public abstract class SQLUtils {
 	}
 
 	/**
+	 * 向SQL追加数据源配置
+	 * 
+	 * @param script     SQL脚本
+	 * @param dataSource 数据源配置
+	 * @param config     作业中的配置
+	 * @param sqlBuffer  SQL缓冲器
+	 */
+	private static void appendDataSource(String script, Map<String, String> dataSource, Map<String, String> config,
+			StringBuffer sqlBuffer) {
+		appendDataSource(sqlBuffer, dataSource);
+		if (needDefaultTableName(dataSource) && !dataSource.containsKey(TABLE_NAME)
+				&& (config == null || !config.containsKey(TABLE_NAME))) {
+			extractAndApppendDefaultTableName(sqlBuffer, script);
+		}
+	}
+
+	/**
 	 * 包装SQL字符串
 	 * 
-	 * @param value
-	 *            字符串
+	 * @param value 字符串
 	 * @return 返回包装后的SQL字符串
 	 */
 	public static String wrapString(String value) {
@@ -145,8 +150,7 @@ public abstract class SQLUtils {
 	/**
 	 * 追加空格等号空格
 	 * 
-	 * @param sqlBuffer
-	 *            SQL缓冲器
+	 * @param sqlBuffer SQL缓冲器
 	 */
 	public static void apppendEquals(StringBuffer sqlBuffer) {
 		sqlBuffer.append(SPACE_EQUALS_SPACE);
@@ -155,8 +159,7 @@ public abstract class SQLUtils {
 	/**
 	 * 隐藏密码
 	 * 
-	 * @param sql
-	 *            SQL
+	 * @param sql SQL
 	 * @return 隐藏密码的SQL
 	 */
 	public static String hiddePassword(String sql) {
@@ -172,10 +175,8 @@ public abstract class SQLUtils {
 	/**
 	 * 包装数据源，即包装Flink SQL的CREATE TABLE语句的WITH子句
 	 * 
-	 * @param script
-	 *            SQL脚本
-	 * @throws IOException
-	 *             I/O异常
+	 * @param script SQL脚本
+	 * @throws IOException I/O异常
 	 */
 	public static String wrapDataSource(String script, Map<String, String> dataSource) throws IOException {
 		Matcher matcher = WITH_CLAUSE_PATTERN.matcher(script);
@@ -187,12 +188,9 @@ public abstract class SQLUtils {
 					end = group.substring(endIndex);
 			if (StringUtils.isBlank(value)) {
 				matcher.appendReplacement(sqlBuffer, start);
-				SQLUtils.appendDataSource(script, dataSource, sqlBuffer);
+				appendDataSource(script, dataSource, sqlBuffer);
 				sqlBuffer.append(end);
 			} else {
-				Map<String, String> config = ConfigurationUtils.load(value),
-						actualDataSource = MapUtils.toHashMap(dataSource);
-				MapUtils.removeAll(actualDataSource, config.keySet());
 				matcher.appendReplacement(sqlBuffer, start);
 				StringBuilder blank = new StringBuilder();
 				int len = value.length(), i = len - 1;
@@ -205,13 +203,13 @@ public abstract class SQLUtils {
 					i--;
 				}
 				sqlBuffer.append(value.substring(0, i + 1)).append(DSLUtils.COMMA).append(DSLUtils.BLANK_SPACE);
-				SQLUtils.appendDataSource(script, actualDataSource, sqlBuffer);
+				appendDataSource(script, dataSource, ConfigurationUtils.load(value), sqlBuffer);
 				sqlBuffer.append(blank.reverse()).append(end);
 			}
 		} else {
 			sqlBuffer.append(script);
 			sqlBuffer.append(" WITH (");
-			SQLUtils.appendDataSource(script, dataSource, sqlBuffer);
+			appendDataSource(script, dataSource, sqlBuffer);
 			sqlBuffer.append(")");
 		}
 		return sqlBuffer.toString();
@@ -227,8 +225,7 @@ public abstract class SQLUtils {
 	/**
 	 * 判断一个数据源是否需要添加默认的table-name
 	 * 
-	 * @param dataSource
-	 *            数据源
+	 * @param dataSource 数据源
 	 * @return 如果数据源需要添加默认的table-name则返回true，否则返回false
 	 */
 	public static boolean needDefaultTableName(Map<String, String> dataSource) {
@@ -238,10 +235,8 @@ public abstract class SQLUtils {
 	/**
 	 * 向SQL语句缓冲器中追加默认表名
 	 * 
-	 * @param sqlBuffer
-	 *            SQL语句缓冲器
-	 * @param defaultTableName
-	 *            默认表名
+	 * @param sqlBuffer        SQL语句缓冲器
+	 * @param defaultTableName 默认表名
 	 */
 	public static void apppendDefaultTableName(StringBuffer sqlBuffer, String defaultTableName) {
 		sqlBuffer.append(DSLUtils.COMMA).append(DSLUtils.BLANK_SPACE).append(wrapString(TABLE_NAME));
@@ -252,10 +247,8 @@ public abstract class SQLUtils {
 	/**
 	 * 转换为 Flink SQL 的数据类型
 	 * 
-	 * @param connector
-	 *            连接器（如mysql等）
-	 * @param columnType
-	 *            列类型
+	 * @param connector  连接器（如mysql等）
+	 * @param columnType 列类型
 	 * @return 对应的 Flink SQL 的数据类型
 	 */
 	public static String toSQLType(String connector, ColumnType columnType) {
@@ -279,10 +272,8 @@ public abstract class SQLUtils {
 	/**
 	 * 从CREATE语句中提取并追加默认表名
 	 * 
-	 * @param sqlBuffer
-	 *            SQL语句缓冲器
-	 * @param script
-	 *            原SQL脚本
+	 * @param sqlBuffer SQL语句缓冲器
+	 * @param script    原SQL脚本
 	 */
 	private static void extractAndApppendDefaultTableName(StringBuffer sqlBuffer, String script) {
 		Matcher createMatcher = CREATE_CLAUSE_PATTERN.matcher(script);
@@ -326,8 +317,7 @@ public abstract class SQLUtils {
 	/**
 	 * 包装配置的值
 	 * 
-	 * @param value
-	 *            配置的值
+	 * @param value 配置的值
 	 * @return 返回包装后的配置值
 	 */
 	private static String wrapValue(String value) {
