@@ -5,7 +5,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.flink.table.api.DataTypes;
 import org.apache.flink.table.api.DataTypes.Field;
 import org.apache.flink.table.types.DataType;
@@ -13,6 +12,7 @@ import org.apache.flink.table.types.DataType;
 import cn.tenmg.clink.exception.UnsupportedSymbolException;
 import cn.tenmg.clink.utils.DataTypeUtils;
 import cn.tenmg.dsl.utils.DSLUtils;
+import cn.tenmg.dsl.utils.StringUtils;
 
 /**
  * {@code ROW} 数据类型工厂
