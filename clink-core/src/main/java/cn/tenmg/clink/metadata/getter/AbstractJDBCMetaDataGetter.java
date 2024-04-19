@@ -8,12 +8,11 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.collections.MapUtils;
-
 import cn.tenmg.clink.exception.IllegalConfigurationException;
 import cn.tenmg.clink.metadata.MetaDataGetter;
 import cn.tenmg.clink.metadata.MetaDataGetter.TableMetaData.ColumnType;
 import cn.tenmg.clink.utils.JDBCUtils;
+import cn.tenmg.dsl.utils.MapUtils;
 import cn.tenmg.dsl.utils.StringUtils;
 
 /**
@@ -32,8 +31,7 @@ public abstract class AbstractJDBCMetaDataGetter implements MetaDataGetter {
 	/**
 	 * 根据数据源配置获取数据库连接
 	 * 
-	 * @param dataSource
-	 *            数据源
+	 * @param dataSource 数据源
 	 * @return 返回数据库连接
 	 */
 	protected Connection getConnection(Map<String, String> dataSource) throws Exception {
@@ -43,17 +41,12 @@ public abstract class AbstractJDBCMetaDataGetter implements MetaDataGetter {
 	/**
 	 * 获取数据表的主键列名集
 	 * 
-	 * @param con
-	 *            连接
-	 * @param catalog
-	 *            目录
-	 * @param schema
-	 *            数据库实例
-	 * @param tableName
-	 *            表名
+	 * @param con       连接
+	 * @param catalog   目录
+	 * @param schema    数据库实例
+	 * @param tableName 表名
 	 * @return 主键列名集
-	 * @throws SQLException
-	 *             执行发生SQL异常
+	 * @throws SQLException 执行发生SQL异常
 	 */
 	abstract Set<String> getPrimaryKeys(Connection con, String catalog, String schema, String tableName)
 			throws SQLException;
