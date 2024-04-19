@@ -1,0 +1,141 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<parent>
+		<groupId>cn.tenmg</groupId>
+		<artifactId>clink-parent</artifactId>
+		<version>1.6.1-SNAPSHOT</version>
+	</parent>
+
+	<modelVersion>4.0.0</modelVersion>
+
+	<description>Clink应用程序客户端类库</description>
+	<artifactId>clink-tests</artifactId>
+	<packaging>jar</packaging>
+
+	<properties>
+	</properties>
+
+	<dependencies>
+		<!-- https://mvnrepository.com/artifact/cn.tenmg/clink-cdc-mysql -->
+		<dependency>
+			<groupId>cn.tenmg</groupId>
+			<artifactId>clink-cdc-mysql</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/cn.tenmg/clink-cdc-postgres -->
+		<dependency>
+			<groupId>cn.tenmg</groupId>
+			<artifactId>clink-cdc-postgres</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/cn.tenmg/clink-cdc-sqlserver -->
+		<dependency>
+			<groupId>cn.tenmg</groupId>
+			<artifactId>clink-cdc-sqlserver</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/cn.tenmg/clink-clients -->
+		<dependency>
+			<groupId>cn.tenmg</groupId>
+			<artifactId>clink-clients</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/cn.tenmg/clink-core -->
+		<dependency>
+			<groupId>cn.tenmg</groupId>
+			<artifactId>clink-core</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<!--
+		https://mvnrepository.com/artifact/com.ververica/flink-sql-connector-mysql-cdc -->
+		<dependency>
+			<groupId>com.ververica</groupId>
+			<artifactId>flink-sql-connector-mysql-cdc</artifactId>
+			<exclusions>
+				<exclusion>
+					<groupId>org.apache.flink</groupId>
+					<artifactId>flink-shaded-guava</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+
+		<!--
+		https://mvnrepository.com/artifact/com.ververica/flink-sql-connector-postgres-cdc -->
+		<dependency>
+			<groupId>com.ververica</groupId>
+			<artifactId>flink-sql-connector-postgres-cdc</artifactId>
+			<exclusions>
+				<exclusion>
+					<groupId>org.apache.flink</groupId>
+					<artifactId>flink-shaded-guava</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+
+		<!--
+		https://mvnrepository.com/artifact/com.ververica/flink-sql-connector-sqlserver-cdc -->
+		<dependency>
+			<groupId>com.ververica</groupId>
+			<artifactId>flink-sql-connector-sqlserver-cdc</artifactId>
+			<exclusions>
+				<exclusion>
+					<groupId>org.apache.flink</groupId>
+					<artifactId>flink-shaded-guava</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+
+		<!-- https://mvnrepository.com/artifact/org.apache.flink/flink-clients -->
+		<dependency>
+			<groupId>org.apache.flink</groupId>
+			<artifactId>flink-clients</artifactId>
+			<scope>provided</scope>
+		</dependency>
+		<!--
+		https://mvnrepository.com/artifact/org.apache.flink/flink-connector-base -->
+		<dependency>
+			<groupId>org.apache.flink</groupId>
+			<artifactId>flink-connector-base</artifactId>
+			<version>${flink.version}</version>
+		</dependency>
+		<!--
+		https://mvnrepository.com/artifact/org.apache.flink/flink-connector-jdbc -->
+		<dependency>
+			<groupId>org.apache.flink</groupId>
+			<artifactId>flink-connector-jdbc</artifactId>
+		</dependency>
+		<!--
+		https://mvnrepository.com/artifact/org.apache.flink/flink-table-planner -->
+		<dependency>
+			<groupId>org.apache.flink</groupId>
+			<artifactId>flink-table-planner_${scala.binary.version}</artifactId>
+		</dependency>
+		<!--
+		https://mvnrepository.com/artifact/org.apache.logging.log4j/log4j-slf4j2-impl -->
+		<dependency>
+			<groupId>org.apache.logging.log4j</groupId>
+			<artifactId>log4j-slf4j2-impl</artifactId>
+		</dependency>
+
+		<!-- https://mvnrepository.com/artifact/org.glassfish.jaxb/jaxb-runtime -->
+		<dependency>
+			<groupId>org.glassfish.jaxb</groupId>
+			<artifactId>jaxb-runtime</artifactId>
+		</dependency>
+
+		<!-- https://mvnrepository.com/artifact/org.junit.jupiter/junit-jupiter -->
+		<dependency>
+			<groupId>org.junit.jupiter</groupId>
+			<artifactId>junit-jupiter</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<!--
+		https://mvnrepository.com/artifact/org.junit.platform/junit-platform-launcher -->
+		<dependency>
+			<groupId>org.junit.platform</groupId>
+			<artifactId>junit-platform-launcher</artifactId>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
+</project>

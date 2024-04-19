@@ -4,7 +4,7 @@
 	<parent>
 		<groupId>cn.tenmg</groupId>
 		<artifactId>clink-parent</artifactId>
-		<version>1.6.0</version>
+		<version>1.6.1-SNAPSHOT</version>
 	</parent>
 
 	<modelVersion>4.0.0</modelVersion>
@@ -38,7 +38,8 @@
 			<artifactId>bsh</artifactId>
 			<optional>true</optional>
 		</dependency>
-		<!-- https://mvnrepository.com/artifact/org.apache.flink/flink-connector-kafka -->
+		<!--
+		https://mvnrepository.com/artifact/org.apache.flink/flink-connector-kafka -->
 		<dependency>
 			<groupId>org.apache.flink</groupId>
 			<artifactId>flink-connector-kafka</artifactId>
@@ -51,13 +52,15 @@
 			<version>${flink.version}</version>
 			<optional>true</optional>
 		</dependency>
-		<!-- https://mvnrepository.com/artifact/org.apache.flink/flink-table-common -->
+		<!--
+		https://mvnrepository.com/artifact/org.apache.flink/flink-table-common -->
 		<dependency>
 			<groupId>org.apache.flink</groupId>
 			<artifactId>flink-table-common</artifactId>
 			<optional>true</optional>
 		</dependency>
-		<!-- https://mvnrepository.com/artifact/org.apache.flink/flink-table-planner -->
+		<!--
+		https://mvnrepository.com/artifact/org.apache.flink/flink-table-planner -->
 		<dependency>
 			<groupId>org.apache.flink</groupId>
 			<artifactId>flink-table-planner_${scala.binary.version}</artifactId>
@@ -65,7 +68,8 @@
 			<optional>true</optional>
 		</dependency>
 
-		<!-- https://mvnrepository.com/artifact/com.ververica/flink-sql-connector-mysql-cdc -->
+		<!--
+		https://mvnrepository.com/artifact/com.ververica/flink-sql-connector-mysql-cdc -->
 		<dependency>
 			<groupId>com.ververica</groupId>
 			<artifactId>flink-sql-connector-mysql-cdc</artifactId>
@@ -78,7 +82,8 @@
 			<artifactId>flink-core</artifactId>
 			<scope>provided</scope>
 		</dependency>
-		<!-- https://mvnrepository.com/artifact/org.apache.flink/flink-streaming-java -->
+		<!--
+		https://mvnrepository.com/artifact/org.apache.flink/flink-streaming-java -->
 		<dependency>
 			<groupId>org.apache.flink</groupId>
 			<artifactId>flink-streaming-java</artifactId>
@@ -104,16 +109,18 @@
 			<artifactId>flink-clients</artifactId>
 			<scope>test</scope>
 		</dependency>
-		<!-- https://mvnrepository.com/artifact/org.apache.flink/flink-connector-jdbc -->
+		<!--
+		https://mvnrepository.com/artifact/org.apache.flink/flink-connector-jdbc -->
 		<dependency>
 			<groupId>org.apache.flink</groupId>
 			<artifactId>flink-connector-jdbc</artifactId>
 			<scope>test</scope>
 		</dependency>
-		<!-- https://mvnrepository.com/artifact/org.apache.logging.log4j/log4j-slf4j-impl -->
+		<!--
+		https://mvnrepository.com/artifact/org.apache.logging.log4j/log4j-slf4j2-impl -->
 		<dependency>
 			<groupId>org.apache.logging.log4j</groupId>
-			<artifactId>log4j-slf4j-impl</artifactId>
+			<artifactId>log4j-slf4j2-impl</artifactId>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>

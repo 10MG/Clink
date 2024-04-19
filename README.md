@@ -641,19 +641,84 @@ type | `String` | 是 | 数据类型。使用标签内文本表示。
 目前已支持多表同步的源连接器有：
 
 | 产品            | 适配版本 | 支持版本 |
-|---------------|------|------|
-| mysql-cdc     | 2.2+ | 1.6+ |
-| sqlserver-cdc | 2.4+ | 1.6+ |
+|---------------|------|--------|
+| mysql-cdc     | 2.2+ | 1.6+   |
+| sqlserver-cdc | 2.4+ | 1.6+   |
+| postgres-cdc  | 2.4+ | 1.6.1+ |
+
+以下示例参考 clink.proerties 配置文件见 [clink-tests](clink-tests/src/test/resources/clink.proerties)，参考数据库表结构（以MySQL为例）：
+
+```
+create database test;
+use test;
+CREATE TABLE `test_table1` (
+  `id` int NOT NULL,
+  `name` varchar(255),
+  `create_time` datetime,
+  `update_time` timestamp DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+);
+CREATE TABLE `test_table2` (
+  `id` int NOT NULL,
+  `name` varchar(255),
+  `create_time` datetime,
+  `update_time` timestamp DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+);
+
+create database test1;
+use test1;
+CREATE TABLE `test_table1` (
+  `id` int NOT NULL,
+  `name` varchar(255),
+  `create_time` datetime,
+  `update_time` timestamp DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+);
+
+create database test2;
+use test2;
+CREATE TABLE `test_table2` (
+  `id` int NOT NULL,
+  `name` varchar(255),
+  `create_time` datetime,
+  `update_time` timestamp DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+);
+
+```
 
 ##### mysql-cdc
+
+- 单一数据库
 
 ```
 <?xml version="1.0" encoding="UTF-8"?>
 <clink xmlns="http://www.10mg.cn/schema/clink"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://www.10mg.cn/schema/clink http://www.10mg.cn/schema/clink.xsd">
-	<data-sync from="test-cdc" to="test"
-		table="test.test_table1,test.test_table2">
+	<!-- 仅同步单一数据库多张表时，可简化表名配置 -->
+	<data-sync from="mysql-cdc" to="postgresql-jdbc"
+		table="test_table1,test_table2">
+		<!-- 推荐指定 server-id -->
+		<from-config><![CDATA[server-id=5401]]></from-config>
+		<!-- 如果在 MySQL 源表中存在类型为 TIMESTAMP 的列，则可能需要将该列的来源数据类型配置为 TIMESTAMP_LTZ 以避免时区不同导致时间差异，这与服务器时区也有直接的关系。 -->
+		<column fromName="test_table1.update_time" fromType="TIMESTAMP_LTZ" />
+		<column fromName="test_table2.update_time" fromType="TIMESTAMP_LTZ" />
+	</data-sync>
+</clink>
+```
+
+- 多个数据库
+
+```
+<?xml version="1.0" encoding="UTF-8"?>
+<clink xmlns="http://www.10mg.cn/schema/clink"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.10mg.cn/schema/clink http://www.10mg.cn/schema/clink.xsd">
+	<!-- 同步多个数据库时，需指明表对应的数据库 -->
+	<data-sync from="mysql-cdc" to="test-sink"
+		table="test1.test_table1,test2.test_table2">
 <!-- 推荐指定 server-id -->
 <!-- 目前一些数仓对删除支持不是很好（比如StarRocks的更新模型），增加指定 convert-delete-to-update 为 true 是指将删除记录转化为更新记录，这时通常会同时记录操作类型 OP。OP 是元数据，需在同步的表中添加 OP 列（列名可根据需要更改，与配置对应即可），并添加如下配置：
 
@@ -665,22 +730,40 @@ data.sync.OP.from-type=CHAR(1) METADATA FROM 'op' VIRTUAL
 -->
 		<from-config><![CDATA[server-id=5401,convert-delete-to-update=true]]></from-config>
                 <!-- 如果在 MySQL 源表中存在类型为 TIMESTAMP 的列，则可能需要将该列的来源数据类型配置为 TIMESTAMP_LTZ 以避免时区不同导致时间差异，这与服务器时区也有直接的关系。 -->
-                <column fromName="test.test_table1.UPDATE_TIME" fromType="TIMESTAMP_LTZ"/>
+                <column fromName="test1.test_table1.UPDATE_TIME" fromType="TIMESTAMP_LTZ"/>
                 <!-- 当然，同样的问题也可以通过转换函数的方式来解决 -->
-                <column fromName="test.test_table2.UPDATE_TIME">TIMESTAMPADD(HOUR, -8, UPDATE_TIME)</column>
+                <column fromName="test2.test_table2.UPDATE_TIME">TIMESTAMPADD(HOUR, -8, UPDATE_TIME)</column>
 	</data-sync>
 </clink>
 ```
 
 ##### sqlserver-cdc
 
+- 单一数据库
+
 ```
 <?xml version="1.0" encoding="UTF-8"?>
 <clink xmlns="http://www.10mg.cn/schema/clink"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://www.10mg.cn/schema/clink http://www.10mg.cn/schema/clink.xsd">
-	<data-sync from="test-cdc" to="test"
-		table="test.test_table1,test.test_table2">
+	<!-- 仅同步单一数据库多张表时，可简化表名配置 -->
+	<data-sync from="sqlserver-cdc" to="mysql-jdbc"
+		table="test_table1,test_table2">
+		<!-- 如果两张表分别属于不同所有者，则可通过table-name参数指定（不指定则默认为dbo） -->
+		<!-- <from-config><![CDATA['table-name'='dbo.test_table1,admin.test_table2']]></from-config> -->
+	</data-sync>
+</clink>
+```
+
+- 多个数据库
+
+```
+<?xml version="1.0" encoding="UTF-8"?>
+<clink xmlns="http://www.10mg.cn/schema/clink"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.10mg.cn/schema/clink http://www.10mg.cn/schema/clink.xsd">
+	<data-sync from="sqlserver-cdc" to="test-sink"
+		table="test1.test_table1,test2.test_table2">
 <!-- 目前一些数仓对删除支持不是很好（比如StarRocks的更新模型），增加指定 convert-delete-to-update 为 true 是指将删除记录转化为更新记录，这时通常会同时记录操作类型 OP。OP 是元数据，需在同步的表中添加 OP 列（列名可根据需要更改，与配置对应即可），并添加如下配置：
 
 # 数据同步自动添加的列
@@ -689,8 +772,37 @@ data.sync.auto-columns=OP
 data.sync.OP.from-type=CHAR(1) METADATA FROM 'op' VIRTUAL
 
 -->
-<!-- 注意，由于 SQLServer 数据库既有 catalog，又有 schema，因为封装针对目前多数 OLAP 仅有 catalog 的场景，目前没有自动生成表名，因此需增加 table-name 配置 -->
-		<from-config><![CDATA[convert-delete-to-update=true,table-name='dbo.test_table1,dbo.test_table2']]></from-config>
+		<from-config><![CDATA[convert-delete-to-update=true]]></from-config>
+	</data-sync>
+</clink>
+```
+
+##### postgres-cdc
+
+- 单一 public 模式
+
+```
+<?xml version="1.0" encoding="UTF-8"?>
+<clink xmlns="http://www.10mg.cn/schema/clink"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.10mg.cn/schema/clink http://www.10mg.cn/schema/clink.xsd">
+	<data-sync from="postgresql-cdc" to="sqlserver-jdbc"
+		table="test_table1,test_table2">
+	</data-sync>
+</clink>
+```
+
+- 多个模式
+
+```
+<?xml version="1.0" encoding="UTF-8"?>
+<clink xmlns="http://www.10mg.cn/schema/clink"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.10mg.cn/schema/clink http://www.10mg.cn/schema/clink.xsd">
+	<data-sync from="postgresql-cdc" to="sqlserver-jdbc"
+		table="test_table1,test_table2">
+		<!-- 两张表分别属于不同模式，则可通过table-name参数指定（不指定则默认为public） -->
+		<from-config><![CDATA['table-name'='test_table1,admin.test_table2']]></from-config>
 	</data-sync>
 </clink>
 ```
