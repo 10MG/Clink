@@ -48,9 +48,14 @@ import io.debezium.data.Envelope;
  */
 public class MySqlCdcSourceFactory implements SourceFactory<MySqlSource<Tuple2<String, Row>>> {
 
-	public static final String IDENTIFIER = "mysql-cdc", SINGLE_QUOTATION_MARK = "'",
-			JDBC_PROPERTIES_PREFIX = "jdbc.properties.", INCLUDE_SCHEMA_CHANGES = "include-schema-changes",
-			CONVERT_DELETE_TO_UPDATE = "convert-delete-to-update";
+	public static final String IDENTIFIER = "mysql-cdc";
+
+	private static final String SINGLE_QUOTATION_MARK = "'", JDBC_PROPERTIES_PREFIX = "jdbc.properties.",
+			INCLUDE_SCHEMA_CHANGES = "include-schema-changes", CONVERT_DELETE_TO_UPDATE = "convert-delete-to-update",
+			SCAN_INCREMENTAL_CLOSE_IDLE_READER_ENABLED = "scan.incremental.close-idle-reader.enabled",
+			CLOSE_IDLE_READERS_METHOD_NAME = "closeIdleReaders",
+			SCAN_INCREMENTAL_SNAPSHOT_BACKFILL_SKIP = "scan.incremental.snapshot.backfill.skip",
+			SKIP_SNAPSHOT_BACKFILL_METHOD_NAME = "skipSnapshotBackfill";
 
 	@Override
 	public String factoryIdentifier() {
@@ -136,6 +141,15 @@ public class MySqlCdcSourceFactory implements SourceFactory<MySqlSource<Tuple2<S
 		if (config.containsKey(INCLUDE_SCHEMA_CHANGES)) {
 			builder.includeSchemaChanges(Boolean.valueOf(config.get(INCLUDE_SCHEMA_CHANGES)));
 		}
+		if (config.containsKey(SCAN_INCREMENTAL_CLOSE_IDLE_READER_ENABLED)) {
+			setbooleanOptionIfPossible(builder, CLOSE_IDLE_READERS_METHOD_NAME,
+					Boolean.valueOf(config.get(SCAN_INCREMENTAL_CLOSE_IDLE_READER_ENABLED)));
+		}
+		if (config.containsKey(SCAN_INCREMENTAL_SNAPSHOT_BACKFILL_SKIP)) {
+			setbooleanOptionIfPossible(builder, SKIP_SNAPSHOT_BACKFILL_METHOD_NAME,
+					Boolean.valueOf(config.get(SCAN_INCREMENTAL_SNAPSHOT_BACKFILL_SKIP)));
+		}
+
 		String convertDeleteToUpdate = config.get(CONVERT_DELETE_TO_UPDATE);
 		return builder
 				.deserializer(new MultiTableDebeziumDeserializationSchema(rowTypes, toMetadataConverters(metadatas),
@@ -194,6 +208,13 @@ public class MySqlCdcSourceFactory implements SourceFactory<MySqlSource<Tuple2<S
 			}
 		}
 		return serverIdValue;
+	}
+
+	private void setbooleanOptionIfPossible(Object obj, String name, boolean value) {
+		try {
+			obj.getClass().getDeclaredMethod(name, boolean.class).invoke(obj, value);
+		} catch (Exception e) {
+		}
 	}
 
 	private static final String SCAN_STARTUP_MODE_VALUE_INITIAL = "initial";
