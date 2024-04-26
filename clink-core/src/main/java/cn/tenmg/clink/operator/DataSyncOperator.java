@@ -56,7 +56,7 @@ public class DataSyncOperator extends AbstractOperator<DataSync> {
 			sinkDataSource.putAll(ConfigurationUtils.load(SQLUtils.toSQL(DSLUtils.parse(toConfig, params))));// 解析其中的参数并加载配置
 		}
 		DataSyncJobGenerator dataSyncJobGenerator;
-		if (table.contains(",") || "true".equals(sourceDataSource.get(CONVERT_DELETE_TO_UPDATE))) {
+		if (table.contains(",") || sourceDataSource.containsKey(CONVERT_DELETE_TO_UPDATE)) {
 			dataSyncJobGenerator = MultiTablesDataSyncJobGenerator.getInstance();
 		} else {
 			sourceDataSource.remove(CONVERT_DELETE_TO_UPDATE);
