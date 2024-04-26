@@ -97,21 +97,14 @@ public abstract class AbstractDataSyncJobGenerator implements DataSyncJobGenerat
 	/**
 	 * 生成数据同步任务
 	 * 
-	 * @param env
-	 *            流执行环境
-	 * @param tableEnv
-	 *            流表执行环境
-	 * @param dataSync
-	 *            同步配置对象
-	 * @param sourceDataSource
-	 *            源数据源
-	 * @param sinkDataSource
-	 *            汇数据源
-	 * @param params
-	 *            参数查找表
+	 * @param env              流执行环境
+	 * @param tableEnv         流表执行环境
+	 * @param dataSync         同步配置对象
+	 * @param sourceDataSource 源数据源
+	 * @param sinkDataSource   汇数据源
+	 * @param params           参数查找表
 	 * @return 生成数据同步任务的结果
-	 * @throws Exception
-	 *             发生异常
+	 * @throws Exception 发生异常
 	 */
 	abstract Object generate(StreamExecutionEnvironment env, StreamTableEnvironment tableEnv, DataSync dataSync,
 			Map<String, String> sourceDataSource, Map<String, String> sinkDataSource, Map<String, Object> params)
@@ -121,26 +114,20 @@ public abstract class AbstractDataSyncJobGenerator implements DataSyncJobGenerat
 	public Object generate(StreamExecutionEnvironment env, DataSync dataSync, Map<String, String> sourceDataSource,
 			Map<String, String> sinkDataSource, Map<String, Object> params) throws Exception {
 		StreamTableEnvironment tableEnv = ClinkContext.getOrCreateStreamTableEnvironment(env);
-		StreamTableEnvironmentUtils.useCatalogOrDefault(tableEnv, null);
+		StreamTableEnvironmentUtils.useDefaultCatalog(tableEnv);
 		return generate(env, tableEnv, dataSync, sourceDataSource, sinkDataSource, params);
 	}
 
 	/**
 	 * 生成创建数据汇表的 Flink SQL
 	 * 
-	 * @param dataSource
-	 *            数据源
-	 * @param table
-	 *            表名
-	 * @param columns
-	 *            列
-	 * @param primaryKeys
-	 *            主键
-	 * @param params
-	 *            运行参数
+	 * @param dataSource  数据源
+	 * @param table       表名
+	 * @param columns     列
+	 * @param primaryKeys 主键
+	 * @param params      运行参数
 	 * @return 创建数据汇表的 Flink SQL
-	 * @throws IOException
-	 *             I/O 异常
+	 * @throws IOException I/O 异常
 	 */
 	protected static String sinkTableSQL(Map<String, String> dataSource, String table, List<Column> columns,
 			Set<String> primaryKeys, Map<String, Object> params) throws IOException {
@@ -150,21 +137,14 @@ public abstract class AbstractDataSyncJobGenerator implements DataSyncJobGenerat
 	/**
 	 * 生成创建数据汇表的 Flink SQL
 	 * 
-	 * @param sinkDataSource
-	 *            汇数据源
-	 * @param table
-	 *            表名
-	 * @param columns
-	 *            列
-	 * @param primaryKeys
-	 *            主键
-	 * @param params
-	 *            运行参数
-	 * @param collector
-	 *            主键收集器
+	 * @param sinkDataSource 汇数据源
+	 * @param table          表名
+	 * @param columns        列
+	 * @param primaryKeys    主键
+	 * @param params         运行参数
+	 * @param collector      主键收集器
 	 * @return 创建数据汇表的 Flink SQL
-	 * @throws IOException
-	 *             I/O 异常
+	 * @throws IOException I/O 异常
 	 */
 	protected static String sinkTableSQL(Map<String, String> sinkDataSource, String table, List<Column> columns,
 			Set<String> primaryKeys, Map<String, Object> params, PrimaryKeysCollector collector) throws IOException {
@@ -655,8 +635,7 @@ public abstract class AbstractDataSyncJobGenerator implements DataSyncJobGenerat
 		/**
 		 * 收集主键列名
 		 * 
-		 * @param primaryKeys
-		 *            主键列名
+		 * @param primaryKeys 主键列名
 		 */
 		void collect(Set<String> primaryKeys);
 	}
