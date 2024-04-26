@@ -120,8 +120,9 @@ public class SQLServerCdcSourceFactory implements SourceFactory<JdbcIncrementalS
 		SqlServerSourceBuilder<Tuple2<String, Row>> builder = SqlServerSourceBuilder.SqlServerIncrementalSource
 				.<Tuple2<String, Row>>builder().hostname(getOrDefault(config, HOSTNAME))
 				.port(getIntegerOrDefault(config, PORT)).username(getOrDefault(config, USERNAME))
-				.password(getOrDefault(config, PASSWORD)).databaseList(String.join(",", databases))
-				.tableList(config.containsKey(TABLE_NAME) ? config.get(TABLE_NAME) : String.join(",", tables))
+				.password(getOrDefault(config, PASSWORD)).databaseList(toArray(databases))
+				.tableList(
+						config.containsKey(TABLE_NAME) ? trimAll(config.get(TABLE_NAME).split(",")) : toArray(tables))
 				.chunkKeyColumn(databaseName).debeziumProperties(DebeziumOptions.getDebeziumProperties(config));
 
 		if (config.containsKey(SERVER_TIME_ZONE.key())) {
@@ -177,6 +178,17 @@ public class SQLServerCdcSourceFactory implements SourceFactory<JdbcIncrementalS
 				.deserializer(new MultiTableDebeziumDeserializationSchema(rowTypes, toMetadataConverters(metadatas),
 						convertDeleteToUpdate == null ? false : Boolean.parseBoolean(convertDeleteToUpdate)))
 				.build();
+	}
+
+	private static String[] toArray(Set<String> strs) {
+		return strs.toArray(new String[strs.size()]);
+	}
+
+	private static String[] trimAll(String[] strs) {
+		for (int i = 0; i < strs.length; i++) {
+			strs[i] = strs[i].trim();
+		}
+		return strs;
 	}
 
 	private static String getOrDefault(Map<String, String> config, ConfigOption<String> option) {
@@ -271,6 +283,14 @@ public class SQLServerCdcSourceFactory implements SourceFactory<JdbcIncrementalS
 					Struct messageStruct = (Struct) record.value();
 					Struct sourceStruct = messageStruct.getStruct(Envelope.FieldName.SOURCE);
 					return StringData.fromString(sourceStruct.getString(AbstractSourceInfo.TABLE_NAME_KEY));
+				}
+			}).put("get_ts", new MetadataConverter() {
+				private static final long serialVersionUID = 1L;
+
+				@Override
+				public Object read(SourceRecord record) {
+					Struct messageStruct = (Struct) record.value();
+					return TimestampData.fromEpochMillis((Long) messageStruct.get(AbstractSourceInfo.TIMESTAMP_KEY));
 				}
 			}).put("database_name", new MetadataConverter() {
 				private static final long serialVersionUID = 1L;

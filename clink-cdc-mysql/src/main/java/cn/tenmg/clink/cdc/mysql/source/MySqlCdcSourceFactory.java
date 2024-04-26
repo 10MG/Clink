@@ -96,8 +96,8 @@ public class MySqlCdcSourceFactory implements SourceFactory<MySqlSource<Tuple2<S
 				.hostname(config.get(MySqlSourceOptions.HOSTNAME.key()))
 				.port(getIntegerOrDefault(config, MySqlSourceOptions.PORT))
 				.username(config.get(MySqlSourceOptions.USERNAME.key()))
-				.password(config.get(MySqlSourceOptions.PASSWORD.key())).databaseList(String.join(",", databases))
-				.tableList(String.join(",", tables)).serverId(validateAndGetServerId(config))
+				.password(config.get(MySqlSourceOptions.PASSWORD.key())).databaseList(toArray(databases))
+				.tableList(toArray(tables)).serverId(validateAndGetServerId(config))
 				.debeziumProperties(DebeziumOptions.getDebeziumProperties(config))
 				.jdbcProperties(ConfigurationUtils.getPrefixedKeyValuePairs(config, JDBC_PROPERTIES_PREFIX, false));
 
@@ -155,6 +155,10 @@ public class MySqlCdcSourceFactory implements SourceFactory<MySqlSource<Tuple2<S
 				.deserializer(new MultiTableDebeziumDeserializationSchema(rowTypes, toMetadataConverters(metadatas),
 						convertDeleteToUpdate == null ? false : Boolean.parseBoolean(convertDeleteToUpdate)))
 				.build();
+	}
+
+	private static String[] toArray(Set<String> strs) {
+		return strs.toArray(new String[strs.size()]);
 	}
 
 	private static String getOrDefault(Map<String, String> config, ConfigOption<String> option) {
@@ -270,6 +274,14 @@ public class MySqlCdcSourceFactory implements SourceFactory<MySqlSource<Tuple2<S
 					Struct messageStruct = (Struct) record.value();
 					Struct sourceStruct = messageStruct.getStruct(Envelope.FieldName.SOURCE);
 					return StringData.fromString(sourceStruct.getString(AbstractSourceInfo.TABLE_NAME_KEY));
+				}
+			}).put("get_ts", new MetadataConverter() {
+				private static final long serialVersionUID = 1L;
+
+				@Override
+				public Object read(SourceRecord record) {
+					Struct messageStruct = (Struct) record.value();
+					return TimestampData.fromEpochMillis((Long) messageStruct.get(AbstractSourceInfo.TIMESTAMP_KEY));
 				}
 			}).put("database_name", new MetadataConverter() {
 				private static final long serialVersionUID = 1L;

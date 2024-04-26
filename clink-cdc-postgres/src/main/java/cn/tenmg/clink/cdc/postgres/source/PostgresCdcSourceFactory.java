@@ -129,7 +129,8 @@ public class PostgresCdcSourceFactory implements SourceFactory<JdbcIncrementalSo
 				.<Tuple2<String, Row>>builder().hostname(getOrDefault(config, HOSTNAME))
 				.port(getIntegerOrDefault(config, PORT)).username(getOrDefault(config, USERNAME))
 				.password(getOrDefault(config, PASSWORD)).database(String.join(",", databases)).schemaList(schemas)
-				.tableList(config.containsKey(TABLE_NAME) ? config.get(TABLE_NAME) : String.join(",", tables))
+				.tableList(
+						config.containsKey(TABLE_NAME) ? trimAll(config.get(TABLE_NAME).split(",")) : toArray(tables))
 				.decodingPluginName(getOrDefault(config, PostgresSourceOptions.DECODING_PLUGIN_NAME))
 				.slotName(getOrDefault(config, SLOT_NAME))
 				.heartbeatInterval(getDurationOrDefault(config, PostgresSourceOptions.HEARTBEAT_INTERVAL))
@@ -185,6 +186,17 @@ public class PostgresCdcSourceFactory implements SourceFactory<JdbcIncrementalSo
 				.deserializer(new MultiTableDebeziumDeserializationSchema(rowTypes, toMetadataConverters(metadatas),
 						convertDeleteToUpdate == null ? false : Boolean.parseBoolean(convertDeleteToUpdate)))
 				.build();
+	}
+
+	private static String[] toArray(Set<String> strs) {
+		return strs.toArray(new String[strs.size()]);
+	}
+
+	private static String[] trimAll(String[] strs) {
+		for (int i = 0; i < strs.length; i++) {
+			strs[i] = strs[i].trim();
+		}
+		return strs;
 	}
 
 	private static String getOrDefault(Map<String, String> config, ConfigOption<String> option) {
@@ -279,6 +291,14 @@ public class PostgresCdcSourceFactory implements SourceFactory<JdbcIncrementalSo
 					Struct messageStruct = (Struct) record.value();
 					Struct sourceStruct = messageStruct.getStruct(Envelope.FieldName.SOURCE);
 					return StringData.fromString(sourceStruct.getString(AbstractSourceInfo.TABLE_NAME_KEY));
+				}
+			}).put("get_ts", new MetadataConverter() {
+				private static final long serialVersionUID = 1L;
+
+				@Override
+				public Object read(SourceRecord record) {
+					Struct messageStruct = (Struct) record.value();
+					return TimestampData.fromEpochMillis((Long) messageStruct.get(AbstractSourceInfo.TIMESTAMP_KEY));
 				}
 			}).put("database_name", new MetadataConverter() {
 				private static final long serialVersionUID = 1L;
