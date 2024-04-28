@@ -292,14 +292,6 @@ public class PostgresCdcSourceFactory implements SourceFactory<JdbcIncrementalSo
 					Struct sourceStruct = messageStruct.getStruct(Envelope.FieldName.SOURCE);
 					return StringData.fromString(sourceStruct.getString(AbstractSourceInfo.TABLE_NAME_KEY));
 				}
-			}).put("get_ts", new MetadataConverter() {
-				private static final long serialVersionUID = 1L;
-
-				@Override
-				public Object read(SourceRecord record) {
-					Struct messageStruct = (Struct) record.value();
-					return TimestampData.fromEpochMillis((Long) messageStruct.get(AbstractSourceInfo.TIMESTAMP_KEY));
-				}
 			}).put("database_name", new MetadataConverter() {
 				private static final long serialVersionUID = 1L;
 
