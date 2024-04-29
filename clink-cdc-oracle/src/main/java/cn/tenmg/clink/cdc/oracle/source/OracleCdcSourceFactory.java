@@ -35,6 +35,7 @@ import com.ververica.cdc.debezium.table.MetadataConverter;
 import cn.tenmg.clink.cdc.oracle.debezium.MultiTableDebeziumDeserializationSchema;
 import cn.tenmg.clink.source.SourceFactory;
 import cn.tenmg.dsl.utils.MapUtils;
+import cn.tenmg.dsl.utils.SetUtils;
 import cn.tenmg.dsl.utils.StringUtils;
 import io.debezium.connector.AbstractSourceInfo;
 import io.debezium.data.Envelope;
@@ -50,8 +51,8 @@ public class OracleCdcSourceFactory implements SourceFactory<JdbcIncrementalSour
 
 	public static final String IDENTIFIER = "oracle-cdc";
 
-	private static final String TABLE_NAME = "table-name", SINGLE_QUOTATION_MARK = "'",
-			INCLUDE_SCHEMA_CHANGES = "include-schema-changes", CONVERT_DELETE_TO_UPDATE = "convert-delete-to-update",
+	private static final String TABLE_NAME = "table-name", INCLUDE_SCHEMA_CHANGES = "include-schema-changes",
+			CONVERT_DELETE_TO_UPDATE = "convert-delete-to-update",
 			SCAN_INCREMENTAL_SNAPSHOT_CHUNK_KEY_COLUMN = JdbcSourceOptions.SCAN_INCREMENTAL_SNAPSHOT_CHUNK_KEY_COLUMN
 					.key(),
 			SCAN_INCREMENTAL_CLOSE_IDLE_READER_ENABLED = "scan.incremental.close-idle-reader.enabled",
@@ -74,9 +75,6 @@ public class OracleCdcSourceFactory implements SourceFactory<JdbcIncrementalSour
 	private static final ConfigOption<String> DATABASE_NAME = ConfigOptions.key("database-name").stringType()
 			.noDefaultValue().withDescription("Database name of the Oracle server to monitor.");
 
-	private static final ConfigOption<String> SCHEMA_NAME = ConfigOptions.key("schema-name").stringType()
-			.defaultValue("public").withDescription("Schema name of the Oracle server to monitor.");
-
 	private static final ConfigOption<String> SCAN_STARTUP_MODE = ConfigOptions.key("scan.startup.mode").stringType()
 			.defaultValue("initial")
 			.withDescription("Optional startup mode for Oracle CDC consumer, valid enumerations are "
@@ -90,39 +88,38 @@ public class OracleCdcSourceFactory implements SourceFactory<JdbcIncrementalSour
 	@Override
 	public JdbcIncrementalSource<Tuple2<String, Row>> create(Map<String, String> config, Map<String, RowType> rowTypes,
 			Map<String, Map<Integer, String>> metadatas) {
-		String databaseName = getOrDefault(config, DATABASE_NAME),
-				schemaList[] = getOrDefault(config, SCHEMA_NAME).split(","), parts[];
-		Set<String> databases = new HashSet<String>(), tables;
-		if (StringUtils.isBlank(databaseName)) {
-			tables = rowTypes.keySet();
-			for (String tableName : tables) {
+		String schemaNames = getOrDefault(config, JdbcSourceOptions.SCHEMA_NAME);
+		Set<String> schemas = schemaNames == null ? Collections.emptySet()
+				: SetUtils.newHashSet(trimAll(schemaNames.split(","))), tables = new HashSet<String>();
+		String[] tableNames = toArray(config.get(TABLE_NAME)), parts;
+		if (tableNames == null) {
+			for (String tableName : rowTypes.keySet()) {
 				parts = tableName.split("\\.", 2);
-				if (parts.length > 1) {
-					databases.add(parts[0]);
+				if (parts.length > 1 || schemas.isEmpty()) {
+					tables.add(tableName);
+				} else {
+					for (Iterator<String> it = schemas.iterator(); it.hasNext();) {
+						tables.add(StringUtils.concat(it.next(), ".", tableName));
+					}
 				}
 			}
 		} else {
-			if (databaseName.startsWith(SINGLE_QUOTATION_MARK) && databaseName.endsWith(SINGLE_QUOTATION_MARK)) {
-				databaseName = databaseName.substring(1, databaseName.length() - 1);
-			}
-			databases.add(databaseName);
-			tables = new HashSet<String>();
-			for (String tableName : rowTypes.keySet()) {
+			for (String tableName : tableNames) {
 				parts = tableName.split("\\.", 2);
-				if (parts.length > 1) {
-					databases.add(parts[0]);
-					tables.add(schemaList.length == 1 ? StringUtils.concat(schemaList[0], ".", parts[1]) : tableName);
+				if (parts.length > 1 || schemas.isEmpty()) {
+					tables.add(tableName);
 				} else {
-					tables.add(schemaList.length == 1 ? StringUtils.concat(schemaList[0], ".", tableName) : tableName);
+					for (Iterator<String> it = schemas.iterator(); it.hasNext();) {
+						tables.add(StringUtils.concat(it.next(), ".", tableName));
+					}
 				}
 			}
 		}
 		OracleSourceBuilder<Tuple2<String, Row>> builder = OracleSourceBuilder.OracleIncrementalSource
 				.<Tuple2<String, Row>>builder().hostname(getOrDefault(config, HOSTNAME))
 				.port(getIntegerOrDefault(config, PORT)).username(getOrDefault(config, USERNAME))
-				.password(getOrDefault(config, PASSWORD)).databaseList(toArray(databases)).schemaList(schemaList)
-				.tableList(
-						config.containsKey(TABLE_NAME) ? trimAll(config.get(TABLE_NAME).split(",")) : toArray(tables))
+				.password(getOrDefault(config, PASSWORD)).databaseList(toArray(getOrDefault(config, DATABASE_NAME)))
+				.schemaList(toArray(schemas)).tableList(toArray(tables))
 				.debeziumProperties(DebeziumOptions.getDebeziumProperties(config));
 
 		StartupOptions startupOptions = getStartupOptions(config);
@@ -179,6 +176,13 @@ public class OracleCdcSourceFactory implements SourceFactory<JdbcIncrementalSour
 
 	private static String[] toArray(Set<String> strs) {
 		return strs.toArray(new String[strs.size()]);
+	}
+
+	private static String[] toArray(String str) {
+		if (str == null) {
+			return null;
+		}
+		return trimAll(str.split(","));
 	}
 
 	private static String[] trimAll(String[] strs) {

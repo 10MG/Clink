@@ -36,6 +36,7 @@ import com.ververica.cdc.debezium.table.MetadataConverter;
 import cn.tenmg.clink.cdc.postgres.debezium.MultiTableDebeziumDeserializationSchema;
 import cn.tenmg.clink.source.SourceFactory;
 import cn.tenmg.dsl.utils.MapUtils;
+import cn.tenmg.dsl.utils.SetUtils;
 import cn.tenmg.dsl.utils.StringUtils;
 import io.debezium.connector.AbstractSourceInfo;
 import io.debezium.data.Envelope;
@@ -51,8 +52,8 @@ public class PostgresCdcSourceFactory implements SourceFactory<JdbcIncrementalSo
 
 	public static final String IDENTIFIER = "postgres-cdc";
 
-	private static final String TABLE_NAME = "table-name", SINGLE_QUOTATION_MARK = "'",
-			INCLUDE_SCHEMA_CHANGES = "include-schema-changes", CONVERT_DELETE_TO_UPDATE = "convert-delete-to-update",
+	private static final String TABLE_NAME = "table-name", INCLUDE_SCHEMA_CHANGES = "include-schema-changes",
+			CONVERT_DELETE_TO_UPDATE = "convert-delete-to-update",
 			SCAN_INCREMENTAL_SNAPSHOT_CHUNK_KEY_COLUMN = JdbcSourceOptions.SCAN_INCREMENTAL_SNAPSHOT_CHUNK_KEY_COLUMN
 					.key(),
 			SCAN_INCREMENTAL_CLOSE_IDLE_READER_ENABLED = "scan.incremental.close-idle-reader.enabled",
@@ -97,30 +98,29 @@ public class PostgresCdcSourceFactory implements SourceFactory<JdbcIncrementalSo
 	@Override
 	public JdbcIncrementalSource<Tuple2<String, Row>> create(Map<String, String> config, Map<String, RowType> rowTypes,
 			Map<String, Map<Integer, String>> metadatas) {
-		String databaseName = getOrDefault(config, DATABASE_NAME),
-				schemas[] = getOrDefault(config, SCHEMA_NAME).split(","), parts[];
-		Set<String> databases = new HashSet<String>(), tables;
-		if (StringUtils.isBlank(databaseName)) {
-			tables = rowTypes.keySet();
-			for (String tableName : tables) {
-				parts = tableName.split("\\.", 2);
-				if (parts.length > 1) {
-					databases.add(parts[0]);
-				}
-			}
-		} else {
-			if (databaseName.startsWith(SINGLE_QUOTATION_MARK) && databaseName.endsWith(SINGLE_QUOTATION_MARK)) {
-				databaseName = databaseName.substring(1, databaseName.length() - 1);
-			}
-			databases.add(databaseName);
-			tables = new HashSet<String>();
+		HashSet<String> schemas = SetUtils.newHashSet(trimAll(getOrDefault(config, SCHEMA_NAME).split(","))),
+				tables = new HashSet<String>();
+		String[] tableNames = toArray(config.get(TABLE_NAME)), parts;
+		if (tableNames == null) {
 			for (String tableName : rowTypes.keySet()) {
 				parts = tableName.split("\\.", 2);
 				if (parts.length > 1) {
-					databases.add(parts[0]);
-					tables.add(schemas.length == 1 ? StringUtils.concat(schemas[0], ".", parts[1]) : tableName);
+					tables.add(tableName);
 				} else {
-					tables.add(schemas.length == 1 ? StringUtils.concat(schemas[0], ".", tableName) : tableName);
+					for (Iterator<String> it = schemas.iterator(); it.hasNext();) {
+						tables.add(StringUtils.concat(it.next(), ".", tableName));
+					}
+				}
+			}
+		} else {
+			for (String tableName : tableNames) {
+				parts = tableName.split("\\.", 2);
+				if (parts.length > 1) {
+					tables.add(tableName);
+				} else {
+					for (Iterator<String> it = schemas.iterator(); it.hasNext();) {
+						tables.add(StringUtils.concat(it.next(), ".", tableName));
+					}
 				}
 			}
 		}
@@ -128,9 +128,8 @@ public class PostgresCdcSourceFactory implements SourceFactory<JdbcIncrementalSo
 		PostgresSourceBuilder<Tuple2<String, Row>> builder = PostgresSourceBuilder.PostgresIncrementalSource
 				.<Tuple2<String, Row>>builder().hostname(getOrDefault(config, HOSTNAME))
 				.port(getIntegerOrDefault(config, PORT)).username(getOrDefault(config, USERNAME))
-				.password(getOrDefault(config, PASSWORD)).database(String.join(",", databases)).schemaList(schemas)
-				.tableList(
-						config.containsKey(TABLE_NAME) ? trimAll(config.get(TABLE_NAME).split(",")) : toArray(tables))
+				.password(getOrDefault(config, PASSWORD)).database(getOrDefault(config, DATABASE_NAME))
+				.schemaList(toArray(schemas)).tableList(toArray(tables))
 				.decodingPluginName(getOrDefault(config, PostgresSourceOptions.DECODING_PLUGIN_NAME))
 				.slotName(getOrDefault(config, SLOT_NAME))
 				.heartbeatInterval(getDurationOrDefault(config, PostgresSourceOptions.HEARTBEAT_INTERVAL))
@@ -186,6 +185,13 @@ public class PostgresCdcSourceFactory implements SourceFactory<JdbcIncrementalSo
 				.deserializer(new MultiTableDebeziumDeserializationSchema(rowTypes, toMetadataConverters(metadatas),
 						convertDeleteToUpdate == null ? false : Boolean.parseBoolean(convertDeleteToUpdate)))
 				.build();
+	}
+
+	private static String[] toArray(String str) {
+		if (str == null) {
+			return null;
+		}
+		return trimAll(str.split(","));
 	}
 
 	private static String[] toArray(Set<String> strs) {

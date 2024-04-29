@@ -4,5 +4,6 @@
 	xsi:schemaLocation="http://www.10mg.cn/schema/clink http://www.10mg.cn/schema/clink.xsd">
 	<data-sync from="oracle-cdc" to="mysql-jdbc"
 		table="TEST_TABLE1,TEST_TABLE2">
+		<from-config><![CDATA['table-name'='C##TEST1.TEST_TABLE1,TEST_TABLE2']]></from-config>
 	</data-sync>
 </clink>

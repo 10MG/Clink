@@ -645,6 +645,7 @@ type | `String` | 是 | 数据类型。使用标签内文本表示。
 | mysql-cdc     | 2.2+ | 1.6+   |
 | sqlserver-cdc | 2.4+ | 1.6+   |
 | postgres-cdc  | 2.4+ | 1.6.1+ |
+| oracle-cdc    | 2.3+ | 1.6.1+ |
 
 以下示例参考 clink.proerties 配置文件见 [clink-tests](clink-tests/src/test/resources/clink.proerties)，参考数据库表结构（以MySQL为例）：
 
@@ -801,8 +802,37 @@ data.sync.OP.from-type=CHAR(1) METADATA FROM 'op' VIRTUAL
 	xsi:schemaLocation="http://www.10mg.cn/schema/clink http://www.10mg.cn/schema/clink.xsd">
 	<data-sync from="postgresql-cdc" to="sqlserver-jdbc"
 		table="test_table1,test_table2">
-		<!-- 两张表分别属于不同模式，则可通过table-name参数指定（不指定则默认为public） -->
-		<from-config><![CDATA['table-name'='test_table1,admin.test_table2']]></from-config>
+		<!-- 两张表分别属于不同模式，则可通过table-name参数指定（不指定则默认为所有已配置的模式） -->
+		<from-config><![CDATA['table-name'='public.test_table1,admin.test_table2']]></from-config>
+	</data-sync>
+</clink>
+```
+
+##### oracle-cdc
+
+- 单一模式
+
+```
+<?xml version="1.0" encoding="UTF-8"?>
+<clink xmlns="http://www.10mg.cn/schema/clink"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.10mg.cn/schema/clink http://www.10mg.cn/schema/clink.xsd">
+	<data-sync from="oracle-cdc" to="mysql-jdbc"
+		table="TEST_TABLE1,TEST_TABLE2">
+	</data-sync>
+</clink>
+```
+- 多个模式
+
+```
+<?xml version="1.0" encoding="UTF-8"?>
+<clink xmlns="http://www.10mg.cn/schema/clink"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.10mg.cn/schema/clink http://www.10mg.cn/schema/clink.xsd">
+	<data-sync from="oracle-cdc" to="mysql-jdbc"
+		table="TEST_TABLE1,TEST_TABLE2">
+		<!-- 两张表分别属于不同模式，则可通过table-name参数指定（不指定则默认为所有已配置的模式） -->
+		<from-config><![CDATA['table-name'='C##TEST1.TEST_TABLE1,C##TEST2.TEST_TABLE2']]></from-config>
 	</data-sync>
 </clink>
 ```
