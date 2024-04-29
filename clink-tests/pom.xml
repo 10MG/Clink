@@ -23,6 +23,12 @@
 			<artifactId>clink-cdc-mysql</artifactId>
 			<version>${project.version}</version>
 		</dependency>
+		<!-- https://mvnrepository.com/artifact/cn.tenmg/clink-cdc-oracle -->
+		<dependency>
+			<groupId>cn.tenmg</groupId>
+			<artifactId>clink-cdc-oracle</artifactId>
+			<version>${project.version}</version>
+		</dependency>
 		<!-- https://mvnrepository.com/artifact/cn.tenmg/clink-cdc-postgres -->
 		<dependency>
 			<groupId>cn.tenmg</groupId>
@@ -59,7 +65,18 @@
 				</exclusion>
 			</exclusions>
 		</dependency>
-
+		<!--
+		https://mvnrepository.com/artifact/com.ververica/flink-sql-connector-oracle-cdc -->
+		<dependency>
+			<groupId>com.ververica</groupId>
+			<artifactId>flink-sql-connector-oracle-cdc</artifactId>
+			<exclusions>
+				<exclusion>
+					<groupId>org.apache.flink</groupId>
+					<artifactId>flink-shaded-guava</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
 		<!--
 		https://mvnrepository.com/artifact/com.ververica/flink-sql-connector-postgres-cdc -->
 		<dependency>

@@ -1,4 +1,4 @@
-package cn.tenmg.clink.cdc.postgres.debezium;
+package cn.tenmg.clink.cdc.oracle.debezium;
 
 import java.math.BigDecimal;
 import java.nio.ByteBuffer;
@@ -85,10 +85,10 @@ public class MultiTableDebeziumDeserializationSchema implements DebeziumDeserial
 		Struct value = (Struct) record.value();
 		Schema valueSchema = record.valueSchema();
 		Struct source = value.getStruct("source");
-		String databaseName = source.getString("db"), tablename = source.get("table").toString();
+		String schema = source.getString("schema"), tablename = source.get("table").toString();
 		DeserializationRuntimeConverter physicalConverter = null;
-		if (databaseName != null) {
-			String fullName = StringUtils.concat(databaseName, ".", tablename);
+		if (schema != null) {
+			String fullName = StringUtils.concat(schema, ".", tablename);
 			physicalConverter = physicalConverters.get(fullName);// 优先根据全名获取物理转换器
 			if (physicalConverter == null) {
 				physicalConverter = physicalConverters.get(tablename);
@@ -496,6 +496,14 @@ public class MultiTableDebeziumDeserializationSchema implements DebeziumDeserial
 				for (int i = 0; i < arity; i++) {
 					String fieldName = fieldNames[i];
 					Field field = schema.field(fieldName);
+					if (field == null) {
+						fieldName = fieldName.toUpperCase();
+						field = schema.field(fieldName);
+						if (field == null) {
+							fieldName = fieldName.toLowerCase();
+							field = schema.field(fieldName);
+						}
+					}
 					if (field == null) {
 						row.setField(i, null);
 					} else {

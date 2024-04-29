@@ -11,6 +11,7 @@
 
 	<modules>
 		<module>clink-cdc-mysql</module>
+		<module>clink-cdc-oracle</module>
 		<module>clink-cdc-postgres</module>
 		<module>clink-cdc-sqlserver</module>
 		<module>clink-clients</module>
@@ -80,9 +81,9 @@
 		<nacos-client.version>2.3.2</nacos-client.version>
 		<mysql-connector-j.version>8.3.0</mysql-connector-j.version>
 		<jakarta.xml.bind-api.version>3.0.1</jakarta.xml.bind-api.version>
-		<flink-cdc.version>2.4.0</flink-cdc.version>
+		<flink-cdc.version>3.0.1</flink-cdc.version>
 		<bsh.version>2.0b6</bsh.version>
-		<flink.version>1.18.1</flink.version>
+		<flink.version>1.19.0</flink.version>
 		<flink-connector-kafka.version>3.1.0-1.18</flink-connector-kafka.version>
 		<flink-connector-jdbc.version>3.1.2-1.18</flink-connector-jdbc.version>
 		<scala.binary.version>2.12</scala.binary.version>
@@ -132,6 +133,13 @@
 			<dependency>
 				<groupId>com.ververica</groupId>
 				<artifactId>flink-sql-connector-mysql-cdc</artifactId>
+				<version>${flink-cdc.version}</version>
+			</dependency>
+			<!--
+			https://mvnrepository.com/artifact/com.ververica/flink-sql-connector-oracle-cdc -->
+			<dependency>
+				<groupId>com.ververica</groupId>
+				<artifactId>flink-sql-connector-oracle-cdc</artifactId>
 				<version>${flink-cdc.version}</version>
 			</dependency>
 			<!--

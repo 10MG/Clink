@@ -497,10 +497,18 @@ public class MultiTableDebeziumDeserializationSchema implements DebeziumDeserial
 					String fieldName = fieldNames[i];
 					Field field = schema.field(fieldName);
 					if (field == null) {
+						fieldName = fieldName.toUpperCase();
+						field = schema.field(fieldName);
+						if (field == null) {
+							fieldName = fieldName.toLowerCase();
+							field = schema.field(fieldName);
+						}
+					}
+					if (field == null) {
 						row.setField(i, null);
 					} else {
 						Object fieldValue = struct.getWithoutDefault(fieldName);
-						Schema fieldSchema = schema.field(fieldName).schema();
+						Schema fieldSchema = field.schema();
 						Object convertedField = convertField(fieldConverters[i], fieldValue, fieldSchema);
 						row.setField(i, convertedField);
 					}
