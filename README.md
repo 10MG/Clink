@@ -631,7 +631,7 @@ type | `String` | 是 | 数据类型。使用标签内文本表示。
 	xsi:schemaLocation="http://www.10mg.cn/schema/clink http://www.10mg.cn/schema/clink.xsd">
 	<data-sync from="test-cdc" to="test" table="test_table">
 		<!-- 推荐指定 server-id -->
-		<from-config><![CDATA[server-id=5400]]></from-config>
+		<from-config><![CDATA['server-id'='5400']]></from-config>
 	</data-sync>
 </clink>
 ```
@@ -702,7 +702,7 @@ CREATE TABLE `test_table2` (
 	<data-sync from="mysql-cdc" to="postgresql-jdbc"
 		table="test_table1,test_table2">
 		<!-- 推荐指定 server-id -->
-		<from-config><![CDATA[server-id=5401]]></from-config>
+		<from-config><![CDATA['server-id'='5401']]></from-config>
 		<!-- 如果在 MySQL 源表中存在类型为 TIMESTAMP 的列，则可能需要将该列的来源数据类型配置为 TIMESTAMP_LTZ 以避免时区不同导致时间差异，这与服务器时区也有直接的关系。 -->
 		<column fromName="test_table1.update_time" fromType="TIMESTAMP_LTZ" />
 		<column fromName="test_table2.update_time" fromType="TIMESTAMP_LTZ" />
@@ -729,7 +729,7 @@ data.sync.auto-columns=OP
 data.sync.OP.from-type=CHAR(1) METADATA FROM 'op' VIRTUAL
 
 -->
-		<from-config><![CDATA[server-id=5401,convert-delete-to-update=true]]></from-config>
+		<from-config><![CDATA['server-id'='5401','convert-delete-to-update'='true']]></from-config>
                 <!-- 如果在 MySQL 源表中存在类型为 TIMESTAMP 的列，则可能需要将该列的来源数据类型配置为 TIMESTAMP_LTZ 以避免时区不同导致时间差异，这与服务器时区也有直接的关系。 -->
                 <column fromName="test1.test_table1.UPDATE_TIME" fromType="TIMESTAMP_LTZ"/>
                 <!-- 当然，同样的问题也可以通过转换函数的方式来解决 -->
@@ -773,7 +773,7 @@ data.sync.auto-columns=OP
 data.sync.OP.from-type=CHAR(1) METADATA FROM 'op' VIRTUAL
 
 -->
-		<from-config><![CDATA[convert-delete-to-update=true]]></from-config>
+		<from-config><![CDATA['convert-delete-to-update'='true']]></from-config>
 	</data-sync>
 </clink>
 ```
