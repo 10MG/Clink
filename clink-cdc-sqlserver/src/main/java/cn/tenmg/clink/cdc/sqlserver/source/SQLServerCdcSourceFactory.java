@@ -293,6 +293,14 @@ public class SQLServerCdcSourceFactory implements SourceFactory<JdbcIncrementalS
 					Struct sourceStruct = messageStruct.getStruct(Envelope.FieldName.SOURCE);
 					return StringData.fromString(sourceStruct.getString(AbstractSourceInfo.DATABASE_NAME_KEY));
 				}
+			}).put("igs_ts", new MetadataConverter() {
+				private static final long serialVersionUID = 1L;
+
+				@Override
+				public Object read(SourceRecord record) {
+					Struct messageStruct = (Struct) record.value();
+					return TimestampData.fromEpochMillis((Long) messageStruct.get(AbstractSourceInfo.TIMESTAMP_KEY));
+				}
 			}).put("op_ts", new MetadataConverter() {
 				private static final long serialVersionUID = 1L;
 

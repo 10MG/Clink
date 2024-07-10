@@ -8,6 +8,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
 
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.configuration.PipelineOptions;
@@ -37,6 +38,8 @@ import cn.tenmg.dsl.utils.StringUtils;
  */
 public class SingleTableDataSyncJobGenerator extends AbstractDataSyncJobGenerator {
 
+	private static final String INGESTION_TIMESTAMP = "igs_ts", FROM_TABLE_PREFIX_KEY = "data.sync.from-table-prefix";
+
 	private static final SingleTableDataSyncJobGenerator INSTANCE = new SingleTableDataSyncJobGenerator();
 
 	private SingleTableDataSyncJobGenerator() {
@@ -50,23 +53,28 @@ public class SingleTableDataSyncJobGenerator extends AbstractDataSyncJobGenerato
 	public Object generate(StreamExecutionEnvironment env, StreamTableEnvironment tableEnv, DataSync dataSync,
 			Map<String, String> sourceDataSource, Map<String, String> sinkDataSource, Map<String, Object> params)
 			throws Exception {
-		String from = dataSync.getFrom(), to = dataSync.getTo(), table = dataSync.getTable(),
-				fromTable = ClinkContext.getProperty("data.sync.from-table-prefix") + table;
+		Set<String> primaryKeys = collation(dataSync, sinkDataSource, params);
+		List<Column> columns = dataSync.getColumns();
+		String table = dataSync.getTable(), fromTable = ClinkContext.getProperty(FROM_TABLE_PREFIX_KEY) + table;
+		String sql = sourceTableSQL(sourceDataSource, dataSync.getTopic(), table, fromTable, columns, primaryKeys,
+				params);
+		if (sql == null) {// sql 为 null 说明需获取摄取时间元数据（METADATA FROM 'igs_ts' VIRTUAL），原生 Flink CDC 的
+							// sql-connector 不支持，改用 MultiTablesDataSyncJobGenerator 实现
+			return cn.tenmg.clink.operator.job.generator.MultiTablesDataSyncJobGenerator.getInstance().generate(env,
+					dataSync, sourceDataSource, sinkDataSource, params);
+		}
+
 		TableConfig tableConfig = tableEnv.getConfig();
 		if (tableConfig != null) {
 			Configuration configuration = tableConfig.getConfiguration();
 			String pipelineName = configuration.get(PipelineOptions.NAME);
 			if (StringUtils.isBlank(pipelineName)) {
-				configuration.set(PipelineOptions.NAME, "data-sync" + ClinkContext.CONFIG_SPLITER
-						+ String.join(ClinkContext.CONFIG_SPLITER, String.join("-", from, "to", to), table));
+				configuration.set(PipelineOptions.NAME,
+						"data-sync" + ClinkContext.CONFIG_SPLITER + String.join(ClinkContext.CONFIG_SPLITER,
+								String.join("-", dataSync.getFrom(), "to", dataSync.getTo()), table));
 			}
 		}
 
-		Set<String> primaryKeys = collation(dataSync, sinkDataSource, params);
-		List<Column> columns = dataSync.getColumns();
-
-		String sql = sourceTableSQL(sourceDataSource, dataSync.getTopic(), table, fromTable, columns, primaryKeys,
-				params);
 		if (log.isInfoEnabled()) {
 			log.info("Create source table by Flink SQL: " + SQLUtils.hiddePassword(sql));
 		}
@@ -88,15 +96,11 @@ public class SingleTableDataSyncJobGenerator extends AbstractDataSyncJobGenerato
 	/**
 	 * 校对和整理列配置并返回主键列（多个列之间使用“,”分隔）
 	 * 
-	 * @param dataSync
-	 *            数据同步配置对象
-	 * @param sinkDataSource
-	 *            汇数据源
-	 * @param params
-	 *            参数查找表
+	 * @param dataSync       数据同步配置对象
+	 * @param sinkDataSource 汇数据源
+	 * @param params         参数查找表
 	 * @return 返回主键
-	 * @throws Exception
-	 *             发生异常
+	 * @throws Exception 发生异常
 	 */
 	private static Set<String> collation(DataSync dataSync, Map<String, String> sinkDataSource,
 			Map<String, Object> params) throws Exception {
@@ -183,12 +187,23 @@ public class SingleTableDataSyncJobGenerator extends AbstractDataSyncJobGenerato
 		Column column;
 		String toName;
 		int i = 0, size = columns.size();
+		String fromType, group, key;
 		while (i < size) {
 			column = columns.get(i++);
 			if (Strategy.TO.equals(column.getStrategy())) {
 				toName = column.getToName();
 				actualPrimaryKeys.remove(toName == null ? column.getFromName() : toName);
 			} else {
+				fromType = column.getFromType();
+				Matcher matcher = METADATA_PATTERN.matcher(fromType);
+				if (matcher.find()) {
+					group = matcher.group();
+					key = group.substring(group.indexOf(SQLUtils.SINGLE_QUOTATION_MARK) + 1,
+							group.lastIndexOf(SQLUtils.SINGLE_QUOTATION_MARK));
+					if (key.equals(INGESTION_TIMESTAMP)) {
+						return null;
+					}
+				}
 				sqlBuffer.append(column.getFromName()).append(DSLUtils.BLANK_SPACE).append(column.getFromType());
 				break;
 			}

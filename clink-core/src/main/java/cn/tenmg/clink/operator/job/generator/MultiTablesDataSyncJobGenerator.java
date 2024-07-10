@@ -10,7 +10,6 @@ import java.util.Map;
 import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
@@ -73,8 +72,6 @@ public class MultiTablesDataSyncJobGenerator extends AbstractDataSyncJobGenerato
 			factories.put(factory.factoryIdentifier(), factory);
 		}
 	}
-
-	private static final Pattern METADATA_PATTERN = Pattern.compile("METADATA[\\s]+FROM[\\s]+'[\\S]+'[\\s]+VIRTUAL");
 
 	static {
 		DataSourceConverter converter;

@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
@@ -47,6 +48,8 @@ public abstract class AbstractDataSyncJobGenerator implements DataSyncJobGenerat
 			.valueOf(ClinkContext.getProperty("data.sync.case-sensitive", "true"));// 不区分大小写，统一转为小写
 
 	protected static final Map<String, ColumnConvert> columnConverts = MapUtils.newHashMap();
+
+	protected static final Pattern METADATA_PATTERN = Pattern.compile("METADATA[\\s]+FROM[\\s]+'[\\S]+'[\\s]+VIRTUAL");
 
 	static {
 		String convert = ClinkContext.getProperty("data.sync.columns.convert");
