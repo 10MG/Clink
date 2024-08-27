@@ -1227,15 +1227,15 @@ data.sync.columns.convert=BIGINT,TIMESTAMP:TO_TIMESTAMP(FROM_UNIXTIME(#columnNam
 
 ### data.sync.from-type
 
-用于配置数据同步的自动添加的来源列的默认类型，默认值为`TIMESTAMP(3) METADATA FROM 'value.ingestion-timestamp' VIRTUAL`，这是Flink SQL所支持的几种变更数据捕获（CDC）工具（Debezium/Canal/Maxwell）都支持的。
+用于配置数据同步的自动添加的来源列的默认类型。1.7 版本开始取消默认值，1.6 及以前版本默认值为`TIMESTAMP(3) METADATA FROM 'value.ingestion-timestamp' VIRTUAL`，这是Flink SQL所支持的几种变更数据捕获（CDC）工具（Debezium/Canal/Maxwell）都支持的。
 
 ### data.sync.to-type
 
-用于配置数据同步的自动添加的目标列的默认类型，默认值为`TIMESTAMP(3)`，与`data.sync.timestamp.from-type`的默认值具有对应关系。
+用于配置数据同步的自动添加的目标列的默认类型。1.7 版本开始取消默认值，1.6 及以前版本默认值为`TIMESTAMP(3)`，与`data.sync.timestamp.from-type`的默认值具有对应关系。
 
 ### data.sync.*.from-type
 
-其中`*`需要替换为具体的列名，用于配置数据同步自动添加的特定列的来源类型，如果没有配置则使用`data.sync.from-type`的值。典型的值为`TIMESTAMP(3) METADATA FROM 'value.ingestion-timestamp' VIRTUAL`或`TIMESTAMP(3) METADATA FROM 'value.source.timestamp' VIRTUAL`（目前仅Debezium支持），可根据具体情况确定。
+其中`*`需要替换为具体的列名，用于配置数据同步自动添加的特定列的来源类型，如果没有配置则使用`data.sync.from-type`的值。使用 kafka 时，典型的值为 `TIMESTAMP(3) METADATA FROM 'value.ingestion-timestamp' VIRTUAL` 或 `TIMESTAMP(3) METADATA FROM 'value.source.timestamp' VIRTUAL`（目前仅Debezium支持），可根据具体情况确定。使用 Flink CDC 时，典型的值为 `TIMESTAMP_LTZ(3) METADATA FROM 'op_ts' VIRTUAL`。
 
 ### data.sync.*.to-type
 
