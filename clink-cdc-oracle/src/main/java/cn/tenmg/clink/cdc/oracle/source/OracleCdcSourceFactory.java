@@ -174,6 +174,11 @@ public class OracleCdcSourceFactory implements SourceFactory<JdbcIncrementalSour
 				.build();
 	}
 
+	@Override
+	public Set<String> metadataKeys() {
+		return METADATA_CONVERTERS.keySet();
+	}
+
 	private static String[] toArray(Set<String> strs) {
 		return strs.toArray(new String[strs.size()]);
 	}

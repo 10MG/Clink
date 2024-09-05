@@ -39,7 +39,7 @@ import cn.tenmg.dsl.utils.StringUtils;
 public abstract class AbstractDataSyncJobGenerator implements DataSyncJobGenerator {
 
 	protected static final String TOPIC_KEY = "topic", GROUP_ID_KEY = "properties.group.id",
-			AUTO_COLUMNS = "data.sync.auto-columns", AUTO_COLUMNS_SPLIT = ",",
+			AUTO_COLUMNS = "data.sync.auto-columns", AUTO_COLUMNS_SPLITER = ",",
 			TYPE_KEY_PREFIX = "data.sync" + ClinkContext.CONFIG_SPLITER,
 			SCRIPT_KEY_SUFFIX = ClinkContext.CONFIG_SPLITER + "script",
 			STRATEGY_KEY_SUFFIX = ClinkContext.CONFIG_SPLITER + "strategy", COLUMN_NAME = "columnName";

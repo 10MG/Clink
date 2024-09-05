@@ -9,7 +9,7 @@
 
 	<modelVersion>4.0.0</modelVersion>
 
-	<description>Clink应用程序客户端类库</description>
+	<description>Clink应用程序集成测试项目</description>
 	<artifactId>clink-tests</artifactId>
 	<packaging>jar</packaging>
 
@@ -121,7 +121,7 @@
 		<dependency>
 			<groupId>org.apache.flink</groupId>
 			<artifactId>flink-connector-files</artifactId>
-			<version>1.19.0</version>
+			<version>${flink.version}</version>
 			<scope>provided</scope>
 		</dependency>
 		<!--

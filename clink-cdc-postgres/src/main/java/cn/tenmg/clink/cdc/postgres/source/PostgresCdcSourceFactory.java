@@ -187,6 +187,11 @@ public class PostgresCdcSourceFactory implements SourceFactory<JdbcIncrementalSo
 				.build();
 	}
 
+	@Override
+	public Set<String> metadataKeys() {
+		return METADATA_CONVERTERS.keySet();
+	}
+
 	private static String[] toArray(String str) {
 		if (str == null) {
 			return null;

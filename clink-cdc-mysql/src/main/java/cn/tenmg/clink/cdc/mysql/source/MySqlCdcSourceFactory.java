@@ -157,6 +157,11 @@ public class MySqlCdcSourceFactory implements SourceFactory<MySqlSource<Tuple2<S
 				.build();
 	}
 
+	@Override
+	public Set<String> metadataKeys() {
+		return METADATA_CONVERTERS.keySet();
+	}
+
 	private static String[] toArray(Set<String> strs) {
 		return strs.toArray(new String[strs.size()]);
 	}

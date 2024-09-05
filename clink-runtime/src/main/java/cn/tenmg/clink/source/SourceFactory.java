@@ -1,6 +1,7 @@
 package cn.tenmg.clink.source;
 
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.flink.api.connector.source.Source;
 import org.apache.flink.api.java.tuple.Tuple2;
@@ -26,14 +27,18 @@ public interface SourceFactory<S extends Source<Tuple2<String, Row>, ?, ?>> {
 	/**
 	 * 创建源
 	 * 
-	 * @param config
-	 *            源的配置
-	 * @param rowTypes
-	 *            行类型查找表
-	 * @param metadatas
-	 *            元数据查找表
+	 * @param config    源的配置
+	 * @param rowTypes  行类型查找表
+	 * @param metadatas 元数据查找表
 	 * @return 源
 	 */
 	S create(Map<String, String> config, Map<String, RowType> rowTypes, Map<String, Map<Integer, String>> metadatas);
+
+	/**
+	 * 获取支持的元数据集
+	 * 
+	 * @return 支持的元数据集
+	 */
+	Set<String> metadataKeys();
 
 }

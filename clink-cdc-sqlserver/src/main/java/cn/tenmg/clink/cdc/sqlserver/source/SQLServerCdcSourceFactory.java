@@ -180,6 +180,11 @@ public class SQLServerCdcSourceFactory implements SourceFactory<JdbcIncrementalS
 				.build();
 	}
 
+	@Override
+	public Set<String> metadataKeys() {
+		return METADATA_CONVERTERS.keySet();
+	}
+
 	private static String[] toArray(Set<String> strs) {
 		return strs.toArray(new String[strs.size()]);
 	}
