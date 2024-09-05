@@ -368,9 +368,9 @@ public abstract class ClinkContext {
 	}
 
 	/**
-	 * 获取Table API & SQL的运行配置
+	 * 获取 {@code Flink Table & SQL} 的运行配置
 	 * 
-	 * @return 返回Table API & SQL的运行配置
+	 * @return 返回 {@code Flink Table&SQL} 的运行配置
 	 */
 	public static Map<String, String> getTableExecConfigs() {
 		return tableExecConfigs;

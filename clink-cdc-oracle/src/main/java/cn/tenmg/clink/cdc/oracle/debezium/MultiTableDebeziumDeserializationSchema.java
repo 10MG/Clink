@@ -46,7 +46,7 @@ import io.debezium.time.NanoTimestamp;
 import io.debezium.time.Timestamp;
 
 /**
- * 多表的从 Debezium 对象到 Flink Table&SQL 内部数据结构的反序列化模式
+ * 多表的从 Debezium 对象到 {@code Flink Table & SQL} 内部数据结构的反序列化模式
  * 
  * @author June wjzhao@aliyun.com
  * 
