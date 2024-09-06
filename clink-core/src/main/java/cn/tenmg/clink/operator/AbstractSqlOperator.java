@@ -6,7 +6,7 @@ import java.util.Map;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
 
-import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson2.JSON;
 
 import cn.tenmg.clink.Operator;
 import cn.tenmg.clink.context.ClinkContext;

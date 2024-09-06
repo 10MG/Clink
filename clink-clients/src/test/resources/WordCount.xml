@@ -2,5 +2,5 @@
 <clink xmlns="http://www.10mg.cn/schema/clink"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://www.10mg.cn/schema/clink http://www.10mg.cn/schema/clink.xsd"
-	jar="D:\Programs\flink-1.16.0\examples\streaming\TopSpeedWindowing.jar">
+	jar="C:\Users\admin\flink-1.20.0\examples\streaming\TopSpeedWindowing.jar">
 </clink>

@@ -1,6 +1,6 @@
 package cn.tenmg.clink;
 
-import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson2.JSON;
 
 import cn.tenmg.clink.config.model.Clink;
 import cn.tenmg.clink.context.ClinkContext;

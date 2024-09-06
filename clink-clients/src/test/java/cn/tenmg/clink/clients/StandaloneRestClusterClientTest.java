@@ -10,7 +10,7 @@ import org.apache.flink.runtime.client.JobStatusMessage;
 import org.apache.flink.runtime.jobmaster.JobResult;
 import org.apache.flink.runtime.rest.messages.job.JobDetailsInfo;
 
-import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson2.JSON;
 
 import cn.tenmg.clink.config.loader.XMLConfigLoader;
 import cn.tenmg.clink.config.model.Clink;
