@@ -68,14 +68,6 @@
 			<optional>true</optional>
 		</dependency>
 
-		<!--
-		https://mvnrepository.com/artifact/com.ververica/flink-sql-connector-mysql-cdc -->
-		<dependency>
-			<groupId>com.ververica</groupId>
-			<artifactId>flink-sql-connector-mysql-cdc</artifactId>
-			<optional>true</optional>
-		</dependency>
-
 		<!-- https://mvnrepository.com/artifact/org.apache.flink/flink-core -->
 		<dependency>
 			<groupId>org.apache.flink</groupId>
