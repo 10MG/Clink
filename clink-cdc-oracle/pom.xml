@@ -13,6 +13,13 @@
 	<packaging>jar</packaging>
 
 	<dependencies>
+		<!--
+		https://mvnrepository.com/artifact/com.ververica/flink-sql-connector-oracle-cdc -->
+		<dependency>
+			<groupId>com.ververica</groupId>
+			<artifactId>flink-sql-connector-oracle-cdc</artifactId>
+		</dependency>
+
 		<!-- https://mvnrepository.com/artifact/cn.tenmg/clink-runtime -->
 		<dependency>
 			<groupId>${project.groupId}</groupId>
@@ -20,17 +27,12 @@
 			<version>${project.version}</version>
 			<scope>provided</scope>
 		</dependency>
-		<!-- https://mvnrepository.com/artifact/org.apache.flink/flink-table-common -->
+		<!--
+		https://mvnrepository.com/artifact/org.apache.flink/flink-table-common -->
 		<dependency>
 			<groupId>org.apache.flink</groupId>
 			<artifactId>flink-table-common</artifactId>
 			<scope>provided</scope>
-		</dependency>
-
-		<!-- https://mvnrepository.com/artifact/com.ververica/flink-sql-connector-oracle-cdc -->
-		<dependency>
-			<groupId>com.ververica</groupId>
-			<artifactId>flink-sql-connector-oracle-cdc</artifactId>
 		</dependency>
 
 		<!-- https://mvnrepository.com/artifact/org.junit.jupiter/junit-jupiter -->
@@ -39,7 +41,8 @@
 			<artifactId>junit-jupiter</artifactId>
 			<scope>test</scope>
 		</dependency>
-		<!-- https://mvnrepository.com/artifact/org.junit.platform/junit-platform-launcher -->
+		<!--
+		https://mvnrepository.com/artifact/org.junit.platform/junit-platform-launcher -->
 		<dependency>
 			<groupId>org.junit.platform</groupId>
 			<artifactId>junit-platform-launcher</artifactId>
