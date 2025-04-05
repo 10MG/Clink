@@ -11,6 +11,7 @@
 
 	<modules>
 		<module>clink-cdc-mysql</module>
+		<module>clink-cdc-oceanbase</module>
 		<module>clink-cdc-oracle</module>
 		<module>clink-cdc-postgres</module>
 		<module>clink-cdc-sqlserver</module>
@@ -133,6 +134,13 @@
 			<dependency>
 				<groupId>com.ververica</groupId>
 				<artifactId>flink-sql-connector-mysql-cdc</artifactId>
+				<version>${flink-cdc.version}</version>
+			</dependency>
+			<!--
+			https://mvnrepository.com/artifact/com.ververica/flink-sql-connector-oceanbase-cdc -->
+			<dependency>
+				<groupId>com.ververica</groupId>
+				<artifactId>flink-sql-connector-oceanbase-cdc</artifactId>
 				<version>${flink-cdc.version}</version>
 			</dependency>
 			<!--

@@ -41,6 +41,12 @@
 			<artifactId>clink-cdc-sqlserver</artifactId>
 			<version>${project.version}</version>
 		</dependency>
+		<!-- https://mvnrepository.com/artifact/cn.tenmg/clink-cdc-oceanbase -->
+		<dependency>
+			<groupId>cn.tenmg</groupId>
+			<artifactId>clink-cdc-oceanbase</artifactId>
+			<version>${project.version}</version>
+		</dependency>
 		<!-- https://mvnrepository.com/artifact/cn.tenmg/clink-clients -->
 		<dependency>
 			<groupId>cn.tenmg</groupId>
