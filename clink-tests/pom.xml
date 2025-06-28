@@ -4,7 +4,7 @@
 	<parent>
 		<groupId>cn.tenmg</groupId>
 		<artifactId>clink-parent</artifactId>
-		<version>1.7.0-SNAPSHOT</version>
+		<version>1.7.0</version>
 	</parent>
 
 	<modelVersion>4.0.0</modelVersion>
@@ -39,12 +39,6 @@
 		<dependency>
 			<groupId>cn.tenmg</groupId>
 			<artifactId>clink-cdc-sqlserver</artifactId>
-			<version>${project.version}</version>
-		</dependency>
-		<!-- https://mvnrepository.com/artifact/cn.tenmg/clink-cdc-oceanbase -->
-		<dependency>
-			<groupId>cn.tenmg</groupId>
-			<artifactId>clink-cdc-oceanbase</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 		<!-- https://mvnrepository.com/artifact/cn.tenmg/clink-clients -->
