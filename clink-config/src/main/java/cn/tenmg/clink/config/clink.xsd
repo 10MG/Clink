@@ -114,7 +114,8 @@
 		</xsd:annotation>
 		<xsd:complexType>
 			<xsd:choice>
-				<xsd:element minOccurs="1" maxOccurs="unbounded" name="param" type="ParamType" />
+				<xsd:element minOccurs="1" maxOccurs="unbounded"
+					name="param" type="ParamType" />
 			</xsd:choice>
 		</xsd:complexType>
 	</xsd:element>
@@ -410,6 +411,15 @@
 									<xsd:annotation>
 										<xsd:documentation>列名</xsd:documentation>
 									</xsd:annotation>
+								</xsd:attribute>
+								<xsd:attribute name="type">
+									<xsd:annotation>
+										<xsd:documentation>数据类型。如果缺省，则如果开启智能模式会自动获取目标数据类型，如果关闭智能模式则必填
+										</xsd:documentation>
+									</xsd:annotation>
+									<xsd:simpleType>
+										<xsd:union memberTypes="DataType xsd:string"></xsd:union>
+									</xsd:simpleType>
 								</xsd:attribute>
 							</xsd:extension>
 						</xsd:simpleContent>

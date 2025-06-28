@@ -4,7 +4,7 @@
 	<parent>
 		<groupId>cn.tenmg</groupId>
 		<artifactId>clink-parent</artifactId>
-		<version>1.7.0</version>
+		<version>1.7.1</version>
 	</parent>
 
 	<modelVersion>4.0.0</modelVersion>
@@ -131,6 +131,18 @@
 			<artifactId>flink-connector-jdbc</artifactId>
 		</dependency>
 		<!--
+		https://mvnrepository.com/artifact/org.apache.flink/flink-connector-kafka -->
+		<dependency>
+			<groupId>org.apache.flink</groupId>
+			<artifactId>flink-connector-kafka</artifactId>
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/org.apache.flink/flink-json -->
+		<dependency>
+			<groupId>org.apache.flink</groupId>
+			<artifactId>flink-json</artifactId>
+			<version>${flink.version}</version>
+		</dependency>
+		<!--
 		https://mvnrepository.com/artifact/org.apache.flink/flink-table-planner -->
 		<dependency>
 			<groupId>org.apache.flink</groupId>
@@ -141,6 +153,7 @@
 		<dependency>
 			<groupId>org.apache.logging.log4j</groupId>
 			<artifactId>log4j-slf4j2-impl</artifactId>
+			<scope>compile</scope>
 		</dependency>
 
 		<!-- https://mvnrepository.com/artifact/org.glassfish.jaxb/jaxb-runtime -->

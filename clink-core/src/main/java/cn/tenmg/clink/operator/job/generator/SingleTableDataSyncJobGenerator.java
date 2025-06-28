@@ -245,12 +245,13 @@ public class SingleTableDataSyncJobGenerator extends AbstractDataSyncJobGenerato
 						.append(DSLUtils.BLANK_SPACE).append(fromType);
 			}
 		}
-		if (!actualPrimaryKeys.isEmpty()) {
+		boolean isKafka = ConfigurationUtils.isKafka(dataSource);
+		if (!actualPrimaryKeys.isEmpty() && !ConfigurationUtils.isJsonFormat(dataSource)) {
 			sqlBuffer.append(DSLUtils.COMMA).append(DSLUtils.BLANK_SPACE).append("PRIMARY KEY (")
 					.append(String.join(", ", actualPrimaryKeys)).append(") NOT ENFORCED");
 		}
 		sqlBuffer.append(") ").append("WITH (");
-		if (ConfigurationUtils.isKafka(dataSource)) {
+		if (isKafka) {
 			if (!dataSource.containsKey(GROUP_ID_KEY)) {
 				dataSource.put(GROUP_ID_KEY, ClinkContext.getProperty("data.sync.group-id-prefix") + table);// 设置properties.group.id
 			}
