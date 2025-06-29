@@ -136,6 +136,19 @@
 			<groupId>org.apache.flink</groupId>
 			<artifactId>flink-connector-kafka</artifactId>
 		</dependency>
+		<!-- https://mvnrepository.com/artifact/org.apache.flink/flink-avro -->
+		<dependency>
+			<groupId>org.apache.flink</groupId>
+			<artifactId>flink-avro</artifactId>
+			<version>${flink.version}</version>
+		</dependency>
+		<!--
+		https://mvnrepository.com/artifact/org.apache.flink/flink-avro-confluent-registry -->
+		<dependency>
+			<groupId>org.apache.flink</groupId>
+			<artifactId>flink-avro-confluent-registry</artifactId>
+			<version>${flink.version}</version>
+		</dependency>
 		<!-- https://mvnrepository.com/artifact/org.apache.flink/flink-csv -->
 		<dependency>
 			<groupId>org.apache.flink</groupId>
@@ -146,6 +159,12 @@
 		<dependency>
 			<groupId>org.apache.flink</groupId>
 			<artifactId>flink-json</artifactId>
+			<version>${flink.version}</version>
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/org.apache.flink/flink-protobuf -->
+		<dependency>
+			<groupId>org.apache.flink</groupId>
+			<artifactId>flink-protobuf</artifactId>
 			<version>${flink.version}</version>
 		</dependency>
 		<!--

@@ -323,7 +323,7 @@ public class SingleTableDataSyncJobGenerator extends AbstractDataSyncJobGenerato
 			supportsPrimaryKey = false;
 			for (Iterator<Entry<String, String>> it = keyValues.entrySet().iterator(); it.hasNext();) {
 				entry = it.next();
-				if (!entry.getValue().equals(keyValues.get(entry.getKey()))) {
+				if (!entry.getValue().equals(dataSource.get(entry.getKey()))) {
 					supportsPrimaryKey = true;
 					break;
 				}
@@ -359,4 +359,5 @@ public class SingleTableDataSyncJobGenerator extends AbstractDataSyncJobGenerato
 			this.sourceFactory = sourceFactory;
 		}
 	}
+
 }
