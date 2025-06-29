@@ -25,8 +25,7 @@ public abstract class ConfigurationUtils {
 
 	private static final char VALUE_BEGIN = '=';
 
-	private static final String JDBC = "jdbc", CONNECTOR = "connector", KAFKA = "kafka", FORMAT = "format",
-			JSON = "json";
+	private static final String JDBC = "jdbc", CONNECTOR = "connector", KAFKA = "kafka";
 
 	private static final Set<Character> VALUE_END = SetUtils.newHashSet(',', '\r', '\n');
 
@@ -224,16 +223,6 @@ public abstract class ConfigurationUtils {
 	 */
 	public static boolean isKafka(Map<String, String> dataSource) {
 		return KAFKA.equals(dataSource.get(CONNECTOR));
-	}
-
-	/**
-	 * 判断一个数据源是否为使用“json”格式
-	 * 
-	 * @param dataSource 数据源
-	 * @return 如果该数据源格式format为json则返回true否则返回false
-	 */
-	public static boolean isJsonFormat(Map<String, String> dataSource) {
-		return JSON.equals(dataSource.get(FORMAT));
 	}
 
 	private static void put(Map<String, String> map, StringBuilder key, StringBuilder value) {
