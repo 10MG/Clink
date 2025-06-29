@@ -1,4 +1,4 @@
-package cn.tenmg.clink.cdc;
+package cn.tenmg.clink.datasync.cdc;
 
 import cn.tenmg.clink.LocalTestSupported;
 
@@ -11,7 +11,7 @@ import cn.tenmg.clink.LocalTestSupported;
 public class MySQLToPostgresSQLDataSyncTest extends LocalTestSupported {
 
 	public static void main(String[] args) throws Exception {
-		test("cn/tenmg/clink/cdc/mysql_to_postgresql.xml");
+		test("cn/tenmg/clink/datasync/cdc/mysql_to_postgresql.xml");
 	}
 
 }

@@ -7,6 +7,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.regex.Matcher;
 
@@ -33,6 +34,7 @@ import cn.tenmg.clink.utils.SQLUtils;
 import cn.tenmg.clink.utils.SourceFactoryUtils;
 import cn.tenmg.dsl.utils.CollectionUtils;
 import cn.tenmg.dsl.utils.DSLUtils;
+import cn.tenmg.dsl.utils.MapUtils;
 import cn.tenmg.dsl.utils.ObjectUtils;
 import cn.tenmg.dsl.utils.StringUtils;
 
@@ -49,11 +51,30 @@ public class SingleTableDataSyncJobGenerator extends AbstractDataSyncJobGenerato
 
 	private static final SingleTableDataSyncJobGenerator INSTANCE = new SingleTableDataSyncJobGenerator();
 
+	private static final List<Map<String, String>> PRIMARY_KEY_LESS = new ArrayList<Map<String, String>>();
+
 	/**
 	 * 扩展的元数据
 	 */
 	private static final Set<String> EXT_METADATA = CollectionUtils
 			.asSet(ClinkContext.getProperty("data.sync.ext-metadata", "").split(","));
+
+	static {
+		String config = ClinkContext.getProperty("datasources.primary-key-less");
+		if (StringUtils.isNotBlank(config)) {
+			String[] values;
+			for (String items : config.split(";")) {
+				Map<String, String> keyValues = MapUtils.newHashMap();
+				for (String item : items.split(",")) {
+					values = item.split("=", 2);
+					if (values.length > 1) {
+						keyValues.put(values[0].trim(), values[1].trim());
+					}
+				}
+				PRIMARY_KEY_LESS.add(keyValues);
+			}
+		}
+	}
 
 	private SingleTableDataSyncJobGenerator() {
 	}
@@ -245,12 +266,13 @@ public class SingleTableDataSyncJobGenerator extends AbstractDataSyncJobGenerato
 						.append(DSLUtils.BLANK_SPACE).append(fromType);
 			}
 		}
-		if (!actualPrimaryKeys.isEmpty()) {
+		boolean isKafka = ConfigurationUtils.isKafka(dataSource);
+		if (!actualPrimaryKeys.isEmpty() && supportsPrimaryKey(dataSource)) {
 			sqlBuffer.append(DSLUtils.COMMA).append(DSLUtils.BLANK_SPACE).append("PRIMARY KEY (")
 					.append(String.join(", ", actualPrimaryKeys)).append(") NOT ENFORCED");
 		}
 		sqlBuffer.append(") ").append("WITH (");
-		if (ConfigurationUtils.isKafka(dataSource)) {
+		if (isKafka) {
 			if (!dataSource.containsKey(GROUP_ID_KEY)) {
 				dataSource.put(GROUP_ID_KEY, ClinkContext.getProperty("data.sync.group-id-prefix") + table);// 设置properties.group.id
 			}
@@ -288,6 +310,31 @@ public class SingleTableDataSyncJobGenerator extends AbstractDataSyncJobGenerato
 		return metadataKeys.contains(metadataKey);
 	}
 
+	/**
+	 * 判断一个数据源是否支持主键
+	 * 
+	 * @param dataSource 数据源
+	 * @return 如果该数据源支持主键则返回true否则返回false
+	 */
+	private static boolean supportsPrimaryKey(Map<String, String> dataSource) {
+		Entry<String, String> entry;
+		boolean supportsPrimaryKey;
+		for (Map<String, String> keyValues : PRIMARY_KEY_LESS) {
+			supportsPrimaryKey = false;
+			for (Iterator<Entry<String, String>> it = keyValues.entrySet().iterator(); it.hasNext();) {
+				entry = it.next();
+				if (!entry.getValue().equals(dataSource.get(entry.getKey()))) {
+					supportsPrimaryKey = true;
+					break;
+				}
+			}
+			if (!supportsPrimaryKey) {
+				return false;
+			}
+		}
+		return true;
+	}
+
 	private static class TableInfo {
 
 		private List<Column> columns;
@@ -312,4 +359,5 @@ public class SingleTableDataSyncJobGenerator extends AbstractDataSyncJobGenerato
 			this.sourceFactory = sourceFactory;
 		}
 	}
+
 }

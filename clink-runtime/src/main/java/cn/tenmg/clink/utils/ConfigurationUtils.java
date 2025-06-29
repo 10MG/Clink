@@ -25,13 +25,14 @@ public abstract class ConfigurationUtils {
 
 	private static final char VALUE_BEGIN = '=';
 
+	private static final String JDBC = "jdbc", CONNECTOR = "connector", KAFKA = "kafka";
+
 	private static final Set<Character> VALUE_END = SetUtils.newHashSet(',', '\r', '\n');
 
 	/**
 	 * 加载字符串配置
 	 * 
-	 * @param config
-	 *            字符串配置
+	 * @param config 字符串配置
 	 * @return 返回配置查找表
 	 */
 	public static Map<String, String> load(String config) {
@@ -111,12 +112,9 @@ public abstract class ConfigurationUtils {
 	/**
 	 * 获取含有指定键的前缀的配置项的集合，该集合的键为去除该前缀后剩余的子串。
 	 * 
-	 * @param config
-	 *            配置对象
-	 * @param prefix
-	 *            键的前缀
-	 * @param camelCaseKey
-	 *            是否将键转换为驼峰形式
+	 * @param config       配置对象
+	 * @param prefix       键的前缀
+	 * @param camelCaseKey 是否将键转换为驼峰形式
 	 * @return 指定键前缀的配置项的集合
 	 */
 	public static Properties getPrefixedKeyValuePairs(Map<String, String> config, String prefix, boolean camelCaseKey) {
@@ -147,12 +145,9 @@ public abstract class ConfigurationUtils {
 	/**
 	 * 获取含有指定键的前缀的配置项的集合，该集合的键为去除该前缀后剩余的子串。
 	 * 
-	 * @param config
-	 *            配置对象
-	 * @param prefix
-	 *            键的前缀
-	 * @param camelCaseKey
-	 *            是否将键转换为驼峰形式
+	 * @param config       配置对象
+	 * @param prefix       键的前缀
+	 * @param camelCaseKey 是否将键转换为驼峰形式
 	 * @return 指定键前缀的配置项的集合
 	 */
 	public static Properties getPrefixedKeyValuePairs(Properties config, String prefix, boolean camelCaseKey) {
@@ -183,10 +178,8 @@ public abstract class ConfigurationUtils {
 	/**
 	 * 根据优先键依次从配置中获取配置的属性，一旦某一键存在则返回其对应的值，均不存在则返回 {@code null}
 	 * 
-	 * @param config
-	 *            配置
-	 * @param priorKeys
-	 *            优先键
+	 * @param config    配置
+	 * @param priorKeys 优先键
 	 * @return 配置属性值或 {@code null}
 	 */
 	public static String getProperty(Properties config, List<String> priorKeys) {
@@ -196,12 +189,9 @@ public abstract class ConfigurationUtils {
 	/**
 	 * 根据优先键依次从配置中获取配置的属性，一旦某一键存在则返回其对应的值，均不存在则返回默认值
 	 * 
-	 * @param config
-	 *            配置
-	 * @param priorKeys
-	 *            优先键
-	 * @param defaultValue
-	 *            默认值
+	 * @param config       配置
+	 * @param priorKeys    优先键
+	 * @param defaultValue 默认值
 	 * @return 配置属性值或默认值
 	 */
 	public static String getProperty(Properties config, List<String> priorKeys, String defaultValue) {
@@ -218,23 +208,21 @@ public abstract class ConfigurationUtils {
 	/**
 	 * 判断一个数据源是否为JDBC
 	 * 
-	 * @param dataSource
-	 *            数据源
+	 * @param dataSource 数据源
 	 * @return 如果该数据源连接器connector为jdbc则返回true否则返回false
 	 */
 	public static boolean isJDBC(Map<String, String> dataSource) {
-		return "jdbc".equals(dataSource.get("connector"));
+		return JDBC.equals(dataSource.get(CONNECTOR));
 	}
 
 	/**
 	 * 判断一个数据源是否为Kafka
 	 * 
-	 * @param dataSource
-	 *            数据源
+	 * @param dataSource 数据源
 	 * @return 如果该数据源连接器connector为kafka则返回true否则返回false
 	 */
 	public static boolean isKafka(Map<String, String> dataSource) {
-		return "kafka".equals(dataSource.get("connector"));
+		return KAFKA.equals(dataSource.get(CONNECTOR));
 	}
 
 	private static void put(Map<String, String> map, StringBuilder key, StringBuilder value) {

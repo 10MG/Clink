@@ -6,7 +6,7 @@
 	<description>Flink流批一体数据处理快速集成开发框架</description>
 	<groupId>cn.tenmg</groupId>
 	<artifactId>clink-parent</artifactId>
-	<version>1.7.0</version>
+	<version>1.7.1</version>
 	<packaging>pom</packaging>
 
 	<modules>
@@ -76,7 +76,7 @@
 		<encoding>UTF-8</encoding>
 		<project.build.encoding>UTF-8</project.build.encoding>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<dsl.version>1.4.4</dsl.version>
+		<dsl.version>1.4.10</dsl.version>
 		<fastjson2.version>2.0.52</fastjson2.version>
 		<nacos-client.version>2.4.1</nacos-client.version>
 		<mysql-connector-j.version>9.0.0</mysql-connector-j.version>
