@@ -6,12 +6,11 @@
 	<description>Flink流批一体数据处理快速集成开发框架</description>
 	<groupId>cn.tenmg</groupId>
 	<artifactId>clink-parent</artifactId>
-	<version>1.7.0-SNAPSHOT</version>
+	<version>1.7.1</version>
 	<packaging>pom</packaging>
 
 	<modules>
 		<module>clink-cdc-mysql</module>
-		<module>clink-cdc-oceanbase</module>
 		<module>clink-cdc-oracle</module>
 		<module>clink-cdc-postgres</module>
 		<module>clink-cdc-sqlserver</module>
@@ -77,7 +76,7 @@
 		<encoding>UTF-8</encoding>
 		<project.build.encoding>UTF-8</project.build.encoding>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<dsl.version>1.4.4</dsl.version>
+		<dsl.version>1.4.10</dsl.version>
 		<fastjson2.version>2.0.52</fastjson2.version>
 		<nacos-client.version>2.4.1</nacos-client.version>
 		<mysql-connector-j.version>9.0.0</mysql-connector-j.version>
@@ -134,13 +133,6 @@
 			<dependency>
 				<groupId>com.ververica</groupId>
 				<artifactId>flink-sql-connector-mysql-cdc</artifactId>
-				<version>${flink-cdc.version}</version>
-			</dependency>
-			<!--
-			https://mvnrepository.com/artifact/com.ververica/flink-sql-connector-oceanbase-cdc -->
-			<dependency>
-				<groupId>com.ververica</groupId>
-				<artifactId>flink-sql-connector-oceanbase-cdc</artifactId>
 				<version>${flink-cdc.version}</version>
 			</dependency>
 			<!--

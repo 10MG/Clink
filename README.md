@@ -647,7 +647,7 @@ type | `String` | 是 | 数据类型。使用标签内文本表示。
 | postgres-cdc  | 2.4+ | 1.6.1+ |
 | oracle-cdc    | 2.3+ | 1.6.1+ |
 
-以下示例参考 clink.proerties 配置文件见 [clink-tests](clink-tests/src/test/resources/clink.proerties)，参考数据库表结构（以MySQL为例）：
+以下示例参考 clink.proerties 配置文件见 [clink-tests](clink-tests/src/main/resources/clink.properties)，参考数据库表结构（以MySQL为例）：
 
 ```
 create database test;
