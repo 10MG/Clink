@@ -304,7 +304,7 @@ public class SingleTableDataSyncJobGenerator extends AbstractDataSyncJobGenerato
 	}
 
 	private static boolean contains(Set<String> metadataKeys, String metadataKey) {
-		if (CollectionUtils.isNotEmpty(metadataKeys) || metadataKey == null) {
+		if (CollectionUtils.isEmpty(metadataKeys) || metadataKey == null) {
 			return false;
 		}
 		return metadataKeys.contains(metadataKey);

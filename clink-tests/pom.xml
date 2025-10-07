@@ -54,9 +54,9 @@
 			<version>${project.version}</version>
 		</dependency>
 		<!--
-		https://mvnrepository.com/artifact/com.ververica/flink-sql-connector-mysql-cdc -->
+		https://mvnrepository.com/artifact/org.apache.flink/flink-sql-connector-mysql-cdc -->
 		<dependency>
-			<groupId>com.ververica</groupId>
+			<groupId>org.apache.flink</groupId>
 			<artifactId>flink-sql-connector-mysql-cdc</artifactId>
 			<exclusions>
 				<exclusion>
@@ -66,9 +66,9 @@
 			</exclusions>
 		</dependency>
 		<!--
-		https://mvnrepository.com/artifact/com.ververica/flink-sql-connector-oracle-cdc -->
+		https://mvnrepository.com/artifact/org.apache.flink/flink-sql-connector-oracle-cdc -->
 		<dependency>
-			<groupId>com.ververica</groupId>
+			<groupId>org.apache.flink</groupId>
 			<artifactId>flink-sql-connector-oracle-cdc</artifactId>
 			<exclusions>
 				<exclusion>
@@ -78,9 +78,9 @@
 			</exclusions>
 		</dependency>
 		<!--
-		https://mvnrepository.com/artifact/com.ververica/flink-sql-connector-postgres-cdc -->
+		https://mvnrepository.com/artifact/org.apache.flink/flink-sql-connector-postgres-cdc -->
 		<dependency>
-			<groupId>com.ververica</groupId>
+			<groupId>org.apache.flink</groupId>
 			<artifactId>flink-sql-connector-postgres-cdc</artifactId>
 			<exclusions>
 				<exclusion>
@@ -91,9 +91,9 @@
 		</dependency>
 
 		<!--
-		https://mvnrepository.com/artifact/com.ververica/flink-sql-connector-sqlserver-cdc -->
+		https://mvnrepository.com/artifact/org.apache.flink/flink-sql-connector-sqlserver-cdc -->
 		<dependency>
-			<groupId>com.ververica</groupId>
+			<groupId>org.apache.flink</groupId>
 			<artifactId>flink-sql-connector-sqlserver-cdc</artifactId>
 			<exclusions>
 				<exclusion>

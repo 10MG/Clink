@@ -14,9 +14,9 @@
 
 	<dependencies>
 		<!--
-		https://mvnrepository.com/artifact/com.ververica/flink-sql-connector-oracle-cdc -->
+		https://mvnrepository.com/artifact/org.apache.flink/flink-sql-connector-oracle-cdc -->
 		<dependency>
-			<groupId>com.ververica</groupId>
+			<groupId>org.apache.flink</groupId>
 			<artifactId>flink-sql-connector-oracle-cdc</artifactId>
 		</dependency>
 

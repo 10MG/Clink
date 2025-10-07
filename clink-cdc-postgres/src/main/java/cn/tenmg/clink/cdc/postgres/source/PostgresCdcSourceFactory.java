@@ -21,17 +21,17 @@ import org.apache.flink.types.Row;
 import org.apache.flink.util.Preconditions;
 import org.apache.flink.util.TimeUtils;
 
-import com.ververica.cdc.connectors.base.options.JdbcSourceOptions;
-import com.ververica.cdc.connectors.base.options.SourceOptions;
-import com.ververica.cdc.connectors.base.options.StartupMode;
-import com.ververica.cdc.connectors.base.options.StartupOptions;
-import com.ververica.cdc.connectors.base.source.jdbc.JdbcIncrementalSource;
-import com.ververica.cdc.connectors.postgres.source.PostgresSourceBuilder;
-import com.ververica.cdc.connectors.postgres.source.config.PostgresSourceOptions;
-import com.ververica.cdc.connectors.shaded.org.apache.kafka.connect.data.Struct;
-import com.ververica.cdc.connectors.shaded.org.apache.kafka.connect.source.SourceRecord;
-import com.ververica.cdc.debezium.table.DebeziumOptions;
-import com.ververica.cdc.debezium.table.MetadataConverter;
+import org.apache.flink.cdc.connectors.base.options.JdbcSourceOptions;
+import org.apache.flink.cdc.connectors.base.options.SourceOptions;
+import org.apache.flink.cdc.connectors.base.options.StartupMode;
+import org.apache.flink.cdc.connectors.base.options.StartupOptions;
+import org.apache.flink.cdc.connectors.base.source.jdbc.JdbcIncrementalSource;
+import org.apache.flink.cdc.connectors.postgres.source.PostgresSourceBuilder;
+import org.apache.flink.cdc.connectors.postgres.source.config.PostgresSourceOptions;
+import org.apache.flink.cdc.connectors.shaded.org.apache.kafka.connect.data.Struct;
+import org.apache.flink.cdc.connectors.shaded.org.apache.kafka.connect.source.SourceRecord;
+import org.apache.flink.cdc.debezium.table.DebeziumOptions;
+import org.apache.flink.cdc.debezium.table.MetadataConverter;
 
 import cn.tenmg.clink.cdc.postgres.debezium.MultiTableDebeziumDeserializationSchema;
 import cn.tenmg.clink.source.SourceFactory;
@@ -57,6 +57,7 @@ public class PostgresCdcSourceFactory implements SourceFactory<JdbcIncrementalSo
 			SCAN_INCREMENTAL_SNAPSHOT_CHUNK_KEY_COLUMN = JdbcSourceOptions.SCAN_INCREMENTAL_SNAPSHOT_CHUNK_KEY_COLUMN
 					.key(),
 			SCAN_INCREMENTAL_CLOSE_IDLE_READER_ENABLED = "scan.incremental.close-idle-reader.enabled",
+			INCLUDE_SCHEMA_CHANGES_METHOD_NAME  = "includeSchemaChanges",
 			CLOSE_IDLE_READERS_METHOD_NAME = "closeIdleReaders",
 			SCAN_INCREMENTAL_SNAPSHOT_BACKFILL_SKIP = "scan.incremental.snapshot.backfill.skip",
 			SKIP_SNAPSHOT_BACKFILL_METHOD_NAME = "skipSnapshotBackfill";
@@ -166,7 +167,7 @@ public class PostgresCdcSourceFactory implements SourceFactory<JdbcIncrementalSo
 						"split-key.even-distribution.factor.upper-bound"), "1000")));
 		builder.connectTimeout(getDurationOrDefault(config, JdbcSourceOptions.CONNECT_TIMEOUT));
 		if (config.containsKey(INCLUDE_SCHEMA_CHANGES)) {
-			builder.includeSchemaChanges(Boolean.valueOf(config.get(INCLUDE_SCHEMA_CHANGES)));
+			setbooleanOptionIfPossible(builder, INCLUDE_SCHEMA_CHANGES_METHOD_NAME, Boolean.valueOf(config.get(INCLUDE_SCHEMA_CHANGES)));
 		}
 		if (config.containsKey(SCAN_INCREMENTAL_SNAPSHOT_CHUNK_KEY_COLUMN)) {
 			builder.chunkKeyColumn(config.get(SCAN_INCREMENTAL_SNAPSHOT_CHUNK_KEY_COLUMN));

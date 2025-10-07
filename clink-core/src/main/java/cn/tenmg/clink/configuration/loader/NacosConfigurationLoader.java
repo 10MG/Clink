@@ -40,6 +40,11 @@ public class NacosConfigurationLoader extends PropertiesFileConfigurationLoader 
 			for (int i = 0; i < dataIds.length; i++) {
 				dataId = dataIds[i];
 				String content = configService.getConfig(dataId, group, timeoutMs);
+				if (content == null) {
+					throw new ConfigurationLoadException(String.format(
+							"Unable to get configuration from nacos with namespace: %s, dataId: %s, group: %s.",
+							nacos.getProperty("namespace"), dataId, group));
+				}
 				try {
 					sr = new StringReader(content);
 					try {
@@ -53,7 +58,9 @@ public class NacosConfigurationLoader extends PropertiesFileConfigurationLoader 
 				}
 			}
 		} catch (NacosException e) {
-			throw new ConfigurationLoadException("Unable to get configuration from nacos wich dataId is " + dataId, e);
+			throw new ConfigurationLoadException(
+					String.format("Unable to get configuration from nacos with namespace: %s, dataIds: %s, group: %s.",
+							nacos.getProperty("namespace"), dataIds, group));
 		}
 	}
 
