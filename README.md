@@ -1534,7 +1534,7 @@ datasource.pmc.password=${source.password}
 datasource.pmc.database-name=pmc
 ```
 
-4. 如果 clink-client 的配置文件也需使用 Nacos 配置中心并共享 Nacos 配置，则需指定在实例化客户端是指定相同的启动配置文件：
+4. 如果 clink-client 也需使用 Nacos 配置中心并共享 Nacos 配置，则需在实例化客户端时指定相同的启动配置文件：
 
 ```
 StandaloneRestClusterClient client = new StandaloneRestClusterClient("bootstrap.properties");
