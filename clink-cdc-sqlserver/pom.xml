@@ -4,7 +4,7 @@
 	<parent>
 		<groupId>cn.tenmg</groupId>
 		<artifactId>clink-parent</artifactId>
-		<version>1.7.1</version>
+		<version>1.8.0</version>
 	</parent>
 
 	<modelVersion>4.0.0</modelVersion>
@@ -18,7 +18,6 @@
 		<dependency>
 			<groupId>org.apache.flink</groupId>
 			<artifactId>flink-sql-connector-sqlserver-cdc</artifactId>
-			<optional>true</optional>
 		</dependency>
 
 		<!-- https://mvnrepository.com/artifact/cn.tenmg/clink-runtime -->
