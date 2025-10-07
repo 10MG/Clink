@@ -11,6 +11,7 @@
 
 	<description>Clink应用程序集成测试项目</description>
 	<artifactId>clink-tests</artifactId>
+	<name>clink-tests</name>
 	<packaging>jar</packaging>
 
 	<properties>
@@ -159,7 +160,6 @@
 		<dependency>
 			<groupId>org.apache.flink</groupId>
 			<artifactId>flink-json</artifactId>
-			<version>${flink.version}</version>
 		</dependency>
 		<!-- https://mvnrepository.com/artifact/org.apache.flink/flink-protobuf -->
 		<dependency>

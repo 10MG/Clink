@@ -11,16 +11,6 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import org.apache.flink.api.java.tuple.Tuple2;
-import org.apache.flink.configuration.ConfigOption;
-import org.apache.flink.configuration.ConfigOptions;
-import org.apache.flink.table.api.ValidationException;
-import org.apache.flink.table.data.StringData;
-import org.apache.flink.table.data.TimestampData;
-import org.apache.flink.table.types.logical.RowType;
-import org.apache.flink.types.Row;
-import org.apache.flink.util.Preconditions;
-import org.apache.flink.util.TimeUtils;
-
 import org.apache.flink.cdc.connectors.base.options.JdbcSourceOptions;
 import org.apache.flink.cdc.connectors.base.options.SourceOptions;
 import org.apache.flink.cdc.connectors.base.options.StartupMode;
@@ -31,6 +21,15 @@ import org.apache.flink.cdc.connectors.shaded.org.apache.kafka.connect.data.Stru
 import org.apache.flink.cdc.connectors.shaded.org.apache.kafka.connect.source.SourceRecord;
 import org.apache.flink.cdc.debezium.table.DebeziumOptions;
 import org.apache.flink.cdc.debezium.table.MetadataConverter;
+import org.apache.flink.configuration.ConfigOption;
+import org.apache.flink.configuration.ConfigOptions;
+import org.apache.flink.table.api.ValidationException;
+import org.apache.flink.table.data.StringData;
+import org.apache.flink.table.data.TimestampData;
+import org.apache.flink.table.types.logical.RowType;
+import org.apache.flink.types.Row;
+import org.apache.flink.util.Preconditions;
+import org.apache.flink.util.TimeUtils;
 
 import cn.tenmg.clink.cdc.oracle.debezium.MultiTableDebeziumDeserializationSchema;
 import cn.tenmg.clink.source.SourceFactory;
@@ -56,9 +55,7 @@ public class OracleCdcSourceFactory implements SourceFactory<JdbcIncrementalSour
 			SCAN_INCREMENTAL_SNAPSHOT_CHUNK_KEY_COLUMN = JdbcSourceOptions.SCAN_INCREMENTAL_SNAPSHOT_CHUNK_KEY_COLUMN
 					.key(),
 			SCAN_INCREMENTAL_CLOSE_IDLE_READER_ENABLED = "scan.incremental.close-idle-reader.enabled",
-			CLOSE_IDLE_READERS_METHOD_NAME = "closeIdleReaders",
-			SCAN_INCREMENTAL_SNAPSHOT_BACKFILL_SKIP = "scan.incremental.snapshot.backfill.skip",
-			SKIP_SNAPSHOT_BACKFILL_METHOD_NAME = "skipSnapshotBackfill";
+			SCAN_INCREMENTAL_SNAPSHOT_BACKFILL_SKIP = "scan.incremental.snapshot.backfill.skip";
 
 	private static final ConfigOption<String> HOSTNAME = ConfigOptions.key("hostname").stringType().noDefaultValue()
 			.withDescription("IP address or hostname of the Oracle database server.");
@@ -159,12 +156,10 @@ public class OracleCdcSourceFactory implements SourceFactory<JdbcIncrementalSour
 			builder.chunkKeyColumn(config.get(SCAN_INCREMENTAL_SNAPSHOT_CHUNK_KEY_COLUMN));
 		}
 		if (config.containsKey(SCAN_INCREMENTAL_CLOSE_IDLE_READER_ENABLED)) {
-			setbooleanOptionIfPossible(builder, CLOSE_IDLE_READERS_METHOD_NAME,
-					Boolean.valueOf(config.get(SCAN_INCREMENTAL_CLOSE_IDLE_READER_ENABLED)));
+			builder.closeIdleReaders(Boolean.valueOf(config.get(SCAN_INCREMENTAL_CLOSE_IDLE_READER_ENABLED)));
 		}
 		if (config.containsKey(SCAN_INCREMENTAL_SNAPSHOT_BACKFILL_SKIP)) {
-			setbooleanOptionIfPossible(builder, SKIP_SNAPSHOT_BACKFILL_METHOD_NAME,
-					Boolean.valueOf(config.get(SCAN_INCREMENTAL_SNAPSHOT_BACKFILL_SKIP)));
+			builder.skipSnapshotBackfill(Boolean.valueOf(config.get(SCAN_INCREMENTAL_SNAPSHOT_BACKFILL_SKIP)));
 		}
 
 		String convertDeleteToUpdate = config.get(CONVERT_DELETE_TO_UPDATE);
@@ -227,13 +222,6 @@ public class OracleCdcSourceFactory implements SourceFactory<JdbcIncrementalSour
 			return TimeUtils.parseDuration(config.get(option.key()));
 		}
 		return option.defaultValue();
-	}
-
-	private void setbooleanOptionIfPossible(Object obj, String name, boolean value) {
-		try {
-			obj.getClass().getDeclaredMethod(name, boolean.class).invoke(obj, value);
-		} catch (Exception e) {
-		}
 	}
 
 	private static final String SCAN_STARTUP_MODE_VALUE_INITIAL = "initial";

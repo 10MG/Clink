@@ -11,6 +11,7 @@
 
 	<description>Clink流批一体数据处理快速集成开发框架核心类库</description>
 	<artifactId>clink-core</artifactId>
+	<name>clink-core</name>
 	<packaging>jar</packaging>
 
 	<dependencies>
@@ -49,7 +50,6 @@
 		<dependency>
 			<groupId>org.apache.flink</groupId>
 			<artifactId>flink-json</artifactId>
-			<version>${flink.version}</version>
 			<optional>true</optional>
 		</dependency>
 		<!--

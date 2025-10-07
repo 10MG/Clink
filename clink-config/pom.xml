@@ -11,6 +11,7 @@
 
 	<description>Clink配置管理类库</description>
 	<artifactId>clink-config</artifactId>
+	<name>clink-config</name>
 	<packaging>jar</packaging>
 
 	<dependencies>

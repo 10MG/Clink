@@ -11,6 +11,7 @@
 
 	<description>Clink应用程序客户端类库</description>
 	<artifactId>clink-clients</artifactId>
+	<name>clink-clients</name>
 	<packaging>jar</packaging>
 
 	<dependencies>

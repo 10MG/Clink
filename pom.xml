@@ -61,16 +61,16 @@
 		</license>
 	</licenses>
 
-	<distributionManagement>
+	<!--<distributionManagement>
 		<repository>
 			<id>sonatype</id>
-			<url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+			<url>https://ossrh-staging-api.central.sonatype.com/service/local/staging/deploy/maven2/</url>
 		</repository>
 		<snapshotRepository>
 			<id>sonatype</id>
-			<url>https://oss.sonatype.org/content/repositories/snapshots/</url>
+			<url>https://ossrh-staging-api.central.sonatype.com/content/repositories/snapshots/</url>
 		</snapshotRepository>
-	</distributionManagement>
+	</distributionManagement>-->
 
 	<properties>
 		<encoding>UTF-8</encoding>
@@ -201,6 +201,7 @@
 			<dependency>
 				<groupId>org.apache.flink</groupId>
 				<artifactId>flink-json</artifactId>
+				<version>${flink.version}</version>
 				<optional>true</optional>
 			</dependency>
 			<!--
@@ -378,6 +379,17 @@
 								</goals>
 							</execution>
 						</executions>
+					</plugin>
+					<plugin>
+						<groupId>org.sonatype.central</groupId>
+							<artifactId>central-publishing-maven-plugin</artifactId>
+							<version>0.9.0</version>
+							<extensions>true</extensions>
+							<configuration>
+								<publishingServerId>maven-central-release</publishingServerId>
+								<autoPublish>false</autoPublish> <!-- 手动发布 -->
+								<waitUntil>uploaded</waitUntil> <!-- 等待上传完成 -->
+							</configuration>
 					</plugin>
 				</plugins>
 			</build>
